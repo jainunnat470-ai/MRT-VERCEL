@@ -1955,6 +1955,7 @@ header {
     top: 0;
     right: -400px;
     width: 380px;
+    max-width: 100vw;
     height: 100vh;
     background-color: #FFFFFF;
     box-shadow: var(--shadow-lux);
@@ -1962,6 +1963,8 @@ header {
     transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 .drawer.drawer-open {
@@ -2726,7 +2729,23 @@ footer {
     
     .footer-grid {
         grid-template-columns: 1fr;
-        gap: 24px;
+        gap: 32px;
+        text-align: center;
+    }
+    .footer-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .footer-logo {
+        align-items: center;
+    }
+    .footer-col h4::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    .footer-socials {
+        justify-content: center;
     }
     
     .footer-bottom {
@@ -2737,7 +2756,9 @@ footer {
     
     .drawer {
         width: 100%;
+        max-width: 100vw;
         right: -100%;
+        box-sizing: border-box;
     }
 }
 
