@@ -1735,6 +1735,10 @@ function toggleAdminMode() {
     }
 }
 
+function initTryOnDragAndDrop() {
+    console.log("Virtual Try-On is currently disabled.");
+}
+
 // --- WINDOW LOAD INITIALIZER ---
 window.addEventListener("DOMContentLoaded", async () => {
     await initState();
