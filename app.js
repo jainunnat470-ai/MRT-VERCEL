@@ -50,13 +50,7 @@ async function initState() {
         
     } catch (err) {
         console.error("Error loading products from Supabase:", err);
-        // Fallback to local storage if available
-        const localProducts = localStorage.getItem("mrt_products_v3");
-        if (localProducts) {
-            STATE.products = JSON.parse(localProducts);
-        } else {
-            STATE.products = [];
-        }
+        STATE.products = [];
     }
 
     // Orders Load from Supabase
