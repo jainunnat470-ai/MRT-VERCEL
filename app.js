@@ -47,7 +47,7 @@ async function initState() {
             description: p.description,
             specs: p.specs
         }));
-        localStorage.setItem("mrt_products_v3", JSON.stringify(STATE.products));
+        
     } catch (err) {
         console.error("Error loading products from Supabase:", err);
         // Fallback to local storage if available
@@ -76,7 +76,7 @@ async function initState() {
                 status: o.status,
                 items: o.items
             }));
-            localStorage.setItem("mrt_orders", JSON.stringify(STATE.orders));
+            
         }
     } catch (err) {
         console.error("Error loading orders from Supabase:", err);
@@ -111,7 +111,7 @@ async function initState() {
             status: "processing" // placed, processing, dispatched, delivered
         };
         STATE.orders = [mockOrder];
-        localStorage.setItem("mrt_orders", JSON.stringify(STATE.orders));
+        
     }
 
     // Coupons Load from Supabase
@@ -137,7 +137,7 @@ async function initState() {
     if (localRates) {
         STATE.rates = JSON.parse(localRates);
     } else {
-        localStorage.setItem("mrt_rates", JSON.stringify(STATE.rates));
+        
     }
     
     // Admin Password Load
@@ -156,7 +156,7 @@ function saveWishlist() {
     updateHeaderCounters();
 }
 async function saveOrders(newOrder) {
-    localStorage.setItem("mrt_orders", JSON.stringify(STATE.orders));
+    
     if (newOrder) {
         try {
             await supaClient.from('orders').insert([{
@@ -1456,7 +1456,7 @@ function updateAdminRates() {
     STATE.rates.fine = fineVal;
     STATE.rates.trend = "up";
     
-    localStorage.setItem("mrt_rates", JSON.stringify(STATE.rates));
+    
     renderRatesTicker();
     
     alert("Live Silver Rates updated on the scrolling marquee ticker successfully!");
@@ -1525,7 +1525,7 @@ function changeOrderStatus(orderId, newStatus) {
     const order = STATE.orders.find(o => o.id === orderId);
     if (order) {
         order.status = newStatus;
-        localStorage.setItem("mrt_orders", JSON.stringify(STATE.orders));
+        
         renderAdminOrders();
         supaClient.from('orders').update({ status: newStatus }).eq('id', orderId).then().catch(e => console.error(e));
         // If lookup order status currently renders this, sync details
@@ -1584,22 +1584,52 @@ function renderAdminInventoryList() {
     `).join("");
 }
 
-function addNewProduct() {
+async function addNewProduct() {
+    const btn = document.querySelector('button[onclick="addNewProduct()"]');
+    if (btn) btn.innerHTML = "Uploading & Saving...";
+    if (btn) btn.disabled = true;
+
     const title = document.getElementById("new-prod-title").value.trim();
     const category = document.getElementById("new-prod-cat").value;
     const price = parseFloat(document.getElementById("new-prod-price").value);
     const origPrice = parseFloat(document.getElementById("new-prod-orig").value) || price;
-    const image = document.getElementById("new-prod-img-base64").value || "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80";
+    let image = "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80"; // default
+    
     const plating = document.getElementById("new-prod-finish").value;
     const desc = document.getElementById("new-prod-desc").value.trim() || "Genuine 925 sterling silver exquisite ornament piece.";
-    
     const weight = document.getElementById("new-prod-weight").value.trim() || "2.5 grams";
     const width = document.getElementById("new-prod-width").value.trim() || "N/A";
     const inStock = document.getElementById("new-prod-stock").value === "true";
     
     if (!title || isNaN(price) || price <= 0) {
-        alert("Please enter a valid Product Title and Base Price (input weight and making charges).");
+        alert("Please enter a valid Product Title and Base Price.");
+        if (btn) btn.innerHTML = "Add Item to Catalog";
+        if (btn) btn.disabled = false;
         return;
+    }
+    
+    // Process Supabase Storage Upload
+    const fileInput = document.getElementById("new-prod-img-file");
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supaClient.storage
+            .from('product-images')
+            .upload(fileName, file);
+            
+        if (uploadError) {
+            console.error("Storage upload error", uploadError);
+            alert("Failed to upload image. Using default.");
+        } else if (uploadData) {
+            const { data: publicUrlData } = supaClient.storage.from('product-images').getPublicUrl(fileName);
+            image = publicUrlData.publicUrl;
+        }
+    } else {
+        // Fallback to base64 if someone manually pasted an image (not recommended anymore but keeping it so it doesn't break)
+        const base64 = document.getElementById("new-prod-img-base64").value;
+        if (base64) image = base64;
     }
     
     const newId = `prod-${STATE.products.length + 1}-${Date.now().toString().slice(-4)}`;
@@ -1620,7 +1650,6 @@ function addNewProduct() {
     };
     
     STATE.products.push(product);
-    localStorage.setItem("mrt_products_v3", JSON.stringify(STATE.products));
     
     const dbProduct = {
         id: product.id,
@@ -1636,7 +1665,10 @@ function addNewProduct() {
         description: product.description,
         specs: product.specs
     };
-    supaClient.from('products').insert([dbProduct]).then().catch(e => console.error(e));
+    await supaClient.from('products').insert([dbProduct]).then().catch(e => console.error(e));
+    
+    if (btn) btn.innerHTML = "Add Item to Catalog";
+    if (btn) btn.disabled = false;
     
     // Clear forms
     document.getElementById("new-prod-title").value = "";
@@ -1680,7 +1712,7 @@ function deleteProduct(prodId) {
         const idx = STATE.products.findIndex(p => p.id === prodId);
         if (idx !== -1) {
             STATE.products.splice(idx, 1);
-            localStorage.setItem("mrt_products_v3", JSON.stringify(STATE.products));
+            
             renderAdminInventoryList();
             supaClient.from('products').delete().eq('id', prodId).then().catch(e => console.error(e));
         }
@@ -2039,7 +2071,7 @@ function updateExistingProduct() {
     };
     
     STATE.products[idx] = updatedProduct;
-    localStorage.setItem("mrt_products_v3", JSON.stringify(STATE.products));
+    
     
     alert(`Success! Product "${title}" has been updated.`);
     
