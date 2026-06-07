@@ -7,7 +7,7 @@
 // Supabase Initialization
 const SUPABASE_URL = 'https://kucxgktrcklojwzdcdbq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1Y3hna3RyY2tsb2p3emRjZGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3ODM3MjksImV4cCI6MjA5NjM1OTcyOX0.81sgrfJLuOf9CG-JYx_TVt0LuXSdmo0_boufqoGRHYg';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supaClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const DEFAULT_PRODUCTS = []; // Now loaded from Supabase
 
@@ -30,7 +30,7 @@ const STATE = {
 async function initState() {
     // Products Load from Supabase
     try {
-        const { data, error } = await supabase.from('products').select('*');
+        const { data, error } = await supaClient.from('products').select('*');
         if (error) throw error;
         
         STATE.products = data.map(p => ({
@@ -61,7 +61,7 @@ async function initState() {
 
     // Orders Load from Supabase
     try {
-        const { data, error } = await supabase.from('orders').select('*');
+        const { data, error } = await supaClient.from('orders').select('*');
         if (!error && data) {
             STATE.orders = data.map(o => ({
                 id: o.id,
@@ -141,7 +141,7 @@ async function saveOrders(newOrder) {
     localStorage.setItem("mrt_orders", JSON.stringify(STATE.orders));
     if (newOrder) {
         try {
-            await supabase.from('orders').insert([{
+            await supaClient.from('orders').insert([{
                 id: newOrder.id,
                 date: newOrder.date,
                 customer: newOrder.customer,
