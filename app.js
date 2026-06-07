@@ -114,7 +114,25 @@ async function initState() {
         localStorage.setItem("mrt_orders", JSON.stringify(STATE.orders));
     }
 
-    // Rates Load
+    // Coupons Load from Supabase
+    try {
+        const { data, error } = await supaClient.from('coupons').select('*');
+        if (!error && data) {
+            data.forEach(c => STATE.coupons[c.code] = c.discount);
+        }
+    } catch(err) { console.error("Error loading coupons", err); }
+
+    // Rates Load from Supabase
+    try {
+        const { data, error } = await supaClient.from('rates').select('*').limit(1);
+        if (!error && data && data.length > 0) {
+            STATE.rates.sterling = parseFloat(data[0].sterling);
+            STATE.rates.fine = parseFloat(data[0].fine);
+            STATE.rates.trend = data[0].trend;
+        }
+    } catch(err) { console.error("Error loading rates", err); }
+
+    // Fallback for Rates Load
     const localRates = localStorage.getItem("mrt_rates");
     if (localRates) {
         STATE.rates = JSON.parse(localRates);
@@ -1507,8 +1525,9 @@ function changeOrderStatus(orderId, newStatus) {
     const order = STATE.orders.find(o => o.id === orderId);
     if (order) {
         order.status = newStatus;
-        saveOrders(newOrder);
+        localStorage.setItem("mrt_orders", JSON.stringify(STATE.orders));
         renderAdminOrders();
+        supaClient.from('orders').update({ status: newStatus }).eq('id', orderId).then().catch(e => console.error(e));
         // If lookup order status currently renders this, sync details
         const trackInp = document.getElementById("track-order-id-input");
         if (trackInp && trackInp.value.trim().toUpperCase() === orderId.toUpperCase()) {
@@ -1533,7 +1552,10 @@ function createAdminCoupon() {
     }
     
     STATE.coupons[code] = value;
-    alert(`Success! Created Coupon Code: ${code} (${value}% OFF). Ready for Cart use.`);
+    
+    supaClient.from('coupons').insert([{ code: code, discount: value }]).then(() => {
+        alert(`Success! Created Coupon Code: ${code} (${value}% OFF). Ready for Cart use.`);
+    }).catch(err => console.error(err));
     codeInp.value = "";
     valInp.value = "";
 }
@@ -1600,6 +1622,22 @@ function addNewProduct() {
     STATE.products.push(product);
     localStorage.setItem("mrt_products_v3", JSON.stringify(STATE.products));
     
+    const dbProduct = {
+        id: product.id,
+        title: product.title,
+        category: product.category,
+        price: product.price,
+        original_price: product.originalPrice,
+        rating: product.rating,
+        reviews_count: product.reviewsCount,
+        plating: product.plating,
+        in_stock: product.inStock,
+        image: product.image,
+        description: product.description,
+        specs: product.specs
+    };
+    supaClient.from('products').insert([dbProduct]).then().catch(e => console.error(e));
+    
     // Clear forms
     document.getElementById("new-prod-title").value = "";
     document.getElementById("new-prod-price").value = "";
@@ -1644,6 +1682,7 @@ function deleteProduct(prodId) {
             STATE.products.splice(idx, 1);
             localStorage.setItem("mrt_products_v3", JSON.stringify(STATE.products));
             renderAdminInventoryList();
+            supaClient.from('products').delete().eq('id', prodId).then().catch(e => console.error(e));
         }
     }
 }
