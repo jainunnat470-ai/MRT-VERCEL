@@ -5,8 +5,8 @@
  */
 
 // Supabase Initialization
-const SUPABASE_URL = 'https://kucxgktrcklojwzdcdbq.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1Y3hna3RyY2tsb2p3emRjZGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3ODM3MjksImV4cCI6MjA5NjM1OTcyOX0.81sgrfJLuOf9CG-JYx_TVt0LuXSdmo0_boufqoGRHYg';
+const SUPABASE_URL = 'https://rqtruijvvnvrpbbppxuw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxdHJ1aWp2dm52cnBiYnBweHV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MzA2NDEsImV4cCI6MjA5NjQwNjY0MX0.MqIwEXTTTjM2oCsCDCqmqQeYracP2c_fZkmIFCYK3L8';
 const supaClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const DEFAULT_PRODUCTS = []; // Now loaded from Supabase
