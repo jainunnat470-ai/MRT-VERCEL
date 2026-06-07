@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRT Silver Jewelers | Elegant 925 Sterling Silver Masterpieces</title>
+    <meta name="description" content="Explore pure 92.5 Sterling Silver jewellery at MRT Silver Jewelers. From classic rings to custom engraving, experience premium quality.">
+    <link rel="stylesheet" href="style.css?v=8">
+</head>
+<body>
+
+    <!-- 1. Scrolling Promo & Live Rates Ticker -->
+    <div class="ticker-wrap">
+        <div class="ticker" id="rates-ticker">
+            <!-- Simulated Rates populate here via app.js -->
+        </div>
+    </div>
+
+    <!-- 2. Responsive Header -->
+    <header>
+        <div class="container header-container">
+            <!-- Logo Section -->
+            <a href="#" class="logo" onclick="navigateTo('home')">
+                <span class="logo-main">MRT Silver</span>
+                <span class="logo-sub">Palace of Purity</span>
+            </a>
+            <!-- Navigation Links -->
+            <nav class="nav-menu">
+                <a href="#" class="nav-link active" data-view="home" onclick="navigateTo('home')">Home</a>
+                <a href="#" class="nav-link" data-view="shop" onclick="navigateTo('shop')">Collections</a>
+                <a href="#" class="nav-link nav-link--customise" data-view="customisation" onclick="navigateTo('customisation')">Customisation ✦</a>
+                <a href="#" class="nav-link" data-view="track" onclick="navigateTo('track')">Track Order</a>
+            </nav>
+
+            <!-- Search, Cart, Wishlist, Admin -->
+            <div class="header-utils">
+                <!-- Hamburger Menu Toggle (Mobile Only) -->
+                <button class="mobile-nav-toggle" onclick="toggleMobileNav()" aria-label="Toggle Menu" style="background: none; border: none; padding: 5px; cursor: pointer;">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+
+                <div class="search-box">
+                    <input type="text" id="search-main" class="search-input" placeholder="Search 925 silver..." onkeyup="if(event.key === 'Enter') navigateTo('shop')">
+                    <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+
+                <!-- Wishlist Icon -->
+                <button class="icon-btn" onclick="showDrawer('wishlist')" aria-label="Open Wishlist">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    </svg>
+                    <span class="badge" id="wishlist-count" style="display: none;">0</span>
+                </button>
+
+                <!-- Cart Icon -->
+                <button class="icon-btn" onclick="showDrawer('cart')" aria-label="Open Shopping Cart">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    </svg>
+                    <span class="badge" id="cart-count" style="display: none;">0</span>
+                </button>
+
+                <!-- Admin Dash Toggle -->
+                <button class="admin-toggle-btn" id="admin-toggle" onclick="toggleAdminMode()">Admin Panel</button>
+            </div>
+        </div>
+    </header>
+
+
+    <!-- ============================================== -->
+    <!-- 3. VIEWS CONTAINERS (SPA Viewport Router)       -->
+    <!-- ============================================== -->
+
+    <!-- --- A. HOME VIEW PANEL --- -->
+    <div id="home-view" class="app-view active-view">
+        
+        <!-- Hero Slides Carousel -->
+        <section class="hero-slider">
+            <div class="hero-slide active-slide">
+                <div class="hero-slide-bg" style="background-image: linear-gradient(to right, rgba(18,18,20,0.65), rgba(18,18,20,0.15)), url('https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1600&q=80');"></div>
+                <div class="hero-slide-content">
+                    <h2 class="hero-title">Shine with Pure Silver</h2>
+                    <p class="hero-desc">Experience handcrafted, tarnish-resistant 925 Sterling Silver essentials for everyday elegance.</p>
+                    <a href="#" class="btn-primary" onclick="navigateTo('shop')">Explore Catalog</a>
+                </div>
+            </div>
+            <div class="hero-controls">
+                <div class="hero-dot active-dot" onclick="alert('Carousel is set to auto-cycle.')"></div>
+                <div class="hero-dot" onclick="alert('Carousel is set to auto-cycle.')"></div>
+            </div>
+        </section>
+
+        <!-- Categories Circle Quick Navigation -->
+        <section class="container section-padding">
+            <h2 class="section-title text-center">Shop by Category</h2>
+            <div class="section-subtitle text-center">Sparkle Handpicked Collections</div>
+            <div class="categories-circles-grid">
+                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'rings')" style="animation-delay: 0.1s;">
+                    <div class="cat-circle-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=150&q=80" alt="Rings">
+                    </div>
+                    <span class="cat-circle-title">Rings</span>
+                </div>
+                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'earrings')" style="animation-delay: 0.15s;">
+                    <div class="cat-circle-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1635767798638-3e25273a8236?auto=format&fit=crop&w=150&q=80" alt="Earrings">
+                    </div>
+                    <span class="cat-circle-title">Earrings</span>
+                </div>
+                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'pendants')" style="animation-delay: 0.2s;">
+                    <div class="cat-circle-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=150&q=80" alt="Pendants">
+                    </div>
+                    <span class="cat-circle-title">Pendants</span>
+                </div>
+                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'anklets')" style="animation-delay: 0.25s;">
+                    <div class="cat-circle-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=150&q=80" alt="Anklets">
+                    </div>
+                    <span class="cat-circle-title">Anklets</span>
+                </div>
+                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'chains')" style="animation-delay: 0.3s;">
+                    <div class="cat-circle-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=150&q=80" alt="Chains">
+                    </div>
+                    <span class="cat-circle-title">Chains</span>
+                </div>
+                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'gold')" style="animation-delay: 0.32s;">
+                    <div class="cat-circle-img-wrap" style="border-color: #D4A017;">
+                        <img src="https://images.unsplash.com/photo-1575377427642-087cf684f29d?auto=format&fit=crop&w=150&q=80" alt="Gold" style="filter: brightness(1.05) saturate(1.2);">
+                    </div>
+                    <span class="cat-circle-title" style="color:#B8860B; font-weight:600;">Gold</span>
+                </div>
+                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'kids')" style="animation-delay: 0.35s;">
+                    <div class="cat-circle-img-wrap" style="border-color: var(--color-accent-pink);">
+                        <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=150&q=80" alt="Kids">
+                    </div>
+                    <span class="cat-circle-title" style="color:var(--color-accent-pink); font-weight:600;">Kids</span>
+                </div>
+                <div class="cat-circle-item animate-entrance" onclick="navigateTo('customisation')" style="animation-delay: 0.4s;">
+                    <div class="cat-circle-img-wrap" style="border-color: #7C3AED;">
+                        <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=150&q=80" alt="Customised" style="filter: brightness(0.95);">
+                    </div>
+                    <span class="cat-circle-title" style="color:#7C3AED; font-weight:600;">Customised</span>
+                </div>
+                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'coins')" style="animation-delay: 0.45s;">
+                    <div class="cat-circle-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=150&q=80" alt="Coins">
+                    </div>
+                    <span class="cat-circle-title">Silver Coin</span>
+                </div>
+                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop')" style="animation-delay: 0.5s;">
+                    <div class="cat-circle-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1611085583191-a3b1a40ffd50?auto=format&fit=crop&w=150&q=80" alt="All Collections">
+                    </div>
+                    <span class="cat-circle-title">View All</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- USPs Trust Points -->
+        <section class="usps-bar">
+            <div class="container usps-grid">
+                <div class="usp-card">
+                    <div class="usp-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <div>
+                        <div class="usp-title">92.5 Silver Purity</div>
+                        <div class="usp-desc">Sourced from top-tier hallmarked mints.</div>
+                    </div>
+                </div>
+                <div class="usp-card">
+                    <div class="usp-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.477 2 2 6.477 2 12a9.96 9.96 0 001.333 4.993L2 22l5.13-1.347A9.923 9.923 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/><path d="M8.5 10.5s.5-1 2-1 2.5 1 2.5 2.5c0 2-2.5 3-2.5 3M12 17h.01"/></svg>
+                    </div>
+                    <div>
+                        <div class="usp-title">625 Available</div>
+                        <div class="usp-desc">Premium 625 silver jewellery now in store.</div>
+                    </div>
+                </div>
+                <div class="usp-card">
+                    <div class="usp-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    </div>
+                    <div>
+                        <div class="usp-title">Anti-Tarnish Coating</div>
+                        <div class="usp-desc">Finished with an advanced protective coating.</div>
+                    </div>
+                </div>
+                <div class="usp-card">
+                    <div class="usp-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.333 4.993L2 22l5.13-1.347a9.923 9.923 0 004.88 1.282h.005c5.505 0 9.989-4.478 9.99-9.984a9.968 9.968 0 00-2.92-7.065A9.932 9.932 0 0012.012 2zm5.72 13.918c-.292.822-1.442 1.503-2.28 1.626-.575.084-1.328.163-3.83-.873-3.197-1.326-5.234-4.577-5.393-4.792-.16-.215-1.28-1.706-1.28-3.256 0-1.55.808-2.31 1.096-2.61.29-.297.632-.373.842-.373h.605c.19.008.447-.074.7.534.264.632.9 1.95 1.095 2.093.076.155.127.336.026.54-.101.205-.152.336-.304.512-.152.176-.32.392-.456.526-.152.148-.31.312-.134.615.176.302.784 1.295 1.678 2.09 1.155.8 2.052 1.347 2.378 1.485.327.137.518.114.712-.107.195-.22.842-.98 1.066-1.32.224-.34.448-.284.748-.17.3.113 1.906.9 2.232 1.063.327.163.544.244.624.38.08.135.08.78-.212 1.602z"/></svg>
+                    </div>
+                    <div>
+                        <div class="usp-title">WhatsApp Order</div>
+                        <div class="usp-desc">Order instantly via WhatsApp &mdash; quick &amp; easy.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Shop for Him and Her Split -->
+        <section class="container gender-banners">
+            <div class="gender-banner-card" onclick="navigateTo('shop', 'men')">
+                <img class="gender-banner-img" src="https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=800&q=80" alt="Collection for Him">
+                <div class="gender-banner-overlay">
+                    <h3 class="gender-title">Collection for Him</h3>
+                    <span class="gender-link">Shop Bold Chains & Rings 
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+            </div>
+            <div class="gender-banner-card" onclick="navigateTo('shop', 'stud')">
+                <img class="gender-banner-img" src="https://images.unsplash.com/photo-1635767798638-3e25273a8236?auto=format&fit=crop&w=800&q=80" alt="Collection for Her">
+                <div class="gender-banner-overlay">
+                    <h3 class="gender-title">Collection for Her</h3>
+                    <span class="gender-link">Shop Sparkling Pendants & Studs
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Price Tier Nav Shortcuts -->
+        <section class="container price-tiers-section">
+            <div class="price-tiers-container">
+                <h3 class="price-tiers-title">Luxury Within Reach</h3>
+                <div class="price-tiers-grid">
+                    <button class="price-tier-card" onclick="navigateTo('shop', 'under-999')">Under ₹999</button>
+                    <button class="price-tier-card" onclick="navigateTo('shop', 'under-1999')">Under ₹1,999</button>
+                    <button class="price-tier-card" onclick="navigateTo('shop', 'under-4999')">Under ₹4,999</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Flash Sale & Countdown Timer -->
+        <section class="container flash-sale-banner">
+            <div class="flash-sale-left">
+                <span class="flash-sale-tag">Limited Flash Offer</span>
+                <h3 class="flash-sale-title">Silver Sparkle Mid-Season Sale</h3>
+                <p class="flash-sale-desc">Save up to 50% on exclusive handcrafted necklaces, chains, and solitaire band rings. Ends very soon.</p>
+                
+                <div class="countdown-timer">
+                    <div class="countdown-box">
+                        <div class="countdown-num" id="timer-hours">04</div>
+                        <div class="countdown-label">hours</div>
+                    </div>
+                    <div class="countdown-box">
+                        <div class="countdown-num" id="timer-mins">32</div>
+                        <div class="countdown-label">mins</div>
+                    </div>
+                    <div class="countdown-box">
+                        <div class="countdown-num" id="timer-secs">15</div>
+                        <div class="countdown-label">secs</div>
+                    </div>
+                </div>
+
+                <a href="#" class="btn-primary" style="align-self: flex-start;" onclick="navigateTo('shop')">Shop Flash Deals</a>
+            </div>
+            <div class="flash-sale-right" style="background-image: url('https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80');"></div>
+        </section>
+
+        <!-- Best Sellers -->
+        <section class="container section-padding">
+            <h2 class="section-title text-center">Top Best Sellers</h2>
+            <div class="section-subtitle text-center">Exquisite Solid 925 Hallmark Favorites</div>
+            <div class="products-grid" id="best-sellers-grid">
+                <!-- Dynamically Populated by app.js -->
+            </div>
+            <div class="view-more-container">
+                <a href="#" class="btn-primary" style="background-color: transparent; border: 2px solid var(--color-primary);" onclick="navigateTo('shop')">View Full Catalog</a>
+            </div>
+        </section>
+
+
+
+    </div>
+
+
+    <!-- --- B. SHOP (PRODUCT LISTING) VIEW PANEL --- -->
+    <div id="shop-view" class="app-view container section-padding">
+        <h2 class="section-title text-center">Silver Masterpieces</h2>
+        <div class="section-subtitle text-center">Filter & find your perfect shimmer</div>
+        <!-- Mobile Filter Toggle -->
+        <button class="mobile-filter-toggle" onclick="toggleShopFilters()">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            Filter Collections
+        </button>
+        
+        <div class="shop-layout">
+            <!-- Left Sidebar Filters -->
+            <aside class="shop-sidebar-filters">
+                <div class="filter-widget">
+                    <h3 class="filter-title">Availability</h3>
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" id="filter-in-stock" onchange="renderShopCatalog()">
+                        <span>In-Stock Only</span>
+                    </label>
+                </div>
+
+                <div class="filter-widget">
+                    <h3 class="filter-title">Jewellery Type</h3>
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" id="filter-type-rings" onchange="renderShopCatalog()">
+                        <span>Rings</span>
+                    </label>
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" id="filter-type-earrings" onchange="renderShopCatalog()">
+                        <span>Earrings</span>
+                    </label>
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" id="filter-type-pendants" onchange="renderShopCatalog()">
+                        <span>Pendants</span>
+                    </label>
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" id="filter-type-anklets" onchange="renderShopCatalog()">
+                        <span>Anklets & Toe Rings</span>
+                    </label>
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" id="filter-type-chains" onchange="renderShopCatalog()">
+                        <span>Chains</span>
+                    </label>
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" id="filter-type-coins" onchange="renderShopCatalog()">
+                        <span>Silver Coins</span>
+                    </label>
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" id="filter-type-gold" onchange="renderShopCatalog()">
+                        <span>Gold</span>
+                    </label>
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" id="filter-type-kids" onchange="renderShopCatalog()">
+                        <span>Kids</span>
+                    </label>
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" id="filter-type-customised" onchange="renderShopCatalog()">
+                        <span>Customised</span>
+                    </label>
+                </div>
+                
+                <div class="filter-widget">
+                    <h3 class="filter-title">Maximum Price</h3>
+                    <input type="range" id="filter-price-max" min="500" max="10000" step="100" value="10000" style="width:100%; accent-color:var(--color-accent-pink);" oninput="document.getElementById('filter-price-val').textContent = '₹' + parseInt(this.value).toLocaleString('en-IN'); renderShopCatalog();">
+                    <div class="price-range-inputs">
+                        <span style="font-size:0.8rem;color:var(--color-silver-dark);">Range: Up to</span>
+                        <strong id="filter-price-val" style="font-size:0.9rem;margin-left:auto;">₹10,000+</strong>
+                    </div>
+                </div>
+
+                
+                <button class="product-btn-add" style="font-size:0.75rem;padding:8px 0;" onclick="applyQuickFilter('all')">Clear All Filters</button>
+            </aside>
+            
+            <!-- Right Catalog -->
+            <main class="shop-main-content">
+                <div class="shop-toolbar">
+                    <span class="shop-results-count" id="results-count">Showing all products</span>
+                    <div class="shop-sorter">
+                        <label for="shop-sort" style="font-size:0.85rem;color:var(--color-silver-dark);">Sort by:</label>
+                        <select id="shop-sort" onchange="renderShopCatalog()">
+                            <option value="popularity">Popular Rating</option>
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="products-grid" id="shop-products-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <!-- Dynamically Populated by app.js -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+    <!-- --- C. PRODUCT DETAIL VIEW PANEL --- -->
+    <div id="detail-view" class="app-view container section-padding">
+        <!-- Back navigation link -->
+        <a href="#" onclick="navigateTo('shop')" style="display:inline-flex;align-items:center;gap:6px;font-size:0.9rem;font-weight:600;margin-bottom:20px;color:var(--color-accent-pink);">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+            Back to Collections
+        </a>
+        
+        <div class="detail-layout">
+            <!-- Left images strip -->
+            <div class="detail-gallery">
+                <div class="detail-main-img-wrap">
+                    <img id="detail-main-img" src="" alt="Main product image">
+                </div>
+                <div class="detail-thumbnails" id="detail-thumbs">
+                    <!-- Loaded dynamically via app.js -->
+                </div>
+            </div>
+            
+            <!-- Right information content -->
+            <div class="detail-info">
+                <span class="detail-category" id="detail-category">RINGS</span>
+                <h1 class="detail-title" id="detail-title">Elegant Solitaire Crown Ring</h1>
+                
+                <div class="detail-rating-row">
+                    <div class="product-rating" style="font-size:0.85rem;margin-bottom:0;">
+                        <svg viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <span id="detail-stars-val">4.9</span>
+                    </div>
+                    <span class="detail-rating-reviews" id="detail-reviews-val">(122 customer reviews)</span>
+                    <span class="detail-badge-hallmark">BIS 92.5 Hallmark</span>
+                </div>
+                
+                <div class="detail-price-row">
+                    <span class="detail-price" id="detail-price">₹1,299</span>
+                    <span class="detail-original-price" id="detail-orig-price">₹2,598</span>
+                    <span class="detail-discount" id="detail-discount-percent">50% OFF</span>
+                </div>
+                
+                <p class="detail-desc" id="detail-desc">Beautiful pure rhodium sterling silver master ring handcrafted using best-in-market diamonds-equivalent cubic zirconia jewels. Hypoallergenic design ensuring all-day safety.</p>
+                
+                <div class="detail-spec-grid">
+                    <div class="detail-spec-item">
+                        <span class="detail-spec-label">Metal Purity</span>
+                        <span class="detail-spec-val" id="spec-metal">Solid 92.5% Sterling Silver</span>
+                    </div>
+                    <div class="detail-spec-item">
+                        <span class="detail-spec-label">Product Weight</span>
+                        <span class="detail-spec-val" id="spec-weight">2.4 grams</span>
+                    </div>
+                    <div class="detail-spec-item">
+                        <span class="detail-spec-label">Authenticity Badge</span>
+                        <span class="detail-spec-val" id="spec-auth">92.5 Hallmarked Stamp</span>
+                    </div>
+                </div>
+                <!-- Dynamic Size Selector (Visible for Rings/Toe Rings only) -->
+                <div id="detail-size-section" style="margin-top: 15px; margin-bottom: 20px; display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label class="custom-form-label" style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0; display: block;">Select Size</label>
+                        <a href="javascript:void(0)" id="ring-size-guide-link" onclick="openSizeGuideModal()" style="font-size: 0.72rem; color: var(--color-accent-pink); font-weight: 600; text-decoration: underline; display: none;">📏 Size Guide</a>
+                    </div>
+                    <div id="detail-size-options" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    </div>
+                </div>
+                
+                <!-- Premium Gift Box Option -->
+                <div class="detail-gift-wrap-wrap" style="margin-top: 15px; margin-bottom: 20px;">
+                    <label class="gift-wrap-checkbox-label" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); background-color: var(--color-silver-light); cursor: pointer; transition: all var(--transition-fast) ease; user-select: none;">
+                        <input type="checkbox" id="detail-gift-wrap" style="accent-color: var(--color-accent-pink); width: 18px; height: 18px; cursor: pointer;">
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="font-size: 0.88rem; font-weight: 600; color: var(--color-primary);">🎁 Add Premium Velvet Gift Box (+₹99)</span>
+                            <span style="font-size: 0.72rem; color: var(--color-silver-dark); margin-top: 2px;">Includes velvet luxury case, greeting card, and premium silver polishing cloth</span>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="detail-actions">
+                    <div class="qty-picker">
+                        <button class="qty-btn" onclick="adjustDetailQty(-1)">-</button>
+                        <span class="qty-val" id="qty-val">1</span>
+                        <button class="qty-btn" onclick="adjustDetailQty(1)">+</button>
+                    </div>
+                    
+                    <div class="detail-buttons-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%;">
+                        <button class="btn-add-cart" id="detail-add-cart-btn" onclick="triggerAddSelectedToCart()" style="width: 100%;">Add to Cart</button>
+                        <button class="btn-checkout" id="detail-buy-now-btn" onclick="triggerBuyNow()" style="width: 100%; padding: 14px 0; margin-top: 0;">Buy Now</button>
+                    </div>
+                    <div style="margin-top: 12px; display: flex; gap: 12px; width: 100%;">
+                        <button class="btn-whatsapp-buy" id="detail-whatsapp-btn" style="flex: 1.2; justify-content: center; margin-top: 0;">
+                            <svg fill="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px; margin-right: 8px;"><path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.333 4.993L2 22l5.13-1.347a9.923 9.923 0 004.88 1.282h.005c5.505 0 9.989-4.478 9.99-9.984a9.968 9.968 0 00-2.92-7.065 9.932 9.932 0 00-7.073-2.916zm5.72 13.918c-.292.822-1.442 1.503-2.28 1.626-.575.084-1.328.163-3.83-.873-3.197-1.326-5.234-4.577-5.393-4.792-.16-.215-1.28-1.706-1.28-3.256 0-1.55.808-2.31 1.096-2.61.29-.297.632-.373.842-.373.21 0 .42.002.605.01.19.008.447-.074.7.534.264.632.9.2 1.095 2.593.076.155.127.336.026.54-.101.205-.152.336-.304.512-.152.176-.32.392-.456.526-.152.148-.31.312-.134.615.176.302.784 1.295 1.678 2.09.155.8 2.052 1.347 2.378 1.485.327.137.518.114.712-.107.195-.22.842-.98.106-1.32-.736-.34-1.22-.27-1.41.05-.19.324-.766.425-1.026.312-.26-.112-1.096-.405-2.09-1.295-.772-.69-1.296-1.545-1.447-1.802-.153-.262-.016-.403.116-.532.12-.116.264-.312.395-.468.13-.156.176-.264.264-.44.088-.176.044-.33-.022-.462-.066-.13-.592-1.428-.81-1.956-.213-.51-.43-.44-.606-.45l-.515-.01c-.176 0-.462.066-.704.33-.242.264-.924.903-.924 2.2 0 1.298.946 2.548 1.078 2.724.13.176 1.86 2.84 4.506 3.985 2.646 1.144 2.646.762 3.123.722z"/></svg>
+                            Order WhatsApp
+                        </button>
+                        <button class="btn-checkout" onclick="openTryOnModal()" style="flex: 1; padding: 12px 0; margin-top: 0; background: linear-gradient(135deg, #4F46E5 0%, #E35275 100%); color: #FFFFFF; font-size: 0.82rem; font-weight: 700; border: none; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);">
+                            <span>✨ AI Virtual Try-On</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- --- D. CUSTOMISATION VIEW PANEL --- -->
+    <div id="customisation-view" class="app-view container section-padding">
+        <h2 class="section-title text-center">Bespoke Customised Creations</h2>
+        <div class="section-subtitle text-center" style="margin-bottom: 40px;">Explore and shop our range of exclusive custom-designed sterling silver masterpieces.</div>
+        
+        <div class="products-grid" id="customised-products-grid">
+            <!-- Populated dynamically via app.js -->
+        </div>
+    </div>
+
+
+    <!-- --- E. TRACK ORDER PORTAL VIEW --- -->
+    <div id="track-view" class="app-view container section-padding">
+        <h2 class="section-title text-center">Track Silver Shipment</h2>
+        <div class="section-subtitle text-center">Check your BIS-Certified dispatch logs</div>
+        
+        <div class="track-layout">
+            <div class="track-form">
+                <input type="text" id="track-order-id-input" class="track-input" placeholder="Enter Order ID (e.g. MRT-SLV-7483)">
+                <button class="btn-track" onclick="lookupOrderStatus()">Track Shipment</button>
+            </div>
+            
+            <!-- Result Output timeline -->
+            <div class="track-results-wrap" id="track-results">
+                <div class="track-order-header">
+                    <div class="track-order-id" id="order-id-display">MRT-SLV-7483</div>
+                    <div class="track-order-date" id="order-date-display">Order placed on: 2026-05-30</div>
+                </div>
+                
+                <div class="timeline">
+                    <!-- Step 1: placed -->
+                    <div class="timeline-step">
+                        <div class="timeline-bullet">
+                            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <div class="timeline-content">
+                            <span class="timeline-title">Order Confirmed & Placed</span>
+                            <span class="timeline-desc">Your order has been logged into our silver smith ledger.</span>
+                        </div>
+                    </div>
+                    <!-- Step 2: processing -->
+                    <div class="timeline-step">
+                        <div class="timeline-bullet">
+                            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <div class="timeline-content">
+                            <span class="timeline-title">925 Handcrafting & Hallmarking</span>
+                            <span class="timeline-desc">BIS Hallmark lab certifies purity. Protective tarnish-resistant coat applied.</span>
+                        </div>
+                    </div>
+                    <!-- Step 3: dispatched -->
+                    <div class="timeline-step">
+                        <div class="timeline-bullet">
+                            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <div class="timeline-content">
+                            <span class="timeline-title">Shipped & In-Transit</span>
+                            <span class="timeline-desc">Parcel dispatched via premium luxury courier partner.</span>
+                        </div>
+                    </div>
+                    <!-- Step 4: delivered -->
+                    <div class="timeline-step">
+                        <div class="timeline-bullet">
+                            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <div class="timeline-content">
+                            <span class="timeline-title">Delivered & Sparkled</span>
+                            <span class="timeline-desc">Package handed over safely. Show off your luxury silver!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- --- E1. BIS HALLMARKING VIEW PANEL --- -->
+    <div id="hallmarking-view" class="app-view container section-padding">
+        <div style="margin-bottom: 30px;">
+            <a href="#" onclick="navigateTo('home')" style="display: inline-flex; align-items: center; gap: 8px; color: var(--color-accent-pink); font-weight: 600; font-size: 0.9rem; transition: var(--transition-fast);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Back to Home
+            </a>
+        </div>
+
+        <div class="info-hero text-center" style="margin-bottom: 50px;">
+            <div style="display: inline-flex; justify-content: center; align-items: center; width: 64px; height: 64px; border-radius: 50%; background-color: var(--color-accent-pink-light); color: var(--color-accent-pink); margin-bottom: 20px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h1 class="section-title" style="margin-bottom: 10px;">BIS Hallmarking Certification</h1>
+            <div class="section-subtitle">Guaranteeing 92.5% pure sterling silver and government-certified authenticity.</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr; gap: 40px; margin-bottom: 60px; align-items: start;">
+            <!-- Interactive Explorer Card -->
+            <div class="interactive-layout-card" style="background-color: var(--color-card-bg); border-radius: var(--border-radius-md); box-shadow: var(--shadow-medium); padding: 30px; border: 1px solid var(--color-silver-light);">
+                <div class="hallmark-interactive-card">
+                    <h3 style="font-family: var(--font-heading); margin-bottom: 12px; text-align: center; font-size: 1.3rem;">Interactive Hallmark Stamp Decoder</h3>
+                    <p style="font-size: 0.85rem; color: var(--color-secondary); text-align: center; margin-bottom: 30px;">Hover over or tap each section of the official hallmark imprint below to understand its significance:</p>
+                    
+                    <div class="stamp-plate-wrapper">
+                        <div class="stamp-plate">
+                            <!-- Mark 1: BIS Logo -->
+                            <div class="stamp-mark" data-mark="logo" onmouseover="showStampDetail('logo')" onclick="showStampDetail('logo')">
+                                <svg viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; margin-bottom: 4px;"><polygon points="12,2 2,20 22,20" /></svg>
+                                <span style="font-size: 0.65rem; font-weight: 700;">BIS</span>
+                            </div>
+                            
+                            <div class="stamp-divider">|</div>
+                            
+                            <!-- Mark 2: Purity -->
+                            <div class="stamp-mark" data-mark="purity" onmouseover="showStampDetail('purity')" onclick="showStampDetail('purity')">
+                                <span style="font-size: 1.1rem; font-weight: 800; font-family: var(--font-body);">925</span>
+                            </div>
+                            
+                            <div class="stamp-divider">|</div>
+                            
+                            <!-- Mark 3: Assaying Centre -->
+                            <div class="stamp-mark" data-mark="assay" onmouseover="showStampDetail('assay')" onclick="showStampDetail('assay')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; margin-bottom: 4px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                                <span style="font-size: 0.65rem; font-weight: 700;">AHC</span>
+                            </div>
+                            
+                            <div class="stamp-divider">|</div>
+                            
+                            <!-- Mark 4: Sponsor/Jeweller -->
+                            <div class="stamp-mark" data-mark="jeweller" onmouseover="showStampDetail('jeweller')" onclick="showStampDetail('jeweller')">
+                                <span style="font-size: 1.1rem; font-weight: 700; font-family: var(--font-cursive); color: var(--color-accent-pink);">MRT</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="stamp-detail-box" class="stamp-detail-box">
+                        <h4 id="stamp-detail-title">Tap or hover over any stamp mark above</h4>
+                        <p id="stamp-detail-desc">Every genuine sterling silver piece from MRT Palace bears this hallmark imprint laser-engraved on the inner side or clasp of the jewelry.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Standard Information Cards Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+                <div class="info-card">
+                    <div class="info-card-icon">🔒</div>
+                    <h4>Why Hallmark Matters</h4>
+                    <p>Without official hallmarking, it is impossible to verify silver purity by eye. Hallmarking protects you from adulterated silver alloyed with cheap, toxic materials.</p>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-card-icon">🏛️</div>
+                    <h4>Government Certified</h4>
+                    <p>Every piece is certified by Bureau of Indian Standards (BIS) recognized assay centers, representing independent third-party quality assurances.</p>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-card-icon">💎</div>
+                    <h4>925 Pure Sterling Silver</h4>
+                    <p>Our hallmark guarantees exactly 92.5% pure fine silver. The remaining 7.5% is alloyed copper, added to give silver the strength required for daily wear.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to action -->
+        <div class="text-center" style="margin-top: 40px;">
+            <button class="custom-btn" onclick="navigateTo('shop', 'all')" style="padding: 14px 30px; font-size: 0.95rem; font-weight: 600;">Shop Hallmarked Collections</button>
+        </div>
+    </div>
+
+
+    <!-- --- E2. HYPOALLERGENIC VIEW PANEL --- -->
+    <div id="hypoallergenic-view" class="app-view container section-padding">
+        <div style="margin-bottom: 30px;">
+            <a href="#" onclick="navigateTo('home')" style="display: inline-flex; align-items: center; gap: 8px; color: var(--color-accent-pink); font-weight: 600; font-size: 0.9rem; transition: var(--transition-fast);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Back to Home
+            </a>
+        </div>
+
+        <div class="info-hero text-center" style="margin-bottom: 50px;">
+            <div style="display: inline-flex; justify-content: center; align-items: center; width: 64px; height: 64px; border-radius: 50%; background-color: var(--color-accent-pink-light); color: var(--color-accent-pink); margin-bottom: 20px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h1 class="section-title" style="margin-bottom: 10px;">Hypoallergenic Comfort</h1>
+            <div class="section-subtitle">Sensitive skin deserves premium care. 100% free from Nickel, Lead, and Cadmium.</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr; gap: 40px; margin-bottom: 60px;">
+            <!-- Interactive Sensitivity Quiz -->
+            <div class="interactive-layout-card" style="background-color: var(--color-card-bg); border-radius: var(--border-radius-md); box-shadow: var(--shadow-medium); padding: 30px; border: 1px solid var(--color-silver-light);">
+                <div class="allergy-checker-card">
+                    <h3 style="font-family: var(--font-heading); text-align: center; margin-bottom: 12px; font-size: 1.3rem;">Skin Sensitivity Diagnosis</h3>
+                    <p style="font-size: 0.85rem; color: var(--color-secondary); text-align: center; margin-bottom: 25px;">Have you ever experienced irritation from local fashion jewelry? Select an option below to learn why:</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 12px; max-width: 500px; margin: 0 auto 20px auto;">
+                        <button class="allergy-quiz-btn" onclick="checkAllergy('rash')">🔴 Rashes, redness, or itching on earlobes or neck</button>
+                        <button class="allergy-quiz-btn" onclick="checkAllergy('green')">🟢 Finger skin turns green or black under rings</button>
+                        <button class="allergy-quiz-btn" onclick="checkAllergy('itch')">⚫ New or old piercings throbbing, swelling, or discharging</button>
+                    </div>
+                    
+                    <div id="allergy-result-box" class="allergy-result-box" style="display: none;">
+                        <h4 id="allergy-result-title">Analysis Result</h4>
+                        <p id="allergy-result-desc"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Material Comparison Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 20px;">
+                <div class="comparison-panel negative">
+                    <h4 style="margin-bottom: 15px; color: #991B1B;">⚠️ Standard Cheap Jewelry</h4>
+                    <ul class="comparison-list">
+                        <li>Contains high trace amounts of Nickel (the primary skin allergen).</li>
+                        <li>Employs Lead and Cadmium to lower melting point and metal costs.</li>
+                        <li>Oxidizes rapidly with body acids, leaving unsightly green stains.</li>
+                        <li>Causes swelling, inflammation, and skin dermatitis.</li>
+                    </ul>
+                </div>
+                
+                <div class="comparison-panel positive">
+                    <h4 style="margin-bottom: 15px; color: #047857;">✨ MRT Luxury Silver Palace</h4>
+                    <ul class="comparison-list">
+                        <li>Strictly 100% Nickel-Free, eliminating skin rashes entirely.</li>
+                        <li>Certified Lead-Free & Cadmium-Free for total body safety.</li>
+                        <li>Coated in premium Rhodium / 18K Gold to prevent copper exposure.</li>
+                        <li>Biocompatible and highly recommended for sensitive skin.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <button class="custom-btn" onclick="navigateTo('shop', 'all')" style="padding: 14px 30px; font-size: 0.95rem; font-weight: 600;">Shop Skin-Safe Jewelry</button>
+        </div>
+    </div>
+
+
+    <!-- --- E3. SHIPPING DETAILS VIEW PANEL --- -->
+    <div id="shipping-view" class="app-view container section-padding">
+        <div style="margin-bottom: 30px;">
+            <a href="#" onclick="navigateTo('home')" style="display: inline-flex; align-items: center; gap: 8px; color: var(--color-accent-pink); font-weight: 600; font-size: 0.9rem; transition: var(--transition-fast);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Back to Home
+            </a>
+        </div>
+
+        <div class="info-hero text-center" style="margin-bottom: 50px;">
+            <div style="display: inline-flex; justify-content: center; align-items: center; width: 64px; height: 64px; border-radius: 50%; background-color: var(--color-accent-pink-light); color: var(--color-accent-pink); margin-bottom: 20px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px;"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            </div>
+            <h1 class="section-title" style="margin-bottom: 10px;">Shipping & Delivery Details</h1>
+            <div class="section-subtitle">Fully insured, trackable nationwide delivery right to your doorstep.</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr; gap: 40px; margin-bottom: 60px;">
+            <!-- Interactive Delivery Estimator -->
+            <div class="interactive-layout-card" style="background-color: var(--color-card-bg); border-radius: var(--border-radius-md); box-shadow: var(--shadow-medium); padding: 30px; border: 1px solid var(--color-silver-light);">
+                <div class="pincode-checker-card">
+                    <h3 style="font-family: var(--font-heading); text-align: center; margin-bottom: 12px; font-size: 1.3rem;">Delivery Time Estimator</h3>
+                    <p style="font-size: 0.85rem; color: var(--color-secondary); text-align: center; margin-bottom: 25px;">Enter your 6-digit Indian Pincode to see exact shipping times & courier channels:</p>
+                    
+                    <div style="display: flex; gap: 10px; max-width: 440px; margin: 0 auto 20px auto;">
+                        <input type="text" id="pincode-input" placeholder="Enter Pincode (e.g. 600001)" maxlength="6" style="flex: 1; padding: 12px 16px; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); font-size: 0.95rem; font-family: var(--font-body); text-align: center;" onkeypress="if(event.key==='Enter') estimateDeliveryTime()">
+                        <button class="custom-btn" onclick="estimateDeliveryTime()" style="padding: 12px 24px; font-size: 0.9rem; font-weight: 600;">Check Delivery</button>
+                    </div>
+                    
+                    <div id="pincode-result-box" class="pincode-result-box" style="display: none; border-radius: var(--border-radius-sm); padding: 16px 20px; line-height: 1.6;">
+                        <h4 id="pincode-result-title" style="margin-bottom: 8px; font-family: var(--font-body); font-weight: 700; font-size: 1.05rem;">Estimating...</h4>
+                        <p id="pincode-result-desc" style="font-size: 0.88rem; color: var(--color-primary);"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transit & Packaging Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+                <div class="info-card">
+                    <div class="info-card-icon">🚀</div>
+                    <h4>Express Dispatch</h4>
+                    <p>All orders are processed and handed over to courier networks within 24 hours of confirmation. Live tracking links are sent via WhatsApp & SMS.</p>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-card-icon">🎁</div>
+                    <h4>Luxury Packaging</h4>
+                    <p>Your jewelry arrives inside a signature MRT royal blue rigid drawer box, velvet padded inserts, authenticity certificate, and polishing cloth.</p>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-card-icon">🛡️</div>
+                    <h4>100% Insured Transit</h4>
+                    <p>Every single package is fully insured from our vault to your door. If anything goes wrong in transit, we will dispatch a replacement immediately.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <button class="custom-btn" onclick="navigateTo('track')" style="padding: 14px 30px; font-size: 0.95rem; font-weight: 600;">Go to Tracking Portal</button>
+        </div>
+    </div>
+
+
+    <!-- --- F. ADMINISTRATIVE CONSOLE VIEW PANEL --- -->
+    <div id="admin-view" class="app-view container section-padding">
+        <h2 class="section-title text-center">Administration Panel</h2>
+        <div class="section-subtitle text-center">Manage rates, inventory, and order books</div>
+        
+        <div class="admin-layout">
+            <!-- Sidebar controls menu -->
+            <aside class="admin-sidebar">
+                <div class="admin-side-menu-item active-menu-item" data-tab="dashboard" onclick="navigateAdminTab('dashboard')">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"/></svg>
+                    <span>Dashboard Metrics</span>
+                </div>
+                <div class="admin-side-menu-item" data-tab="rates" onclick="navigateAdminTab('rates')">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 7h6m0 10v-3m-3-4h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M11 7h2A2 2 0 0015 5v0a2 2 0 00-2-2h-2a2 2 0 00-2 2v0a2 2 0 002 2zM5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>Manage Metal Rates</span>
+                </div>
+                <div class="admin-side-menu-item" data-tab="orders" onclick="navigateAdminTab('orders')">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 00-2 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    <span>Incoming Orders</span>
+                </div>
+                <div class="admin-side-menu-item" data-tab="inventory" onclick="navigateAdminTab('inventory')">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <span>Product Catalog</span>
+                </div>
+                <div class="admin-side-menu-item" data-tab="add" onclick="navigateAdminTab('add')">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Upload Product</span>
+                </div>
+                <div class="admin-side-menu-item" data-tab="coupons" onclick="navigateAdminTab('coupons')">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 7h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2zM10 9l4 6"/></svg>
+                    <span>Coupon Manager</span>
+                </div>
+                <div class="admin-side-menu-item" data-tab="gst" onclick="navigateAdminTab('gst')">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm6 5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/></svg>
+                    <span>GST Calculator</span>
+                </div>
+                <div class="admin-side-menu-item" data-tab="settings" onclick="navigateAdminTab('settings')">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span>Settings</span>
+                </div>
+            </aside>
+            
+            <!-- Main Content tabs area -->
+            <main class="admin-content">
+                <!-- 1. Dashboard -->
+                <div class="admin-tab-view active-tab" id="admin-tab-dashboard">
+                    <h3 class="admin-tab-title">Sales Analytics Overview</h3>
+                    <div class="admin-stats-grid">
+                        <div class="admin-stat-card">
+                            <span class="admin-stat-label">Total Revenue</span>
+                            <span class="admin-stat-val" id="admin-stat-sales">₹1,169</span>
+                        </div>
+                        <div class="admin-stat-card">
+                            <span class="admin-stat-label">Total Orders</span>
+                            <span class="admin-stat-val" id="admin-stat-orders">1</span>
+                        </div>
+                        <div class="admin-stat-card">
+                            <span class="admin-stat-label">Active Catalog Items</span>
+                            <span class="admin-stat-val" id="admin-stat-catalog">11</span>
+                        </div>
+                    </div>
+                    <div style="background-color: var(--color-silver-light); padding:20px; border-radius:var(--border-radius-md); border:1px solid var(--color-silver-mid);">
+                        <h4 style="margin-bottom:8px; font-weight:600;">System Integrity Verification Logs:</h4>
+                        <p style="font-size:0.82rem; color:var(--color-silver-dark); line-height:1.5;">This administrative interface is completely connected to client state via standard localStorage mechanisms. Any updates made here reflect instantly across customer-facing views in real time.</p>
+                    </div>
+                </div>
+                
+                <!-- 2. Manage Rates -->
+                <div class="admin-tab-view" id="admin-tab-rates">
+                    <h3 class="admin-tab-title">Adjust Live Metal Rates</h3>
+                    <div class="admin-form-grid" style="margin-bottom: 24px;">
+                        <div class="custom-form-group">
+                            <label class="custom-form-label">925 Sterling Silver Rate (per Gram)</label>
+                            <input type="number" id="admin-rate-sterling" class="custom-input" step="0.01">
+                        </div>
+                        <div class="custom-form-group">
+                            <label class="custom-form-label">625 Silver Rate (per Gram)</label>
+                            <input type="number" id="admin-rate-fine" class="custom-input" step="0.01">
+                        </div>
+                    </div>
+                    <button class="admin-btn-submit" onclick="updateAdminRates()">Update scrolling Ticker Rates</button>
+                </div>
+                
+                <!-- 3. Incoming Orders -->
+                <div class="admin-tab-view" id="admin-tab-orders">
+                    <h3 class="admin-tab-title">Order Ledger Book</h3>
+                    <div class="admin-table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Date</th>
+                                    <th>Customer info</th>
+                                    <th>Purchased Items</th>
+                                    <th>Total bill</th>
+                                    <th>Tracking Status</th>
+                                    <th>Invoice Copy</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-orders-tbody">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 4. Product Catalog List -->
+                <div class="admin-tab-view" id="admin-tab-inventory">
+                    <h3 class="admin-tab-title">Active Store Inventory</h3>
+                    <div class="admin-table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Base Price</th>
+                                    <th>Stock State</th>
+                                    <th>Fulfillment Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-inventory-tbody">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 5. Add Product -->
+                <div class="admin-tab-view" id="admin-tab-add">
+                    <h3 class="admin-tab-title" id="admin-add-tab-title">Upload New Silver Jewel</h3>
+                    <div class="admin-form-grid">
+                        <div class="custom-form-group">
+                            <label class="custom-form-label">Product Name / Title</label>
+                            <input type="text" id="new-prod-title" class="custom-input" placeholder="e.g. Vintage Silver Ear Studs">
+                        </div>
+                        <div class="custom-form-group">
+                            <label class="custom-form-label">Category</label>
+                            <select id="new-prod-cat" class="custom-input" onchange="autoCalculateJewelRate()">
+                                <option value="rings">Rings</option>
+                                <option value="earrings">Earrings</option>
+                                <option value="pendants">Pendants</option>
+                                <option value="anklets">Anklets & Toe Rings</option>
+                                <option value="chains">Chains</option>
+                                <option value="coins">Silver Coins</option>
+                                <option value="gold">Gold</option>
+                                <option value="kids">Kids</option>
+                                <option value="customised">Customised</option>
+                            </select>
+                        </div>
+                        <input type="hidden" id="new-prod-finish" value="silver">
+                        <div class="custom-form-group">
+                            <label class="custom-form-label">Market Rate Purity Base</label>
+                            <select id="new-prod-market-base" class="custom-input" onchange="autoCalculateJewelRate()">
+                                <option value="sterling">925 Sterling Silver Purity</option>
+                                <option value="fine">625 Silver Purity</option>
+                            </select>
+                        </div>
+                        <div class="custom-form-group">
+                            <label class="custom-form-label">Size Option / Dimensions</label>
+                            <input type="text" id="new-prod-width" class="custom-input" placeholder="e.g. Adjustable, Size 12, 18 inches">
+                        </div>
+                        
+                        <!-- Upload Photo from Device -->
+                        <div class="custom-form-group">
+                            <label class="custom-form-label">Upload Photo from Device</label>
+                            <input type="file" id="new-prod-img-file" class="custom-input" accept="image/*" onchange="previewUploadedImage(this)">
+                            <input type="hidden" id="new-prod-img-base64">
+                            <div id="new-prod-img-preview-wrap" style="display: none; margin-top: 10px;">
+                                <img id="new-prod-img-preview" src="" style="width: 80px; height: 80px; object-fit: cover; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid);" alt="Preview">
+                            </div>
+                        </div>
+
+                        <!-- Auto-calculation Input Fields -->
+                        <div class="custom-form-group" style="grid-column: 1/-1; background-color: var(--color-silver-light); padding: 20px; border-radius: var(--border-radius-md); display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 0;">
+                            <div class="custom-form-group" style="margin-bottom:0;">
+                                <label class="custom-form-label" style="color:var(--color-primary);">Calculation: Weight (Grams)</label>
+                                <input type="number" id="new-prod-calc-weight" class="custom-input" placeholder="e.g. 5.2" step="0.01" oninput="autoCalculateJewelRate()">
+                            </div>
+                            <div class="custom-form-group" style="margin-bottom:0; display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px;">
+                                <div>
+                                    <label class="custom-form-label" style="color:var(--color-primary);">Making Charge</label>
+                                    <input type="number" id="new-prod-calc-making" class="custom-input" placeholder="e.g. 10 or 35" step="0.1" oninput="autoCalculateJewelRate()">
+                                </div>
+                                <div>
+                                    <label class="custom-form-label" style="color:var(--color-primary);">Type</label>
+                                    <select id="new-prod-calc-making-type" class="custom-input" onchange="autoCalculateJewelRate()">
+                                        <option value="per-gram">₹ / Gram</option>
+                                        <option value="percentage">% of Metal</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="custom-form-group" style="margin-bottom:0;">
+                                <label class="custom-form-label" style="color:var(--color-primary);">Calculation: GST (%)</label>
+                                <input type="number" id="new-prod-calc-gst" class="custom-input" value="3" step="0.1" oninput="autoCalculateJewelRate()">
+                            </div>
+                        </div>
+
+                        <!-- Real-time calculation summary breakdown box -->
+                        <div id="rate-calculation-breakdown" style="grid-column: 1/-1; display: none; font-size: 0.85rem; color: #1e293b; background-color: #f1f5f9; border-left: 4px solid var(--color-accent-pink); padding: 15px; border-radius: var(--border-radius-sm); line-height: 1.6;">
+                        </div>
+
+                        <!-- Hidden auto-populated Net weight spec field -->
+                        <input type="hidden" id="new-prod-weight">
+
+                        <div class="custom-form-group">
+                            <label class="custom-form-label">Auto-Calculated Price (₹ INR)</label>
+                            <input type="number" id="new-prod-price" class="custom-input" placeholder="Calculated price">
+                        </div>
+                        <div class="custom-form-group">
+                            <label class="custom-form-label">Original Price (for Crossed Sale tag)</label>
+                            <input type="number" id="new-prod-orig" class="custom-input" placeholder="Calculated original price">
+                        </div>
+                        <div class="custom-form-group">
+                            <label class="custom-form-label">Stock Status</label>
+                            <select id="new-prod-stock" class="custom-input">
+                                <option value="true">In Stock</option>
+                                <option value="false">Out of Stock</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="custom-form-group" style="margin-top:20px;">
+                        <label class="custom-form-label">Description specs detail</label>
+                        <textarea id="new-prod-desc" class="custom-input" rows="3" placeholder="Enter high-quality product storytelling..."></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; margin-top: 20px;" id="admin-add-actions">
+                        <button id="admin-add-btn" class="admin-btn-submit" onclick="addNewProduct()" style="margin-top: 0; flex: 1;">Save Jewel to active Catalog</button>
+                    </div>
+                </div>
+                
+                <!-- 6. Coupon Manager -->
+                <div class="admin-tab-view" id="admin-tab-coupons">
+                    <h3 class="admin-tab-title">Generate Discount Promo Codes</h3>
+                    <div class="admin-form-grid" style="margin-bottom: 24px;">
+                        <div class="custom-form-group">
+                            <label class="custom-form-label">Coupon Code (e.g. MRTFESTIVE)</label>
+                            <input type="text" id="admin-coupon-code" class="custom-input" style="text-transform:uppercase;">
+                        </div>
+                        <div class="custom-form-group">
+                            <label class="custom-form-label">Discount Value Percentage (1-100%)</label>
+                            <input type="number" id="admin-coupon-value" class="custom-input" min="1" max="100" placeholder="e.g. 20">
+                        </div>
+                    </div>
+                    <button class="admin-btn-submit" onclick="createAdminCoupon()">Publish Discount Code</button>
+                </div>
+                
+                <!-- 7. Settings -->
+                <div class="admin-tab-view" id="admin-tab-settings">
+                    <h3 class="admin-tab-title">Admin settings</h3>
+                    <div class="admin-form-grid" style="margin-bottom: 24px; max-width: 500px; grid-template-columns: 1fr;">
+                        <div class="custom-form-group">
+                            <label class="custom-form-label">Current Admin Password</label>
+                            <input type="password" id="admin-current-password" class="custom-input" placeholder="Enter current password">
+                        </div>
+                        <div class="custom-form-group">
+                            <label class="custom-form-label">New Admin Password</label>
+                            <input type="password" id="admin-new-password" class="custom-input" placeholder="Enter new password">
+                        </div>
+                    </div>
+                    <button class="admin-btn-submit" onclick="changeAdminPassword()">Update Password</button>
+                </div>
+
+                <!-- 8. GST Calculator Portal -->
+                <div class="admin-tab-view" id="admin-tab-gst">
+                    <h3 class="admin-tab-title">GST Tax Ledger & Calculator Portal</h3>
+                    
+                    <!-- Filters & Download Section -->
+                    <div style="background-color: var(--color-silver-light); border-radius: var(--border-radius-md); padding: 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <label class="custom-form-label" style="margin-bottom: 0; font-weight: 600;">Select Month:</label>
+                            <select id="gst-month-select" onchange="renderAdminGstPortal()" style="padding: 8px 12px; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); font-size: 0.9rem; font-family: var(--font-body); background-color: #FFFFFF; color: var(--color-primary); cursor: pointer;">
+                                <option value="all">All Months (Show All)</option>
+                            </select>
+                        </div>
+                        
+                        <button class="custom-btn" onclick="downloadGstReportCsv()" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; font-size: 0.88rem; font-weight: 600;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16.5; height: 16.5; margin-right: 4px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                            Download Monthly GST Report (CSV)
+                        </button>
+                    </div>
+                    
+                    <!-- Analytics Summary Cards -->
+                    <div class="admin-stats-grid" style="margin-bottom: 24px;">
+                        <div class="admin-stat-card" style="border-left: 4px solid var(--color-accent-pink);">
+                            <span class="admin-stat-label">Gross Sales (Taxable Value)</span>
+                            <span class="admin-stat-val" id="gst-stat-gross">₹0</span>
+                        </div>
+                        <div class="admin-stat-card" style="border-left: 4px solid #3B82F6;">
+                            <span class="admin-stat-label">Total GST Received (3%)</span>
+                            <span class="admin-stat-val" id="gst-stat-tax">₹0</span>
+                        </div>
+                        <div class="admin-stat-card" style="border-left: 4px solid #10B981;">
+                            <span class="admin-stat-label">Total Orders Count</span>
+                            <span class="admin-stat-val" id="gst-stat-count">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Table wrapper -->
+                    <div class="admin-table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Gross Total</th>
+                                    <th>GST (3%)</th>
+                                    <th>Payment Method</th>
+                                    <th>Invoice Copy</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-gst-tbody">
+                                <!-- Dynamic entries -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+    <!-- ============================================== -->
+    <!-- 4. FLOATING DRAWERS PANELS                     -->
+    <!-- ============================================== -->
+    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer('cart'); closeDrawer('wishlist');"></div>
+
+    <!-- A. Shopping Cart Drawer -->
+    <div class="drawer" id="cart-drawer">
+        <div class="drawer-header">
+            <h3 class="drawer-title">Shopping Bag</h3>
+            <button class="drawer-close" onclick="closeDrawer('cart')" aria-label="Close Shopping Bag">✕</button>
+        </div>
+        
+        <!-- Cart Items dynamic container -->
+        <div class="drawer-content" id="cart-drawer-items">
+            <!-- Loaded dynamically via app.js -->
+        </div>
+        
+        <div class="drawer-footer">
+            <div class="drawer-summary-row">
+                <span>Subtotal:</span>
+                <span id="cart-subtotal">₹0</span>
+            </div>
+            <div class="drawer-summary-row" id="cart-discount-row" style="display:none; color: #10B981;">
+                <span>Discount applied:</span>
+                <span id="cart-discount">-₹0</span>
+            </div>
+            <div class="drawer-summary-row drawer-summary-total">
+                <span>Total bill Amount:</span>
+                <span id="cart-total">₹0</span>
+            </div>
+            
+            <div class="coupon-section">
+                <input type="text" id="cart-coupon-input" class="coupon-input" placeholder="Enter coupon code...">
+                <button class="btn-coupon" onclick="applyCouponCode()">Apply</button>
+            </div>
+            
+            <button class="btn-checkout" onclick="checkoutCart()">Secure Checkout & Ship</button>
+        </div>
+    </div>
+
+    <!-- B. Wishlist Drawer -->
+    <div class="drawer" id="wishlist-drawer">
+        <div class="drawer-header">
+            <h3 class="drawer-title">Saved Wishlist</h3>
+            <button class="drawer-close" onclick="closeDrawer('wishlist')" aria-label="Close Wishlist">✕</button>
+        </div>
+        
+        <!-- Wishlist Items dynamic container -->
+        <div class="drawer-content" id="wishlist-drawer-items">
+            <!-- Loaded dynamically via app.js -->
+        </div>
+    </div>
+
+
+    <!-- ============================================== -->
+    <!-- 5. PREMIUM FOOTER SECTION                      -->
+    <!-- ============================================== -->
+    <footer>
+        <!-- Top Gold Accent Bar -->
+        <div class="footer-accent-bar">
+            <div class="container footer-accent-inner">
+                <span class="footer-accent-badge">✦ BIS Hallmarked 925 Silver</span>
+                <span class="footer-accent-divider"></span>
+                <span class="footer-accent-badge">✦ 625 Silver Available</span>
+                <span class="footer-accent-divider"></span>
+                <span class="footer-accent-badge">✦ Gold Jewellery</span>
+                <span class="footer-accent-divider"></span>
+                <span class="footer-accent-badge">✦ Free UPI Payments</span>
+                <span class="footer-accent-divider"></span>
+                <span class="footer-accent-badge">✦ WhatsApp Orders</span>
+            </div>
+        </div>
+
+        <div class="container footer-grid">
+            <!-- Brand Column -->
+            <div class="footer-brand-col">
+                <div class="footer-logo">
+                    <span class="footer-logo-main">MRT Silver</span>
+                    <span class="footer-logo-tagline">Palace of Purity</span>
+                </div>
+                <p class="footer-about-text">Premium BIS-Certified 925 Sterling Silver &amp; 625 Silver jewellery, handcrafted by master artisans. Gold &amp; Kids collections available.</p>
+                <div class="footer-socials">
+                    <a class="footer-social-icon" href="https://instagram.com" target="_blank" aria-label="Instagram">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                    </a>
+                    <a class="footer-social-icon" href="https://facebook.com" target="_blank" aria-label="Facebook">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+                    </a>
+                    <a class="footer-social-icon" href="https://wa.me/916289974877" target="_blank" aria-label="WhatsApp">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.333 4.993L2 22l5.13-1.347a9.923 9.923 0 004.88 1.282h.005c5.505 0 9.989-4.478 9.99-9.984a9.968 9.968 0 00-2.92-7.065A9.932 9.932 0 0012.012 2zm5.72 13.918c-.292.822-1.442 1.503-2.28 1.626-.575.084-1.328.163-3.83-.873-3.197-1.326-5.234-4.577-5.393-4.792-.16-.215-1.28-1.706-1.28-3.256 0-1.55.808-2.31 1.096-2.61.29-.297.632-.373.842-.373h.605c.19.008.447-.074.7.534.264.632.9 1.95 1.095 2.093.076.155.127.336.026.54-.101.205-.152.336-.304.512-.152.176-.32.392-.456.526-.152.148-.31.312-.134.615.176.302.784 1.295 1.678 2.09 1.155.8 2.052 1.347 2.378 1.485.327.137.518.114.712-.107.195-.22.842-.98 1.066-1.32.224-.34.448-.284.748-.17.3.113 1.906.9 2.232 1.063.327.163.544.244.624.38.08.135.08.78-.212 1.602z"/></svg>
+                    </a>
+                    <a class="footer-social-icon" href="https://youtube.com" target="_blank" aria-label="YouTube">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 00-1.95 1.96A29 29 0 001 12a29 29 0 00.46 5.58A2.78 2.78 0 003.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 001.95-1.95A29 29 0 0023 12a29 29 0 00-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#121214"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Collections Column -->
+            <div>
+                <h4 class="footer-col-title">Collections</h4>
+                <ul class="footer-links-list">
+                    <li><a href="#" onclick="navigateTo('shop','rings')">Rings</a></li>
+                    <li><a href="#" onclick="navigateTo('shop','earrings')">Earrings</a></li>
+                    <li><a href="#" onclick="navigateTo('shop','pendants')">Pendants</a></li>
+                    <li><a href="#" onclick="navigateTo('shop','chains')">Chains</a></li>
+                    <li><a href="#" onclick="navigateTo('shop','anklets')">Anklets</a></li>
+                    <li><a href="#" onclick="navigateTo('shop','kids')"><span class="footer-link-badge">New</span> Kids</a></li>
+                    <li><a href="#" onclick="navigateTo('shop','gold')"><span class="footer-link-badge footer-link-badge--gold">Gold</span> Gold</a></li>
+                    <li><a href="#" onclick="navigateTo('customisation')">Customised</a></li>
+                </ul>
+            </div>
+
+            <!-- Quick Links Column -->
+            <div>
+                <h4 class="footer-col-title">Quick Links</h4>
+                <ul class="footer-links-list">
+                    <li><a href="#" onclick="navigateTo('home')">Home</a></li>
+                    <li><a href="#" onclick="navigateTo('shop')">All Collections</a></li>
+                    <li><a href="#" onclick="navigateTo('track')">Track Shipments</a></li>
+                    <li><a href="#" onclick="navigateTo('hallmarking')">BIS Hallmarking</a></li>
+                    <li><a href="#" onclick="navigateTo('hypoallergenic')">Hypoallergenic</a></li>
+                    <li><a href="#" onclick="navigateTo('shipping')">Shipping Details</a></li>
+                </ul>
+            </div>
+
+            <!-- Contact Column -->
+            <div>
+                <h4 class="footer-col-title">Contact Us</h4>
+                <div class="footer-contact-items">
+                    <div class="footer-contact-row">
+                        <span class="footer-contact-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                        </span>
+                        <div>
+                            <div class="footer-contact-label">Phone / WhatsApp</div>
+                            <a href="https://wa.me/916289974877" class="footer-contact-value">+91 62899 74877</a>
+                            <div class="footer-contact-sub">10 AM – 7 PM IST</div>
+                        </div>
+                    </div>
+                    <div class="footer-contact-row">
+                        <span class="footer-contact-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        </span>
+                        <div>
+                            <div class="footer-contact-label">Store Location</div>
+                            <div class="footer-contact-value">MRT Thanga Maaligai</div>
+                            <div class="footer-contact-sub">Tamil Nadu, India</div>
+                        </div>
+                    </div>
+                    <div class="footer-contact-row">
+                        <span class="footer-contact-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </span>
+                        <div>
+                            <div class="footer-contact-label">Business Hours</div>
+                            <div class="footer-contact-value">Mon – Sat</div>
+                            <div class="footer-contact-sub">10:00 AM – 7:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Newsletter Column -->
+            <div>
+                <h4 class="footer-col-title">Newsletter</h4>
+                <p class="footer-about-text">Subscribe for flash sale alerts, new arrivals &amp; silver rate updates.</p>
+                <div class="footer-subscribe-form">
+                    <input type="email" class="footer-subscribe-input" placeholder="Your email address...">
+                    <button class="btn-subscribe" onclick="alert('Thank you for subscribing to MRT Silver news alerts!')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                </div>
+                <div class="footer-trust-badges">
+                    <div class="footer-trust-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        BIS Certified 925 Silver
+                    </div>
+                    <div class="footer-trust-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                        256-bit SSL Secured
+                    </div>
+                    <div class="footer-trust-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.333 4.993L2 22l5.13-1.347a9.923 9.923 0 004.88 1.282h.005c5.505 0 9.989-4.478 9.99-9.984 0-2.67-1.04-5.178-2.92-7.065A9.932 9.932 0 0012.012 2z"/></svg>
+                        WhatsApp Orders
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="container footer-bottom">
+            <span>© 2026 MRT Thanga Maaligai · Silver Palace · All Rights Reserved.</span>
+            <div class="footer-bottom-right">
+                <span class="footer-payment-label">Payments:</span>
+                <span class="footer-pay-badge">UPI</span>
+                <span class="footer-pay-badge">QR Code</span>
+                <span class="footer-pay-badge">WhatsApp</span>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- Admin Password Modal -->
+    <div class="drawer-overlay" id="admin-auth-overlay" onclick="closeAdminAuthModal()" style="z-index: 190;"></div>
+    <div class="custom-form-panel" id="admin-auth-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 200; width: 90%; max-width: 400px; box-shadow: var(--shadow-lux); border-radius: var(--border-radius-md); padding: 30px; background-color: #FFFFFF;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-silver-light); padding-bottom: 12px;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.1rem; letter-spacing: 1px; text-transform: uppercase; color: var(--color-primary);">Admin Authentication</h3>
+            <button onclick="closeAdminAuthModal()" style="font-size: 1.1rem; color: var(--color-silver-dark); cursor: pointer; background: none; border: none;">✕</button>
+        </div>
+        <div class="custom-form-group" style="margin-bottom: 20px;">
+            <label class="custom-form-label" for="admin-auth-input" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block;">Enter Admin Password</label>
+            <input type="password" id="admin-auth-input" class="custom-input" placeholder="••••••••" style="width: 100%; padding: 12px 16px; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid); outline: none;" onkeyup="if(event.key === 'Enter') submitAdminAuth()">
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button class="btn-add-cart" style="flex: 1; padding: 12px 0; font-size: 0.8rem; text-transform: uppercase; font-weight: 600; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm);" onclick="closeAdminAuthModal()">Cancel</button>
+            <button class="btn-checkout" style="flex: 1; padding: 12px 0; font-size: 0.8rem; text-transform: uppercase; font-weight: 600; border-radius: var(--border-radius-sm);" onclick="submitAdminAuth()">Verify</button>
+        </div>
+    </div>
+
+    <!-- AI Virtual Try-On Modal -->
+    <div class="drawer-overlay" id="tryon-modal-overlay" onclick="closeTryOnModal()" style="z-index: 190; display: none;"></div>
+    <div class="custom-form-panel" id="tryon-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 200; width: 95%; max-width: 600px; box-shadow: var(--shadow-lux); border-radius: var(--border-radius-md); padding: 25px; background-color: #FFFFFF; max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-silver-light); padding-bottom: 12px;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.2rem; letter-spacing: 1px; text-transform: uppercase; color: var(--color-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <span>✨ AI Virtual Try-On</span>
+            </h3>
+            <button onclick="closeTryOnModal()" style="font-size: 1.3rem; color: var(--color-silver-dark); cursor: pointer; background: none; border: none; font-weight: 600; line-height: 1;">&times;</button>
+        </div>
+        
+        <div class="tryon-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <!-- Left Side: Upload & Info -->
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--color-silver-light); border-radius: var(--border-radius-sm); background-color: var(--color-silver-light);">
+                    <img id="tryon-jewel-img" src="" style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px;" alt="">
+                    <div style="display: flex; flex-direction: column;">
+                        <span id="tryon-jewel-title" style="font-size: 0.85rem; font-weight: 600; color: var(--color-primary);">Adira Ring</span>
+                        <span id="tryon-jewel-cat" style="font-size: 0.72rem; color: var(--color-silver-dark); text-transform: uppercase;">Rings</span>
+                    </div>
+                </div>
+                
+                <div class="custom-form-group" style="margin-bottom: 0;">
+                    <label class="custom-form-label">Upload Your Photo</label>
+                    <div id="tryon-upload-zone" style="border: 2px dashed var(--color-silver-mid); border-radius: var(--border-radius-sm); padding: 20px 15px; text-align: center; cursor: pointer; position: relative; background-color: var(--color-bg-main); transition: border-color var(--transition-fast) ease;">
+                        <input type="file" id="tryon-file-input" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="handleTryOnUpload(this)">
+                        <div id="tryon-upload-prompt">
+                            <span style="font-size: 1.8rem; display: block; margin-bottom: 8px;">📷</span>
+                            <span style="font-size: 0.8rem; font-weight: 600; color: var(--color-accent-pink); display: block;">Upload Face / Hand / Neck Photo</span>
+                            <span style="font-size: 0.68rem; color: var(--color-silver-dark); display: block; margin-top: 4px;">PNG, JPG up to 5MB</span>
+                        </div>
+                        <div id="tryon-upload-preview-wrap" style="display: none; position: relative; width: 100%; max-height: 150px; overflow: hidden; border-radius: 4px;">
+                            <img id="tryon-upload-preview" src="" style="width: 100%; height: auto; object-fit: contain; max-height: 150px;" alt="">
+                            <button onclick="clearTryOnUpload(event)" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.6); color: #FFF; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold;">&times;</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- API Key Configuration Settings (AI Mode) -->
+                <div id="tryon-api-key-group" style="display: none; border-top: 1px solid var(--color-silver-light); padding-top: 12px; margin-top: 5px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <label class="custom-form-label" style="margin-bottom: 0;">Gemini API Key (Optional)</label>
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" style="font-size: 0.65rem; color: var(--color-accent-pink); font-weight: 600; text-decoration: underline;">Get Free Key</a>
+                    </div>
+                    <input type="password" id="tryon-api-key" class="custom-input" style="padding: 8px 10px; font-size: 0.78rem;" placeholder="Paste Gemini API Key (saves locally)" onchange="saveTryOnApiKey(this)">
+                    <span style="font-size: 0.62rem; color: var(--color-silver-dark); line-height: 1.3; display: block; margin-top: 4px;">*If left empty, a premium high-quality simulated model representation is generated.</span>
+                </div>
+            </div>
+            
+            <!-- Right Side: AI Output Render Frame -->
+            <div style="display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; border: 1px solid var(--color-silver-light); border-radius: var(--border-radius-sm); background-color: var(--color-bg-main); padding: 15px; position: relative; min-height: 320px;">
+                <!-- Loading overlay -->
+                <div id="tryon-loading-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255,255,255,0.95); z-index: 10; border-radius: var(--border-radius-sm); flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center;">
+                    <div class="tryon-spinner" style="width: 44px; height: 44px; border: 4px solid var(--color-silver-mid); border-top: 4px solid var(--color-accent-pink); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px;"></div>
+                    <h4 id="tryon-loading-status" style="font-size: 0.88rem; font-weight: 700; color: var(--color-primary); margin-bottom: 6px;">Gemini is analyzing...</h4>
+                    <p id="tryon-loading-desc" style="font-size: 0.72rem; color: var(--color-silver-dark); line-height: 1.4;">Extracting skin tone and pose structure for perfect jewelry fit.</p>
+                </div>
+                
+                <!-- Display Frame -->
+                <div id="tryon-display-frame" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px;">
+                    <div id="tryon-placeholder-content" style="padding: 20px;">
+                        <span style="font-size: 3rem; display: block; margin-bottom: 10px; opacity: 0.3;">💎</span>
+                        <span style="font-size: 0.82rem; font-weight: 600; color: var(--color-secondary); display: block;">Your AI Try-On Image will appear here.</span>
+                        <span style="font-size: 0.7rem; color: var(--color-silver-dark); display: block; margin-top: 4px; max-width: 200px; margin-left: auto; margin-right: auto;">Upload your photo to generate an AI virtual try-on.</span>
+                    </div>
+
+                    <!-- AI generated result container -->
+                    <div id="tryon-result-wrap" style="display: none; width: 100%; flex-direction: column; align-items: center;">
+                        <div style="border: 4px solid #FFFFFF; box-shadow: var(--shadow-medium); border-radius: 8px; overflow: hidden; width: 100%; max-height: 250px; background-color: #FFFFFF;">
+                            <img id="tryon-result-img" src="" style="width: 100%; height: auto; object-fit: contain; max-height: 250px;" alt="Try-On Result">
+                        </div>
+                        <div style="display: flex; gap: 10px; width: 100%; margin-top: 15px;">
+                            <button onclick="downloadTryOnResult()" class="btn-add-cart" style="flex: 1; padding: 10px 0; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 4px; border: 1px solid var(--color-silver-mid);">
+                                📥 Download
+                            </button>
+                            <button onclick="shareTryOnWhatsapp()" class="btn-checkout" style="flex: 1.2; padding: 10px 0; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 0; background: #25D366; border-color: #25D366;">
+                                💬 WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--color-silver-light); padding-top: 15px; margin-top: 20px; flex-wrap: wrap;">
+            <button class="btn-add-cart" style="padding: 10px 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); margin-top: 0;" onclick="closeTryOnModal()">Cancel</button>
+            <button id="tryon-submit-btn" class="btn-checkout" style="padding: 10px 25px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; border-radius: var(--border-radius-sm); margin-top: 0; background-color: var(--color-primary); display: none;" onclick="generateAiTryOn()">Generate AI Try-On</button>
+        </div>
+    </div>
+
+    <!-- Ring Size Guide Modal -->
+    <div class="drawer-overlay" id="size-guide-overlay" onclick="closeSizeGuideModal()" style="z-index: 190; display: none;"></div>
+    <div class="custom-form-panel" id="size-guide-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 200; width: 90%; max-width: 480px; box-shadow: var(--shadow-lux); border-radius: var(--border-radius-md); padding: 25px; background-color: #FFFFFF; max-height: 85vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-silver-light); padding-bottom: 12px;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.1rem; letter-spacing: 1px; text-transform: uppercase; color: var(--color-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <span>📏 Ring Size Helper</span>
+            </h3>
+            <button onclick="closeSizeGuideModal()" style="font-size: 1.3rem; color: var(--color-silver-dark); cursor: pointer; background: none; border: none; font-weight: 600; line-height: 1;">&times;</button>
+        </div>
+        
+        <!-- Tabs for Size Guide -->
+        <div style="display: flex; border-bottom: 1px solid var(--color-silver-light); margin-bottom: 15px; gap: 15px;">
+            <div id="size-tab-calc" onclick="toggleSizeGuideTab('calc')" style="padding-bottom: 8px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; cursor: pointer; color: var(--color-accent-pink); border-bottom: 2px solid var(--color-accent-pink);">Calculator</div>
+            <div id="size-tab-chart" onclick="toggleSizeGuideTab('chart')" style="padding-bottom: 8px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; cursor: pointer; color: var(--color-silver-dark); border-bottom: 2px solid transparent;">Size Chart</div>
+        </div>
+        
+        <!-- Tab Content 1: Calculator -->
+        <div id="size-content-calc" style="display: block;">
+            <p style="font-size: 0.78rem; color: var(--color-secondary); line-height: 1.4; margin-bottom: 15px;">
+                Measure your finger easily: Wrap a thin strip of paper or string around the base of your finger. Mark where the paper overlaps, and measure the marked length in millimeters (mm).
+            </p>
+            <div class="custom-form-group">
+                <label class="custom-form-label" for="ring-circum-input">Enter Measured Length (Circumference in mm)</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="number" id="ring-circum-input" class="custom-input" placeholder="e.g. 57" style="flex: 1; padding: 10px; margin-bottom:0;" oninput="calculateRingSizeFromInput()">
+                    <button class="btn-checkout" onclick="calculateRingSizeFromInput()" style="margin-top: 0; padding: 0 15px; font-size: 0.8rem; text-transform: uppercase; font-weight: 600; border-radius: var(--border-radius-sm);">Check</button>
+                </div>
+            </div>
+            
+            <div id="size-calc-result-box" style="display: none; background-color: var(--color-silver-light); border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); padding: 15px; text-align: center; margin-top: 15px;">
+                <div style="font-size: 0.75rem; color: var(--color-silver-dark); text-transform: uppercase; font-weight: 600;">Calculated Indian Size</div>
+                <div id="calculated-size-val" style="font-size: 2.2rem; font-weight: 800; color: var(--color-accent-pink); margin: 5px 0;">15</div>
+                <div id="calculated-size-desc" style="font-size: 0.7rem; color: var(--color-secondary); margin-bottom: 12px;">Fits ~55.0 mm finger circumference</div>
+                <button class="btn-checkout" onclick="applyCalculatedRingSize()" style="margin-top: 0; width: 100%; padding: 8px 0; font-size: 0.78rem; text-transform: uppercase; font-weight: 600; border-radius: var(--border-radius-sm);">Apply size to product</button>
+            </div>
+        </div>
+        
+        <!-- Tab Content 2: Size Chart -->
+        <div id="size-content-chart" style="display: none;">
+            <div class="admin-table-wrap" style="max-height: 250px; overflow-y: auto;">
+                <table class="admin-table" style="font-size: 0.75rem;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 6px;">Indian Size</th>
+                            <th style="padding: 6px;">Circumference (mm)</th>
+                            <th style="padding: 6px;">Inner Diameter (mm)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="size-guide-chart-tbody">
+                        <!-- Populated dynamically by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Details Modal -->
+    <div class="drawer-overlay" id="checkout-modal-overlay" onclick="closeCheckoutModal()" style="z-index: 190; display: none;"></div>
+    <div class="custom-form-panel" id="checkout-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 200; width: 95%; max-width: 850px; box-shadow: var(--shadow-lux); border-radius: var(--border-radius-md); padding: 30px; background-color: #FFFFFF; max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-silver-light); padding-bottom: 12px;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-primary); margin: 0;">Secure Checkout</h3>
+            <button onclick="closeCheckoutModal()" style="font-size: 1.1rem; color: var(--color-silver-dark); cursor: pointer; background: none; border: none;">✕</button>
+        </div>
+        
+        <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+            <!-- Left: Shipping & Payment -->
+            <div style="flex: 1.2; min-width: 280px; display: flex; flex-direction: column; gap: 16px;">
+                <h4 style="font-family: var(--font-heading); font-size: 0.95rem; text-transform: uppercase; color: var(--color-primary); margin: 0; letter-spacing: 0.5px; border-left: 3px solid var(--color-accent-pink); padding-left: 8px;">1. Shipping Information</h4>
+                
+                <div class="custom-form-group" style="margin-bottom: 0;">
+                    <label class="custom-form-label" for="checkout-name" style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: block;">Full Name *</label>
+                    <input type="text" id="checkout-name" class="custom-input" placeholder="Enter full name" style="width: 100%; padding: 10px 14px; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid); outline: none;">
+                </div>
+                
+                <div class="custom-form-group" style="margin-bottom: 0;">
+                    <label class="custom-form-label" for="checkout-phone" style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: block;">Phone Number *</label>
+                    <input type="text" id="checkout-phone" class="custom-input" placeholder="Enter phone number" style="width: 100%; padding: 10px 14px; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid); outline: none;">
+                </div>
+                
+                <!-- Professional Address Fields -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;">
+                    <div class="custom-form-group" style="margin-bottom: 0; grid-column: span 2;">
+                        <label class="custom-form-label" for="checkout-flat" style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block;">Flat, House No., Building *</label>
+                        <input type="text" id="checkout-flat" class="custom-input" placeholder="E.g. Flat 302, Block A" style="width: 100%; padding: 8px 12px; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid); outline: none; font-size: 0.85rem;">
+                    </div>
+                    
+                    <div class="custom-form-group" style="margin-bottom: 0; grid-column: span 2;">
+                        <label class="custom-form-label" for="checkout-street" style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block;">Road, Street, Area *</label>
+                        <input type="text" id="checkout-street" class="custom-input" placeholder="E.g. Park Avenue, T. Nagar" style="width: 100%; padding: 8px 12px; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid); outline: none; font-size: 0.85rem;">
+                    </div>
+                    
+                    <div class="custom-form-group" style="margin-bottom: 0; grid-column: span 2;">
+                        <label class="custom-form-label" for="checkout-landmark" style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block;">Landmark (Optional)</label>
+                        <input type="text" id="checkout-landmark" class="custom-input" placeholder="E.g. Near Apollo Hospital" style="width: 100%; padding: 8px 12px; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid); outline: none; font-size: 0.85rem;">
+                    </div>
+                    
+                    <div class="custom-form-group" style="margin-bottom: 0;">
+                        <label class="custom-form-label" for="checkout-city" style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block;">City *</label>
+                        <input type="text" id="checkout-city" class="custom-input" placeholder="E.g. Chennai" style="width: 100%; padding: 8px 12px; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid); outline: none; font-size: 0.85rem;">
+                    </div>
+                    
+                    <div class="custom-form-group" style="margin-bottom: 0;">
+                        <label class="custom-form-label" for="checkout-pincode" style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block;">Pincode *</label>
+                        <input type="text" id="checkout-pincode" class="custom-input" placeholder="6 Digits (600001)" style="width: 100%; padding: 8px 12px; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid); outline: none; font-size: 0.85rem;">
+                    </div>
+                    
+                    <div class="custom-form-group" style="margin-bottom: 0; grid-column: span 2;">
+                        <label class="custom-form-label" for="checkout-state" style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block;">State *</label>
+                        <select id="checkout-state" class="custom-input" style="width: 100%; padding: 8px 12px; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid); outline: none; background-color: #FFFFFF; font-family: var(--font-body); font-size: 0.85rem; cursor:pointer;">
+                            <option value="">Select State</option>
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                            <option value="Assam">Assam</option>
+                            <option value="Bihar">Bihar</option>
+                            <option value="Chhattisgarh">Chhattisgarh</option>
+                            <option value="Goa">Goa</option>
+                            <option value="Gujarat">Gujarat</option>
+                            <option value="Haryana">Haryana</option>
+                            <option value="Himachal Pradesh">Himachal Pradesh</option>
+                            <option value="Jharkhand">Jharkhand</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="Kerala">Kerala</option>
+                            <option value="Madhya Pradesh">Madhya Pradesh</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                            <option value="Manipur">Manipur</option>
+                            <option value="Meghalaya">Meghalaya</option>
+                            <option value="Mizoram">Mizoram</option>
+                            <option value="Nagaland">Nagaland</option>
+                            <option value="Odisha">Odisha</option>
+                            <option value="Punjab">Punjab</option>
+                            <option value="Rajasthan">Rajasthan</option>
+                            <option value="Sikkim">Sikkim</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                            <option value="Telangana">Telangana</option>
+                            <option value="Tripura">Tripura</option>
+                            <option value="Uttar Pradesh">Uttar Pradesh</option>
+                            <option value="Uttarakhand">Uttarakhand</option>
+                            <option value="West Bengal">West Bengal</option>
+                            <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+                            <option value="Chandigarh">Chandigarh</option>
+                            <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+                            <option value="Ladakh">Ladakh</option>
+                            <option value="Lakshadweep">Lakshadweep</option>
+                            <option value="Puducherry">Puducherry</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <h4 style="font-family: var(--font-heading); font-size: 0.95rem; text-transform: uppercase; color: var(--color-primary); margin: 10px 0 0 0; letter-spacing: 0.5px; border-left: 3px solid var(--color-accent-pink); padding-left: 8px;">2. Payment Method</h4>
+                
+                <div class="custom-form-group" style="margin-bottom: 0;">
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer; font-weight: 600; color: var(--color-primary);">
+                            <input type="radio" name="checkout-payment" value="UPI" checked onclick="togglePaymentFields('UPI')" style="accent-color: var(--color-accent-pink); cursor: pointer;">
+                            <span>📱 UPI / QR Code / NetBanking</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer; font-weight: 600; color: var(--color-primary);">
+                            <input type="radio" name="checkout-payment" value="WhatsApp" onclick="togglePaymentFields('WhatsApp')" style="accent-color: var(--color-accent-pink); cursor: pointer;">
+                            <span>💬 Order via WhatsApp (Send details)</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- UPI Sub-Fields (Toggleable) -->
+                <div id="checkout-upi-subfields" style="display: none; background-color: var(--color-silver-light); padding: 12px; border-radius: var(--border-radius-sm); border: 1px dashed var(--color-silver-mid);">
+                    <label class="custom-form-label" for="checkout-upi-id" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: block;">UPI ID *</label>
+                    <input type="text" id="checkout-upi-id" class="custom-input" placeholder="E.g. name@upi or cellnumber@paytm" style="width: 100%; padding: 8px 12px; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid); outline: none; background-color: #FFFFFF;">
+                    <div style="font-size: 0.75rem; color: var(--color-silver-dark); margin-top: 6px;">Secure instant validation via UPI Gateway.</div>
+                </div>
+            </div>
+            
+            <!-- Right: Order Summary -->
+            <div style="flex: 1; min-width: 280px; background-color: var(--color-silver-light); padding: 20px; border-radius: var(--border-radius-md); display: flex; flex-direction: column; gap: 16px; align-self: flex-start;">
+                <h4 style="font-family: var(--font-heading); font-size: 0.95rem; text-transform: uppercase; color: var(--color-primary); margin: 0; letter-spacing: 0.5px; border-bottom: 1px solid var(--color-silver-mid); padding-bottom: 8px;">Order Summary</h4>
+                
+                <!-- Summary Items (Dynamically loaded) -->
+                <div id="checkout-summary-items" style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;">
+                    <!-- Appended via JS -->
+                </div>
+                
+                <!-- Promo Code Panel -->
+                <div style="display: flex; gap: 8px; border-top: 1px solid var(--color-silver-mid); padding-top: 12px;">
+                    <input type="text" id="checkout-coupon-input" placeholder="Promo code..." style="flex: 1; padding: 6px 12px; font-size: 0.8rem; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid); outline: none; background-color:#FFFFFF;">
+                    <button class="btn-coupon" onclick="applyCheckoutCouponCode()" style="padding: 6px 12px; font-size: 0.75rem; text-transform: uppercase; border-radius: var(--border-radius-sm); cursor:pointer;">Apply</button>
+                </div>
+                
+                <!-- Pricing Breakdown -->
+                <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--color-silver-mid); padding-top: 12px; font-size: 0.88rem;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--color-silver-dark);">Subtotal:</span>
+                        <span id="checkout-summary-subtotal" style="font-weight: 600;">₹0</span>
+                    </div>
+                    <div id="checkout-summary-discount-row" style="display: none; justify-content: space-between; color: #10B981;">
+                        <span>Discount:</span>
+                        <span id="checkout-summary-discount">-₹0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--color-silver-dark);">GST (3% Included):</span>
+                        <span id="checkout-summary-gst" style="font-weight: 500;">₹0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--color-silver-dark);">Shipping:</span>
+                        <span style="font-weight: 500;">₹150</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 1.05rem; font-weight: 700; border-top: 1px dashed var(--color-silver-mid); padding-top: 10px; margin-top: 4px; color: var(--color-primary);">
+                        <span>Grand Total:</span>
+                        <span id="checkout-summary-total">₹0</span>
+                    </div>
+                </div>
+                
+                <div style="font-size: 0.72rem; color: var(--color-silver-dark); display: flex; align-items: center; gap: 6px; margin-top: 10px; justify-content: center; border-top: 1px solid var(--color-silver-mid); padding-top: 12px;">
+                    <span>🔒 256-Bit SSL Secured Checkout & Shipping</span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 12px; margin-top: 30px; border-top: 1px solid var(--color-silver-light); padding-top: 20px;">
+            <button class="btn-add-cart" style="flex: 1; padding: 12px 0; font-size: 0.85rem; text-transform: uppercase; font-weight: 600; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm);" onclick="closeCheckoutModal()">Cancel</button>
+            <button class="btn-checkout" style="flex: 1.2; padding: 12px 0; font-size: 0.85rem; text-transform: uppercase; font-weight: 600; border-radius: var(--border-radius-sm); margin-top: 0;" onclick="submitCheckoutOrder()">Confirm & Place Order</button>
+        </div>
+    </div>
+
+    <!-- Simulated UPI Payment Processing Modal -->
+    <div class="drawer-overlay" id="upi-processing-overlay" style="z-index: 210; display: none; background-color: rgba(18, 18, 20, 0.75);"></div>
+    <div class="custom-form-panel" id="upi-processing-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 220; width: 90%; max-width: 380px; box-shadow: var(--shadow-lux); border-radius: var(--border-radius-md); padding: 30px; background-color: #FFFFFF; text-align: center;">
+        <div id="upi-loading-spinner" style="margin: 20px auto; width: 50px; height: 50px; border: 4px solid var(--color-silver-mid); border-top: 4px solid var(--color-accent-pink); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <h3 id="upi-processing-title" style="font-family: var(--font-heading); font-size: 1.15rem; text-transform: uppercase; letter-spacing: 1px; color: var(--color-primary); margin-top: 16px;">Verifying Payment</h3>
+        <p id="upi-processing-text" style="font-size: 0.88rem; color: var(--color-silver-dark); margin-top: 8px; line-height: 1.5;">Awaiting secure confirmation from UPI network. Please do not close or reload the page.</p>
+    </div>
+
+    <!-- Beautiful E-Commerce Order Success Modal -->
+    <div class="drawer-overlay" id="order-success-overlay" style="z-index: 230; display: none; background-color: rgba(18, 18, 20, 0.75);"></div>
+    <div class="custom-form-panel" id="order-success-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 240; width: 90%; max-width: 450px; box-shadow: var(--shadow-lux); border-radius: var(--border-radius-md); padding: 35px 30px; background-color: #FFFFFF; text-align: center;">
+        <div style="width: 72px; height: 72px; background-color: #E6F4EA; color: #10B981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; font-size: 2rem; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);">✓</div>
+        <h3 style="font-family: var(--font-heading); font-size: 1.4rem; text-transform: uppercase; letter-spacing: 1px; color: var(--color-primary); margin: 0 0 10px 0;">Order Confirmed!</h3>
+        <p style="font-size: 0.9rem; color: var(--color-silver-dark); line-height: 1.5; margin: 0 0 24px 0;">
+            Thank you for shopping with us. Your order has been securely registered and is being processed by our master artisans.
+        </p>
+        <div style="background-color: var(--color-silver-light); padding: 15px; border-radius: var(--border-radius-sm); margin-bottom: 24px; border: 1px solid var(--color-silver-mid);">
+            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--color-silver-dark); margin-bottom: 4px;">Your Order ID</div>
+            <div id="success-order-id" style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--color-accent-pink); letter-spacing: 1px;">MRT-SLV-XXXX</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn-checkout" id="success-track-btn" style="margin-top: 0; padding: 12px 0;" onclick="handleSuccessTrack()">Track Shipment Logs</button>
+            <button class="btn-add-cart" style="width: 100%; padding: 12px 0; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;" onclick="closeOrderSuccessModal()">Continue Shopping</button>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Core Javascript Code -->
+    <script src="app.js?v=15"></script>
+</body>
+</html>
