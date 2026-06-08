@@ -17,7 +17,7 @@ const STATE = {
     cart: [],
     wishlist: [],
     orders: [],
-    rates: { sterling: 94.8, fine: 98.5, trend: "up" },
+    rates: { sterling: 94.8, fine: 98.5, gold: 7500.00, trend: "up" },
     coupons: { "SILVER10": 10, "SPARKLE15": 15 },
     activeCoupon: null,
     currentView: "home",
@@ -122,9 +122,12 @@ async function initState() {
         if (!error && data && data.length > 0) {
             STATE.rates.sterling = parseFloat(data[0].sterling);
             STATE.rates.fine = parseFloat(data[0].fine);
+            STATE.rates.gold = parseFloat(data[0].gold) || 7500.00;
             STATE.rates.trend = data[0].trend;
         }
     } catch(err) { console.error("Error loading rates", err); }
+
+    recalculateAllProductPrices();
 
     // Rates loaded strictly from Supabase - no local storage fallback
     
@@ -175,12 +178,13 @@ function renderRatesTicker() {
     
     const sterlingStr = STATE.rates.sterling.toFixed(2);
     const fineStr = STATE.rates.fine.toFixed(2);
+    const goldStr = (STATE.rates.gold || 7500.00).toFixed(2);
     const trendIcon = STATE.rates.trend === "up" ? "▲" : "▼";
     const trendClass = STATE.rates.trend === "up" ? "rate-up" : "rate-down";
     
     const singleSet = `
         <div class="ticker-item">✨ GET EXTRA 10% OFF ON YOUR FIRST SILVER ORDER! USE CODE: <strong style="color:var(--color-accent-pink);">SILVER10</strong> ✨</div>
-        <div class="ticker-item">🔴 LIVE METAL RATES: 925 Sterling Silver: <span class="ticker-rate">₹${sterlingStr}/g</span> <span class="${trendClass}">${trendIcon}</span> | 625 Silver: <span class="ticker-rate">₹${fineStr}/g</span></div>
+        <div class="ticker-item">🔴 LIVE METAL RATES: 925 Sterling Silver: <span class="ticker-rate">₹${sterlingStr}/g</span> <span class="${trendClass}">${trendIcon}</span> | 625 Silver: <span class="ticker-rate">₹${fineStr}/g</span> | 24K Gold: <span class="ticker-rate">₹${goldStr}/g</span></div>
         <div class="ticker-item">💍 100% NICKEL-FREE & LEAD-FREE HYPOALLERGENIC SILVER PIECES</div>
         <div class="ticker-item">⭐ FAST SECURE SHIPPING PAN INDIA ON ALL ORDERS!</div>
     `;
@@ -295,6 +299,8 @@ function applyQuickFilter(filterType) {
         document.getElementById("filter-type-anklets").checked = false;
         document.getElementById("filter-type-chains").checked = false;
         document.getElementById("filter-type-coins").checked = false;
+        const gcInput = document.getElementById("filter-type-gold_coins");
+        if (gcInput) gcInput.checked = false;
         document.getElementById("filter-type-gold").checked = false;
         document.getElementById("filter-type-kids").checked = false;
         document.getElementById("filter-type-customised").checked = false;
@@ -302,7 +308,7 @@ function applyQuickFilter(filterType) {
     const priceMaxSlider = document.getElementById("filter-price-max");
     const priceDisplay = document.getElementById("filter-price-val");
     
-    const categoriesList = ["rings", "earrings", "pendants", "anklets", "chains", "coins", "gold", "kids", "customised"];
+    const categoriesList = ["rings", "earrings", "pendants", "anklets", "chains", "coins", "gold", "gold_coins", "kids", "customised"];
     
     if (filterType === "under-999") {
         priceMaxSlider.value = 999;
@@ -379,6 +385,8 @@ function renderShopCatalog() {
     if (chainsCheck && chainsCheck.checked) categories.push("chains");
     const coinsCheck = document.getElementById("filter-type-coins");
     if (coinsCheck && coinsCheck.checked) categories.push("coins");
+    const gcCheck = document.getElementById("filter-type-gold_coins");
+    if (gcCheck && gcCheck.checked) categories.push("gold_coins");
     const goldCheck = document.getElementById("filter-type-gold");
     if (goldCheck && goldCheck.checked) categories.push("gold");
     const kidsCheck = document.getElementById("filter-type-kids");
@@ -692,8 +700,6 @@ function viewProductDetail(prodId) {
     if (thumbs) {
         thumbs.innerHTML = `
             <div class="detail-thumb active-thumb" onclick="changeDetailImage('${prod.image}', this)"><img src="${prod.image}" alt=""></div>
-            <div class="detail-thumb" onclick="changeDetailImage('https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=600&q=80', this)"><img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=600&q=80" alt=""></div>
-            <div class="detail-thumb" onclick="changeDetailImage('https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80', this)"><img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80" alt=""></div>
         `;
     }
     
@@ -1426,36 +1432,49 @@ function renderAdminDashboard() {
 function renderAdminRates() {
     const inpSterling = document.getElementById("admin-rate-sterling");
     const inpFine = document.getElementById("admin-rate-fine");
+    const inpGold = document.getElementById("admin-rate-gold");
     
     if (inpSterling) inpSterling.value = STATE.rates.sterling.toFixed(2);
     if (inpFine) inpFine.value = STATE.rates.fine.toFixed(2);
+    if (inpGold) inpGold.value = (STATE.rates.gold || 7500.00).toFixed(2);
 }
 
 async function updateAdminRates() {
     const sterlingVal = parseFloat(document.getElementById("admin-rate-sterling").value);
     const fineVal = parseFloat(document.getElementById("admin-rate-fine").value);
+    const goldVal = parseFloat(document.getElementById("admin-rate-gold").value);
     
-    if (isNaN(sterlingVal) || isNaN(fineVal)) {
+    if (isNaN(sterlingVal) || isNaN(fineVal) || isNaN(goldVal)) {
         alert("Please enter valid decimal numbers for rates.");
         return;
     }
     
     STATE.rates.sterling = sterlingVal;
     STATE.rates.fine = fineVal;
+    STATE.rates.gold = goldVal;
     STATE.rates.trend = "up";
     
     renderRatesTicker();
+    recalculateAllProductPrices();
+    
+    // Rerender active views to show recalculated prices instantly
+    if (STATE.currentView === "home") renderHomeProducts();
+    if (STATE.currentView === "shop") renderShopCatalog();
+    if (STATE.selectedProduct) {
+        viewProductDetail(STATE.selectedProduct.id);
+    }
     
     try {
         const { error } = await supaClient.from('rates').upsert([{
             id: 1,
             sterling: sterlingVal,
             fine: fineVal,
+            gold: goldVal,
             trend: 'up',
             updated_at: new Date().toISOString()
         }]);
         if (error) throw error;
-        alert("Live Silver Rates updated on the scrolling marquee ticker and saved to Supabase successfully!");
+        alert("Live Metal Rates updated on scrolling ticker and saved to Supabase successfully!");
     } catch (err) {
         console.error("Supabase rates update error:", err);
         alert("Rates updated locally, but failed to save to Supabase: " + err.message);
@@ -1646,7 +1665,17 @@ async function addNewProduct() {
         inStock: inStock,
         image: image,
         description: desc,
-        specs: { metal: document.getElementById("new-prod-market-base").value === "fine" ? "625 Silver" : "925 Sterling Silver", weight: weight, width: width, authenticity: "92.5 Hallmark Certificate Included" }
+        specs: {
+            metal: document.getElementById("new-prod-market-base").value === "gold" ? "24K Gold" : (document.getElementById("new-prod-market-base").value === "fine" ? "625 Silver" : "925 Sterling Silver"),
+            weight: weight,
+            width: width,
+            authenticity: document.getElementById("new-prod-market-base").value === "gold" ? "NABL Lab-Certified Gold Assay Card Included" : (document.getElementById("new-prod-market-base").value === "fine" ? "NABL Lab-Tested Certificate Included" : "92.5 Hallmark Certificate Included"),
+            calc_weight: parseFloat(document.getElementById("new-prod-calc-weight").value),
+            calc_making: parseFloat(document.getElementById("new-prod-calc-making").value) || 0,
+            calc_making_type: document.getElementById("new-prod-calc-making-type").value,
+            calc_gst: parseFloat(document.getElementById("new-prod-calc-gst").value) || 3,
+            market_base: document.getElementById("new-prod-market-base").value
+        }
     };
     
     STATE.products.push(product);
@@ -1852,6 +1881,102 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
 });
 
+// --- RECALCULATE ALL PRODUCT PRICES BASED ON LIVE RATES ---
+function recalculateAllProductPrices() {
+    console.log("Recalculating all product prices based on live metal rates...");
+    if (!STATE.products || STATE.products.length === 0) return;
+
+    STATE.products.forEach(p => {
+        let specs = p.specs || {};
+        let weightVal = parseFloat(specs.calc_weight);
+        
+        if (isNaN(weightVal) && specs.weight) {
+            weightVal = parseFloat(specs.weight);
+        }
+        if (isNaN(weightVal)) {
+            const cat = (p.category || "").toLowerCase();
+            if (cat === "rings") weightVal = 3.0;
+            else if (cat === "earrings") weightVal = 2.5;
+            else if (cat === "pendants") weightVal = 3.5;
+            else if (cat === "anklets") weightVal = 4.0;
+            else if (cat === "chains") weightVal = 6.0;
+            else if (cat === "coins") weightVal = 10.0;
+            else if (cat === "gold_coins") weightVal = 5.0;
+            else weightVal = 3.0;
+        }
+
+        let marketBase = specs.market_base;
+        if (!marketBase) {
+            const cat = (p.category || "").toLowerCase();
+            const title = (p.title || "").toLowerCase();
+            if (cat === "gold" || cat === "gold_coins" || title.includes("gold")) {
+                marketBase = "gold";
+            } else if (cat === "coins" || (specs.metal && specs.metal.includes("625"))) {
+                marketBase = "fine";
+            } else {
+                marketBase = "sterling";
+            }
+        }
+
+        let liveRate = STATE.rates.sterling;
+        if (marketBase === "gold") {
+            liveRate = STATE.rates.gold || 7500.00;
+        } else if (marketBase === "fine") {
+            liveRate = STATE.rates.fine;
+        }
+
+        const metalCost = weightVal * liveRate;
+
+        let makingVal = parseFloat(specs.calc_making);
+        let makingType = specs.calc_making_type || "per-gram";
+        let gstVal = parseFloat(specs.calc_gst) || 3.0;
+
+        if (isNaN(makingVal)) {
+            const cat = (p.category || "").toLowerCase();
+            if (cat === "gold" || cat === "gold_coins") {
+                makingVal = 160.0;
+            } else if (cat === "coins") {
+                makingVal = 8.0;
+            } else {
+                makingVal = 350.0; 
+            }
+        }
+
+        let makingCost = 0;
+        if (makingType === "percentage") {
+            makingCost = metalCost * (makingVal / 100);
+        } else {
+            makingCost = weightVal * makingVal;
+        }
+
+        const subtotal = metalCost + makingCost;
+        const gstCost = subtotal * (gstVal / 100);
+        const finalPrice = Math.round(subtotal + gstCost);
+
+        p.price = finalPrice;
+        p.originalPrice = finalPrice * 2;
+    });
+
+    if (STATE.cart && STATE.cart.length > 0) {
+        let cartUpdated = false;
+        STATE.cart.forEach(item => {
+            const prod = STATE.products.find(p => p.id === item.id);
+            if (prod) {
+                const hasGiftWrap = item.title.includes("+ Gift Box");
+                const newUnitPrice = prod.price + (hasGiftWrap ? 99 : 0);
+                if (item.price !== newUnitPrice) {
+                    item.price = newUnitPrice;
+                    cartUpdated = true;
+                }
+            }
+        });
+        if (cartUpdated) {
+            saveCart();
+            renderCartDrawer();
+        }
+    }
+}
+
 // --- DYNAMIC RATE AUTO-CALCULATOR FOR INVENTORY UPLOADS ---
 function autoCalculateJewelRate() {
     const weightVal = parseFloat(document.getElementById("new-prod-calc-weight").value);
@@ -1871,7 +1996,12 @@ function autoCalculateJewelRate() {
     }
     
     // Choose live rate depending on dropdown value
-    const liveRate = marketBase === "fine" ? STATE.rates.fine : STATE.rates.sterling;
+    let liveRate = STATE.rates.sterling;
+    if (marketBase === "gold") {
+        liveRate = STATE.rates.gold || 7500.00;
+    } else if (marketBase === "fine") {
+        liveRate = STATE.rates.fine;
+    }
     
     const metalCost = weightVal * liveRate;
     
@@ -1898,7 +2028,7 @@ function autoCalculateJewelRate() {
         breakdownDiv.style.display = "block";
         breakdownDiv.innerHTML = `
             <strong>Auto-Calculation Breakdown:</strong><br>
-            • Metal Cost (${weightVal}g @ ₹${liveRate.toFixed(2)}/g for ${marketBase === 'fine' ? '999 Fine Purity' : '925 Sterling Purity'}): ₹${metalCost.toFixed(2)}<br>
+            • Metal Cost (${weightVal}g @ ₹${liveRate.toFixed(2)}/g for ${marketBase === 'gold' ? '24K Gold Purity' : (marketBase === 'fine' ? '999 Fine Purity' : '925 Sterling Purity')}): ₹${metalCost.toFixed(2)}<br>
             • ${makingText}<br>
             • Subtotal: ₹${subtotal.toFixed(2)}<br>
             • GST (${gstVal}%): ₹${gstCost.toFixed(2)}<br>
@@ -1944,7 +2074,11 @@ function editProduct(prodId) {
     
     // Infer market purity base from specs.metal
     const metalSpec = (p.specs && p.specs.metal) ? p.specs.metal.toLowerCase() : "";
-    if (metalSpec.includes("625") || metalSpec.includes("fine")) {
+    if (p.specs && p.specs.market_base) {
+        document.getElementById("new-prod-market-base").value = p.specs.market_base;
+    } else if (metalSpec.includes("gold")) {
+        document.getElementById("new-prod-market-base").value = "gold";
+    } else if (metalSpec.includes("625") || metalSpec.includes("fine")) {
         document.getElementById("new-prod-market-base").value = "fine";
     } else {
         document.getElementById("new-prod-market-base").value = "sterling";
@@ -1967,22 +2101,29 @@ function editProduct(prodId) {
     
     // Weight spec and calculator weight
     let weightVal = 0;
-    if (p.specs && p.specs.weight) {
+    if (p.specs && p.specs.calc_weight !== undefined) {
+        weightVal = p.specs.calc_weight;
+    } else if (p.specs && p.specs.weight) {
         weightVal = parseFloat(p.specs.weight);
-        document.getElementById("new-prod-weight").value = p.specs.weight;
-    } else {
-        document.getElementById("new-prod-weight").value = "";
     }
+    document.getElementById("new-prod-weight").value = (p.specs && p.specs.weight) ? p.specs.weight : "";
     document.getElementById("new-prod-calc-weight").value = isNaN(weightVal) || weightVal === 0 ? "" : weightVal;
     
-    // Reset other calculator values since we are doing manual edit or re-calc
-    document.getElementById("new-prod-calc-making").value = "";
-    document.getElementById("new-prod-calc-making-type").value = "per-gram";
-    document.getElementById("new-prod-calc-gst").value = "3";
-    const breakdown = document.getElementById("rate-calculation-breakdown");
-    if (breakdown) {
-        breakdown.innerHTML = "";
-        breakdown.style.display = "none";
+    // Load dynamic pricing calculator parameters if available
+    if (p.specs && p.specs.calc_making !== undefined) {
+        document.getElementById("new-prod-calc-making").value = p.specs.calc_making;
+        document.getElementById("new-prod-calc-making-type").value = p.specs.calc_making_type || "per-gram";
+        document.getElementById("new-prod-calc-gst").value = p.specs.calc_gst !== undefined ? p.specs.calc_gst : "3";
+        autoCalculateJewelRate();
+    } else {
+        document.getElementById("new-prod-calc-making").value = "";
+        document.getElementById("new-prod-calc-making-type").value = "per-gram";
+        document.getElementById("new-prod-calc-gst").value = "3";
+        const breakdown = document.getElementById("rate-calculation-breakdown");
+        if (breakdown) {
+            breakdown.innerHTML = "";
+            breakdown.style.display = "none";
+        }
     }
     
     // Prices
@@ -2097,9 +2238,14 @@ async function updateExistingProduct() {
         description: desc,
         specs: {
             ...existingProduct.specs,
-            metal: document.getElementById("new-prod-market-base").value === "fine" ? "625 Silver" : "925 Sterling Silver",
+            metal: document.getElementById("new-prod-market-base").value === "gold" ? "24K Gold" : (document.getElementById("new-prod-market-base").value === "fine" ? "625 Silver" : "925 Sterling Silver"),
             weight: weight,
-            width: width
+            width: width,
+            calc_weight: parseFloat(document.getElementById("new-prod-calc-weight").value),
+            calc_making: parseFloat(document.getElementById("new-prod-calc-making").value) || 0,
+            calc_making_type: document.getElementById("new-prod-calc-making-type").value,
+            calc_gst: parseFloat(document.getElementById("new-prod-calc-gst").value) || 3,
+            market_base: document.getElementById("new-prod-market-base").value
         }
     };
     
