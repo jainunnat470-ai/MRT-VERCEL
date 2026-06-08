@@ -1,5 +1,5 @@
 /**
- * MRT Silver Jewelers - Application Logic
+ * M R THANGAMAALIGAI - Application Logic
  * Implements SPA Router, Core State, Rate Simulator, Checkout, Cursive Previewer, 
  * Tracking Portal, and Full-Featured Administrative Panel.
  */
@@ -749,7 +749,7 @@ function viewProductDetail(prodId) {
             const isBase64 = prod.image && prod.image.startsWith("data:");
             const photoUrl = isBase64 ? "[Custom Design Uploaded]" : prod.image;
             
-            const text = encodeURIComponent(`Hello MRT Silver Jewelers! I am interested in purchasing the following item:\n\n*Product:* ${prod.title}\n*Price:* ₹${prod.price}\n*Quantity:* ${qty}\n*Metal specs:* ${prod.specs.metal}.\n*Product Photo:* ${photoUrl}\n\nPlease let me know availability and billing details!`);
+            const text = encodeURIComponent(`Hello M R THANGAMAALIGAI! I am interested in purchasing the following item:\n\n*Product:* ${prod.title}\n*Price:* ₹${prod.price}\n*Quantity:* ${qty}\n*Metal specs:* ${prod.specs.metal}.\n*Product Photo:* ${photoUrl}\n\nPlease let me know availability and billing details!`);
             window.open(`https://api.whatsapp.com/send?phone=916289974877&text=${text}`, "_blank");
         };
     }
@@ -1348,7 +1348,7 @@ function finalizeOrderPlacement(newOrder, orderId) {
             itemsText += `${idx + 1}. *Product:* ${item.title}\n   *Price:* ₹${item.price.toLocaleString("en-IN")}\n   *Quantity:* ${item.qty}\n   *Product Photo:* ${photoUrl}\n\n`;
         });
         
-        const text = encodeURIComponent(`Hello MRT Silver Palace! I have placed an order and uploaded my payment screenshot:\n\n*Order ID:* ${orderId}\n*Customer Name:* ${newOrder.customer}\n*Phone:* ${newOrder.phone}\n*Shipping Address:* ${newOrder.address}\n\n*Order Items:*\n${itemsText}*Shipping Fee:* ₹150\n*Grand Total:* ₹${newOrder.total.toLocaleString("en-IN")}\n\nPlease verify my payment screenshot and confirm my order!`);
+        const text = encodeURIComponent(`Hello M R THANGAMAALIGAI! I have placed an order and uploaded my payment screenshot:\n\n*Order ID:* ${orderId}\n*Customer Name:* ${newOrder.customer}\n*Phone:* ${newOrder.phone}\n*Shipping Address:* ${newOrder.address}\n\n*Order Items:*\n${itemsText}*Shipping Fee:* ₹150\n*Grand Total:* ₹${newOrder.total.toLocaleString("en-IN")}\n\nPlease verify my payment screenshot and confirm my order!`);
         
         window.open(`https://api.whatsapp.com/send?phone=916289974877&text=${text}`, "_blank");
     }
@@ -2584,7 +2584,7 @@ function showStampDetail(mark) {
         },
         jeweller: {
             title: "4. Jeweller's Identification Mark",
-            desc: "MRT's official identification mark (stamped as 'MRT'), guaranteeing that this piece was handcrafted by MRT Silver Palace and conforms to our strict luxury standards."
+            desc: "MRT's official identification mark (stamped as 'MRT'), guaranteeing that this piece was handcrafted by M R THANGAMAALIGAI and conforms to our strict quality standards."
         }
     };
     
@@ -2617,7 +2617,7 @@ function checkAllergy(issue) {
     
     if (issue === 'rash') {
         heading = "The Cause: Nickel Contact Dermatitis";
-        solution = "Most cheap fashion jewelry is made of brass or base metals plated with Nickel. When you sweat, nickel salts dissolve and absorb into the skin, triggering red rashes and itching. \n\nOur Solution: MRT Silver Palace jewelry is 100% Nickel-Free. We use pure 925 sterling silver alloyed only with copper, and shield it under luxury Rhodium plating (platinum family) so nickel never touches your skin.";
+        solution = "Most cheap fashion jewelry is made of brass or base metals plated with Nickel. When you sweat, nickel salts dissolve and absorb into the skin, triggering red rashes and itching. \n\nOur Solution: M R THANGAMAALIGAI jewelry is 100% Nickel-Free. We use pure 925 sterling silver alloyed only with copper, and shield it under luxury Rhodium plating (platinum family) so nickel never touches your skin.";
     } else if (issue === 'green') {
         heading = "The Cause: Acidic Copper Oxidation";
         solution = "Cheap alloys release copper or copper oxides that react with the acids and oils in your skin, leaving a harmless but unsightly green or dark stain. \n\nOur Solution: All our rings are finished with mirror-polished Rhodium plating or 18K Yellow Gold plating, creating a solid barrier that prevents copper oxidation and keeps your fingers clean and bright.";
@@ -3101,7 +3101,7 @@ function downloadTryOnResult() {
 function shareTryOnWhatsapp() {
     const prod = STATE.selectedProduct;
     if (!prod) return;
-    const message = `Hello MRT Silver Palace, I just tried on the *${prod.title}* virtually using your AI Try-On tool! I would love to consult with you about purchasing this piece. (Product ID: ${prod.id})`;
+    const message = `Hello M R THANGAMAALIGAI, I just tried on the *${prod.title}* virtually using your AI Try-On tool! I would love to consult with you about purchasing this piece. (Product ID: ${prod.id})`;
     const url = `https://api.whatsapp.com/send?phone=919999999999&text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
 }
@@ -3306,7 +3306,7 @@ function downloadOrderInvoicePdf(orderId) {
             <div class="invoice-card">
                 <div class="invoice-header">
                     <div>
-                        <div class="brand-title">MRT SILVER PALACE</div>
+                        <div class="brand-title">M R THANGAMAALIGAI</div>
                         <div class="brand-sub">925 Pure Sterling Silver</div>
                         <div style="font-size: 0.8rem; color: #4A5568; margin-top: 8px; line-height: 1.4;">
                             GSTIN: 33AAQFM1234F1Z8<br>
@@ -3334,7 +3334,7 @@ function downloadOrderInvoicePdf(orderId) {
                     <div class="billing-box">
                         <div class="box-title">Seller Details</div>
                         <div class="box-content">
-                            <strong>MRT Silver Palace</strong><br>
+                            <strong>M R THANGAMAALIGAI</strong><br>
                             T. Nagar Showroom<br>
                             Chennai, Tamil Nadu - 600017
                         </div>
@@ -3392,7 +3392,7 @@ function downloadOrderInvoicePdf(orderId) {
                 </div>
                 
                 <div class="footer-note">
-                    <p>Thank you for shopping at MRT Silver Palace! All our jewelry is 92.5 Sterling Silver certified.</p>
+                    <p>Thank you for shopping at M R THANGAMAALIGAI! All our jewelry is 92.5 Sterling Silver certified.</p>
                     <p style="font-size: 0.7rem; margin-top: 10px;">This is a computer-generated tax invoice and does not require a physical signature.</p>
                 </div>
             </div>
