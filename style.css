@@ -142,15 +142,21 @@ img {
     display: flex;
     white-space: nowrap;
     width: max-content;
+    flex-shrink: 0;
+    will-change: transform;
+    backface-visibility: hidden;
     animation: marquee 35s linear infinite;
 }
 
-.ticker:hover {
-    animation-play-state: paused;
+@media (hover: hover) {
+    .ticker:hover {
+        animation-play-state: paused;
+    }
 }
 
 .ticker-item {
     display: inline-block;
+    flex-shrink: 0;
     padding: 0 40px;
 }
 
@@ -818,12 +824,14 @@ header {
 }
 
 .countdown-box {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     min-width: 70px;
-    padding: 10px;
-    border-radius: var(--border-radius-sm);
+    padding: 12px 10px;
+    border-radius: 12px;
     text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
 }
 
 .countdown-num {
@@ -838,6 +846,49 @@ header {
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-top: 4px;
+}
+
+/* Stock Progress Bar */
+.flash-sale-stock-bar {
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 28px;
+}
+
+.stock-text-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--color-silver-mid);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.stock-text-row strong {
+    color: var(--color-accent-pink);
+    font-weight: 700;
+}
+
+.stock-progress-track {
+    width: 100%;
+    height: 6px;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.stock-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-accent-pink) 0%, #F472B6 50%, var(--color-accent-pink) 100%);
+    background-size: 200% auto;
+    border-radius: 10px;
+    animation: shimmer 3s infinite linear;
+}
+
+@keyframes shimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .flash-sale-right {
@@ -2657,15 +2708,42 @@ footer {
     }
     
     .flash-sale-banner {
+        position: relative;
+        background-image: linear-gradient(180deg, rgba(18, 18, 20, 0.78) 0%, rgba(18, 18, 20, 0.92) 100%), url('https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80');
+        background-size: cover;
+        background-position: center;
         flex-direction: column;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
     }
     
     .flash-sale-left {
-        padding: 24px;
+        padding: 40px 24px;
+        align-items: center;
+        text-align: center;
+        z-index: 2;
+        width: 100%;
+        box-sizing: border-box;
     }
     
     .flash-sale-right {
-        min-height: 200px;
+        display: none;
+    }
+
+    .flash-sale-tag {
+        align-self: center;
+    }
+
+    .countdown-timer {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .flash-sale-banner .btn-primary {
+        align-self: center !important;
+        width: 100%;
+        max-width: 280px;
+        text-align: center;
     }
     
     .products-grid {
@@ -3307,15 +3385,27 @@ footer {
     }
 
     .flash-sale-left {
-        padding: 20px;
-    }
-
-    .flash-sale-right {
-        min-height: 150px;
+        padding: 30px 16px;
     }
 
     .flash-sale-title {
-        font-size: 1.6rem;
+        font-size: 1.5rem;
+        line-height: 1.25;
+    }
+
+    .countdown-box {
+        min-width: 60px;
+        padding: 8px 4px;
+        border-radius: 10px;
+    }
+
+    .countdown-num {
+        font-size: 1.3rem;
+    }
+
+    .flash-sale-desc {
+        font-size: 0.85rem;
+        margin-bottom: 16px;
     }
 
     .section-title {
