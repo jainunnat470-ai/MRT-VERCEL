@@ -3314,10 +3314,12 @@ function downloadOrderInvoicePdf(orderId) {
             <div class="invoice-card">
                 <div class="invoice-header">
                     <div>
-                        <div class="brand-title">M R THANGAMAALIGAI</div>
-                        <div class="brand-sub">925 Pure Sterling Silver</div>
-                        <div style="font-size: 0.8rem; color: #4A5568; margin-top: 8px; line-height: 1.4;">
-                            GSTIN: 33AAQFM1234F1Z8<br>
+                        <div class="brand-title">M. R. THANGA MAALIGAI</div>
+                        <div class="brand-sub">925 Pure Sterling Silver & Gold Jewellery</div>
+                        <div style="font-size: 0.8rem; color: #4A5568; margin-top: 8px; line-height: 1.6;">
+                            <strong>Legal Name:</strong> RAMCHAND SURESH KUMAR<br>
+                            <strong>Trade Name:</strong> M. R. THANGA MAALIGAI<br>
+                            <strong>GSTIN:</strong> 33AAKPS5130M1ZG<br>
                             23, Tiruvalluvar Salai, Teynampet, Chennai - 600018<br>
                             Phone: +91 98417 39433
                         </div>
@@ -3342,7 +3344,9 @@ function downloadOrderInvoicePdf(orderId) {
                     <div class="billing-box">
                         <div class="box-title">Seller Details</div>
                         <div class="box-content">
-                            <strong>M R THANGAMAALIGAI</strong><br>
+                            <strong>M. R. THANGA MAALIGAI</strong><br>
+                            Legal Name: RAMCHAND SURESH KUMAR<br>
+                            GSTIN: 33AAKPS5130M1ZG<br>
                             23, Tiruvalluvar Salai, Teynampet<br>
                             Chennai, Tamil Nadu - 600018
                         </div>
