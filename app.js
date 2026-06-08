@@ -84,7 +84,29 @@ async function initState() {
     const localWishlist = localStorage.getItem("mrt_wishlist");
     if (localWishlist) STATE.wishlist = JSON.parse(localWishlist);
 
-    // Orders are loaded strictly from Supabase above - no local storage fallback
+    // Orders Load
+    const localOrders = localStorage.getItem("mrt_orders");
+    if (localOrders) {
+        STATE.orders = JSON.parse(localOrders);
+    } else {
+        // Mock default order for tracking demonstration
+        const mockOrder = {
+            id: "MRT-SLV-7483",
+            date: "2026-05-30",
+            customer: "Suresh Kumar",
+            phone: "+91 98765 43210",
+            address: "12, Park Avenue, Chennai - 600001",
+            items: [
+                { id: "prod-1", title: "Adira Sterling Silver Ring", price: 1299, qty: 1 }
+            ],
+            subtotal: 1299,
+            discount: 130,
+            total: 1169,
+            status: "processing" // placed, processing, dispatched, delivered
+        };
+        STATE.orders = [mockOrder];
+        
+    }
 
     // Coupons Load from Supabase
     try {
@@ -2000,14 +2022,18 @@ function editProduct(prodId) {
     navigateAdminTab('add');
 }
 
-function updateExistingProduct() {
+async function updateExistingProduct() {
     if (!STATE.editingProductId) return;
+    
+    const submitBtn = document.querySelector('button[onclick="updateExistingProduct()"]');
+    if (submitBtn) submitBtn.innerHTML = "Uploading & Saving...";
+    if (submitBtn) submitBtn.disabled = true;
     
     const title = document.getElementById("new-prod-title").value.trim();
     const category = document.getElementById("new-prod-cat").value;
     const price = parseFloat(document.getElementById("new-prod-price").value);
     const origPrice = parseFloat(document.getElementById("new-prod-orig").value) || price;
-    const image = document.getElementById("new-prod-img-base64").value || "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80";
+    let image = document.getElementById("new-prod-img-base64").value || "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80";
     const plating = document.getElementById("new-prod-finish").value;
     const desc = document.getElementById("new-prod-desc").value.trim() || "Genuine 925 sterling silver exquisite ornament piece.";
     
@@ -2017,6 +2043,8 @@ function updateExistingProduct() {
     
     if (!title || isNaN(price) || price <= 0) {
         alert("Please enter a valid Product Title and Base Price.");
+        if (submitBtn) submitBtn.innerHTML = "Save Changes";
+        if (submitBtn) submitBtn.disabled = false;
         return;
     }
     
@@ -2024,7 +2052,34 @@ function updateExistingProduct() {
     if (idx === -1) {
         alert("Error: Product to edit not found.");
         cancelEditProduct();
+        if (submitBtn) submitBtn.innerHTML = "Save Changes";
+        if (submitBtn) submitBtn.disabled = false;
         return;
+    }
+    
+    // Process Supabase Storage Upload for edit
+    const fileInput = document.getElementById("new-prod-img-file");
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supaClient.storage
+            .from('product-images')
+            .upload(fileName, file);
+            
+        if (uploadError) {
+            console.error("Storage upload error", uploadError);
+            alert("Failed to upload new image. Retaining current image.");
+            image = STATE.products[idx].image;
+        } else if (uploadData) {
+            const { data: publicUrlData } = supaClient.storage.from('product-images').getPublicUrl(fileName);
+            image = publicUrlData.publicUrl;
+        }
+    } else {
+        if (!image || image === "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80") {
+            image = STATE.products[idx].image;
+        }
     }
     
     // Update the product fields, retaining rating & reviews
@@ -2050,13 +2105,36 @@ function updateExistingProduct() {
     
     STATE.products[idx] = updatedProduct;
     
+    const dbProduct = {
+        id: updatedProduct.id,
+        title: updatedProduct.title,
+        category: updatedProduct.category,
+        price: updatedProduct.price,
+        original_price: updatedProduct.originalPrice,
+        rating: updatedProduct.rating,
+        reviews_count: updatedProduct.reviewsCount,
+        plating: updatedProduct.plating,
+        in_stock: updatedProduct.inStock,
+        image: updatedProduct.image,
+        description: updatedProduct.description,
+        specs: updatedProduct.specs
+    };
     
-    alert(`Success! Product "${title}" has been updated.`);
+    try {
+        const { error } = await supaClient.from('products').upsert([dbProduct]);
+        if (error) throw error;
+        alert(`Success! Product "${title}" has been updated in Supabase.`);
+    } catch (err) {
+        console.error("Supabase product update error:", err);
+        alert(`Product updated locally, but failed to save to Supabase: ${err.message}`);
+    }
     
-    // Return to upload state
+    if (submitBtn) {
+        submitBtn.innerHTML = "Save Changes";
+        submitBtn.disabled = false;
+    }
+    
     cancelEditProduct();
-    
-    // Rerender catalog
     renderAdminInventoryList();
 }
 
