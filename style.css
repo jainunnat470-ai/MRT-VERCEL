@@ -906,6 +906,10 @@ header {
     gap: 24px;
 }
 
+#shop-products-grid {
+    grid-template-columns: repeat(3, 1fr);
+}
+
 .product-card {
     background-color: var(--color-card-bg);
     border-radius: var(--border-radius-md);
@@ -2746,9 +2750,14 @@ footer {
         text-align: center;
     }
     
-    .products-grid {
+    .products-grid, #shop-products-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 16px;
+    }
+    
+    .product-img-wrap {
+        height: auto;
+        aspect-ratio: 1 / 1;
     }
     
     .shop-by-colour-grid {
@@ -3461,7 +3470,7 @@ footer {
     }
 
     /* Stack products */
-    .products-grid {
+    .products-grid, #shop-products-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
     }
