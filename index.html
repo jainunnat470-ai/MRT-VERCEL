@@ -1622,7 +1622,7 @@
                     </div>
                 </div>
                 
-                <!-- UPI/QR and WhatsApp Manual Payment QR and Screenshot Upload -->
+                <!-- UPI/QR and Screenshot Upload — shown for UPI only -->
                 <div id="checkout-payment-ss-fields" style="margin-top: 15px; background-color: var(--color-silver-light); padding: 15px; border-radius: var(--border-radius-sm); border: 1px dashed var(--color-silver-mid);">
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #FFFFFF; padding: 15px; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid); margin: 0 auto 12px auto; max-width: 260px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
                         <svg width="100" height="100" viewBox="0 0 100 100" style="color: var(--color-primary);">
@@ -1658,6 +1658,21 @@
                         
                         <div id="checkout-payment-ss-preview-wrap" style="display: none; margin-top: 10px; border: 1px solid var(--color-silver-mid); padding: 4px; border-radius: 4px; background: #FFFFFF; max-width: 120px;">
                             <img id="checkout-payment-ss-preview" src="" style="width: 100%; height: auto; object-fit: contain; max-height: 120px;" alt="SS Preview">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WhatsApp Order Note — shown when WhatsApp is selected, NO screenshot needed -->
+                <div id="checkout-wa-note" style="display: none; margin-top: 15px; background-color: #F0FDF4; padding: 16px; border-radius: var(--border-radius-sm); border: 1px solid #86EFAC;">
+                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                        <span style="font-size: 1.5rem;">💬</span>
+                        <div>
+                            <div style="font-weight: 700; color: #166534; font-size: 0.88rem; margin-bottom: 4px;">No payment needed right now!</div>
+                            <div style="font-size: 0.8rem; color: #166534; line-height: 1.6;">
+                                Your order details will be sent to us on WhatsApp.<br>
+                                We will confirm availability &amp; share payment details with you directly.<br>
+                                <strong>No screenshot upload required.</strong>
+                            </div>
                         </div>
                     </div>
                 </div>
