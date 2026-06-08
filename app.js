@@ -500,7 +500,7 @@ function addToCart(prodId, count = 1) {
     let size = null;
     const isToeRing = prod.title.toLowerCase().includes("toe");
     const isRing = (prod.category === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing;
-    const isChain = prod.category === "chains" || prod.category === "pendants" || prod.title.toLowerCase().includes("chain") || prod.title.toLowerCase().includes("necklace") || prod.title.toLowerCase().includes("bracelet") || prod.title.toLowerCase().includes("pendant");
+    const isChain = prod.category === "chains";
     
     if (STATE.selectedProduct && STATE.selectedProduct.id === prod.id && STATE.selectedSize) {
         // If we are adding the product that is currently viewed in detail, use the selected size!
@@ -594,7 +594,7 @@ function viewProductDetail(prodId) {
     // Ring, Toe Ring, and Chain Size rendering
     const isToeRing = prod.title.toLowerCase().includes("toe");
     const isRing = (prod.category === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing;
-    const isChain = prod.category === "chains" || prod.category === "pendants" || prod.title.toLowerCase().includes("chain") || prod.title.toLowerCase().includes("necklace") || prod.title.toLowerCase().includes("bracelet") || prod.title.toLowerCase().includes("pendant");
+    const isChain = prod.category === "chains";
     
     const sizeSection = document.getElementById("detail-size-section");
     const sizeOptionsContainer = document.getElementById("detail-size-options");
@@ -796,7 +796,7 @@ function triggerBuyNow() {
         
         const isToeRing = prod.title.toLowerCase().includes("toe");
         const isRing = (prod.category === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing;
-        const isChain = prod.category === "chains" || prod.category === "pendants" || prod.title.toLowerCase().includes("chain") || prod.title.toLowerCase().includes("necklace") || prod.title.toLowerCase().includes("bracelet") || prod.title.toLowerCase().includes("pendant");
+        const isChain = prod.category === "chains";
         
         let size = STATE.selectedSize;
         if (!size) {
