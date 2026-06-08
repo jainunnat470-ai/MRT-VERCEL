@@ -18,7 +18,10 @@ const STATE = {
     wishlist: [],
     orders: [],
     rates: { sterling: 94.8, fine: 98.5, gold: 7500.00, trend: "up" },
-    coupons: { "SILVER10": 10, "SPARKLE15": 15 },
+    coupons: {
+        "SILVER10": { code: "SILVER10", type: "percentage", value: 10, is_used: false, single_use: false },
+        "SPARKLE15": { code: "SPARKLE15", type: "percentage", value: 15, is_used: false, single_use: false }
+    },
     activeCoupon: null,
     currentView: "home",
     activeAdminTab: "dashboard",
@@ -64,16 +67,36 @@ async function initState() {
                 phone: o.phone,
                 address: o.address,
                 paymentMethod: o.payment_method,
-                subtotal: o.subtotal,
-                discount: o.discount,
-                total: o.total,
+                subtotal: parseFloat(o.subtotal) || 0,
+                discount: parseFloat(o.discount) || 0,
+                total: parseFloat(o.total) || 0,
                 status: o.status,
-                items: o.items
+                items: o.items,
+                payment_screenshot: o.payment_screenshot
             }));
-            
         }
     } catch (err) {
         console.error("Error loading orders from Supabase:", err);
+    }
+
+    // Ensure mock fallback order if no orders in Supabase
+    if (STATE.orders.length === 0) {
+        const mockOrder = {
+            id: "MRT-SLV-7483",
+            date: "2026-05-30",
+            customer: "Suresh Kumar",
+            phone: "+91 98765 43210",
+            address: "12, Park Avenue, Chennai - 600001",
+            paymentMethod: "UPI Payment",
+            items: [
+                { id: "prod-1", title: "Adira Sterling Silver Ring", price: 1299, qty: 1 }
+            ],
+            subtotal: 1299,
+            discount: 130,
+            total: 1169,
+            status: "processing"
+        };
+        STATE.orders = [mockOrder];
     }
 
     // Cart Load
@@ -84,35 +107,20 @@ async function initState() {
     const localWishlist = localStorage.getItem("mrt_wishlist");
     if (localWishlist) STATE.wishlist = JSON.parse(localWishlist);
 
-    // Orders Load
-    const localOrders = localStorage.getItem("mrt_orders");
-    if (localOrders) {
-        STATE.orders = JSON.parse(localOrders);
-    } else {
-        // Mock default order for tracking demonstration
-        const mockOrder = {
-            id: "MRT-SLV-7483",
-            date: "2026-05-30",
-            customer: "Suresh Kumar",
-            phone: "+91 98765 43210",
-            address: "12, Park Avenue, Chennai - 600001",
-            items: [
-                { id: "prod-1", title: "Adira Sterling Silver Ring", price: 1299, qty: 1 }
-            ],
-            subtotal: 1299,
-            discount: 130,
-            total: 1169,
-            status: "processing" // placed, processing, dispatched, delivered
-        };
-        STATE.orders = [mockOrder];
-        
-    }
-
     // Coupons Load from Supabase
     try {
         const { data, error } = await supaClient.from('coupons').select('*');
         if (!error && data) {
-            data.forEach(c => STATE.coupons[c.code] = c.discount);
+            STATE.coupons = {};
+            data.forEach(c => {
+                STATE.coupons[c.code] = {
+                    code: c.code,
+                    type: c.type || 'percentage',
+                    value: c.value !== null && c.value !== undefined ? parseFloat(c.value) : (parseFloat(c.discount) || 0),
+                    is_used: !!c.is_used,
+                    single_use: !!c.single_use
+                };
+            });
         }
     } catch(err) { console.error("Error loading coupons", err); }
 
@@ -905,11 +913,21 @@ function renderCartDrawer() {
     let discount = 0;
     
     if (STATE.activeCoupon) {
-        const pct = STATE.coupons[STATE.activeCoupon] || 0;
-        discount = Math.round(subtotal * (pct / 100));
-        if (summaryDiscountRow) {
-            summaryDiscountRow.style.display = "flex";
-            summaryDiscount.textContent = `-₹${discount.toLocaleString("en-IN")} (${pct}%)`;
+        const coupon = STATE.coupons[STATE.activeCoupon];
+        if (coupon) {
+            let labelSuffix = "";
+            if (coupon.type === 'free_silver') {
+                discount = Math.round(coupon.value * STATE.rates.sterling);
+                labelSuffix = `Free Silver: ${coupon.value}g`;
+            } else {
+                discount = Math.round(subtotal * (coupon.value / 100));
+                labelSuffix = `${coupon.value}%`;
+            }
+            discount = Math.min(discount, subtotal);
+            if (summaryDiscountRow) {
+                summaryDiscountRow.style.display = "flex";
+                summaryDiscount.textContent = `-₹${discount.toLocaleString("en-IN")} (${labelSuffix})`;
+            }
         }
     } else {
         if (summaryDiscountRow) summaryDiscountRow.style.display = "none";
@@ -926,7 +944,12 @@ function applyCouponCode() {
     if (!input) return;
     
     const code = input.value.toUpperCase().trim();
-    if (STATE.coupons[code]) {
+    const coupon = STATE.coupons[code];
+    if (coupon) {
+        if (coupon.is_used) {
+            alert("This coupon has already been used and can only be used once.");
+            return;
+        }
         STATE.activeCoupon = code;
         alert(`Success! Coupon "${code}" applied successfully.`);
         renderCartDrawer();
@@ -1007,11 +1030,21 @@ function openCheckoutModal() {
         const summaryTotal = document.getElementById("checkout-summary-total");
         
         if (STATE.activeCoupon) {
-            const pct = STATE.coupons[STATE.activeCoupon] || 0;
-            discount = Math.round(subtotal * (pct / 100));
-            if (summaryDiscountRow && summaryDiscount) {
-                summaryDiscountRow.style.display = "flex";
-                summaryDiscount.textContent = `-₹${discount.toLocaleString("en-IN")} (${pct}%)`;
+            const coupon = STATE.coupons[STATE.activeCoupon];
+            if (coupon) {
+                let labelSuffix = "";
+                if (coupon.type === 'free_silver') {
+                    discount = Math.round(coupon.value * STATE.rates.sterling);
+                    labelSuffix = `Free Silver: ${coupon.value}g`;
+                } else {
+                    discount = Math.round(subtotal * (coupon.value / 100));
+                    labelSuffix = `${coupon.value}%`;
+                }
+                discount = Math.min(discount, subtotal);
+                if (summaryDiscountRow && summaryDiscount) {
+                    summaryDiscountRow.style.display = "flex";
+                    summaryDiscount.textContent = `-₹${discount.toLocaleString("en-IN")} (${labelSuffix})`;
+                }
             }
         } else {
             if (summaryDiscountRow) summaryDiscountRow.style.display = "none";
@@ -1048,7 +1081,12 @@ function applyCheckoutCouponCode() {
     if (!input) return;
     
     const code = input.value.toUpperCase().trim();
-    if (STATE.coupons[code]) {
+    const coupon = STATE.coupons[code];
+    if (coupon) {
+        if (coupon.is_used) {
+            alert("This coupon has already been used and can only be used once.");
+            return;
+        }
         STATE.activeCoupon = code;
         alert(`Success! Coupon "${code}" applied successfully.`);
         openCheckoutModal();
@@ -1158,22 +1196,27 @@ function submitCheckoutOrder() {
     const paymentRadio = document.querySelector('input[name="checkout-payment"]:checked');
     const paymentMethod = paymentRadio ? paymentRadio.value : "UPI";
     
-    let upiId = "";
-    if (paymentMethod === "UPI") {
-        const upiIdInp = document.getElementById("checkout-upi-id");
-        if (upiIdInp) {
-            upiId = upiIdInp.value.trim();
-            if (!upiId) {
-                alert("Please enter your UPI ID.");
-                upiIdInp.focus();
-                return;
-            }
-        }
+    if (!checkoutPaymentSsBase64) {
+        alert("Please upload your payment screenshot (SS) to complete checkout.");
+        return;
     }
     
     const orderId = `MRT-SLV-${Math.floor(1000 + Math.random() * 9000)}`;
     const subtotal = STATE.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    const discount = STATE.activeCoupon ? Math.round(subtotal * ((STATE.coupons[STATE.activeCoupon] || 0) / 100)) : 0;
+    
+    let discount = 0;
+    if (STATE.activeCoupon) {
+        const coupon = STATE.coupons[STATE.activeCoupon];
+        if (coupon) {
+            if (coupon.type === 'free_silver') {
+                discount = Math.round(coupon.value * STATE.rates.sterling);
+            } else {
+                discount = Math.round(subtotal * (coupon.value / 100));
+            }
+            discount = Math.min(discount, subtotal);
+        }
+    }
+    
     const shippingFee = 150;
     const total = subtotal - discount + shippingFee;
     
@@ -1183,59 +1226,38 @@ function submitCheckoutOrder() {
         customer: name,
         phone: phone,
         address: address,
-        paymentMethod: paymentMethod === "WhatsApp" ? "WhatsApp Order" : (paymentMethod === "UPI" ? `UPI (${upiId})` : "UPI Payment"),
+        paymentMethod: paymentMethod === "WhatsApp" ? "WhatsApp Order (SS Verification)" : "UPI Payment (SS Verification)",
         items: [...STATE.cart],
         subtotal: subtotal,
         discount: discount,
         total: total,
-        status: "placed"
+        status: "awaiting_approval",
+        payment_screenshot: checkoutPaymentSsBase64
     };
     
-    if (paymentMethod === "UPI") {
-        // Show UPI simulated payment gateway
-        const upiOverlay = document.getElementById("upi-processing-overlay");
-        const upiModal = document.getElementById("upi-processing-modal");
-        const upiTitle = document.getElementById("upi-processing-title");
-        const upiText = document.getElementById("upi-processing-text");
-        const upiSpinner = document.getElementById("upi-loading-spinner");
-        
-        if (upiOverlay && upiModal) {
-            upiOverlay.style.display = "block";
-            upiModal.style.display = "block";
-            
-            // Phase 1: Processing
-            if (upiTitle) upiTitle.textContent = "Verifying UPI ID & Requesting Payment";
-            if (upiText) upiText.textContent = `Pinging UPI gateway at ${upiId}. Please open your payment app to approve the charge.`;
-            if (upiSpinner) {
-                upiSpinner.style.border = "4px solid var(--color-silver-mid)";
-                upiSpinner.style.borderTop = "4px solid var(--color-accent-pink)";
-                upiSpinner.style.animation = "spin 1s linear infinite";
-                upiSpinner.style.backgroundColor = "transparent";
-            }
-            
-            // Phase 2: Confirmed after 1.5 seconds
-            setTimeout(() => {
-                if (upiTitle) upiTitle.textContent = "Payment Confirmed!";
-                if (upiText) upiText.textContent = "Transaction authorized. Saving order details...";
-                if (upiSpinner) {
-                    upiSpinner.style.animation = "none";
-                    upiSpinner.style.border = "4px solid #10B981";
-                    upiSpinner.style.backgroundColor = "#E6F4EA";
-                }
-                
-                // Phase 3: Place Order after another 1 second
-                setTimeout(() => {
-                    upiOverlay.style.display = "none";
-                    upiModal.style.display = "none";
-                    
-                    finalizeOrderPlacement(newOrder, orderId);
-                }, 1000);
-            }, 1500);
-        } else {
-            finalizeOrderPlacement(newOrder, orderId);
-        }
+    // Call finalizeOrderPlacement directly since verification is manual
+    finalizeOrderPlacement(newOrder, orderId);
+}
+
+let checkoutPaymentSsBase64 = "";
+
+function previewPaymentScreenshot(input) {
+    const previewWrap = document.getElementById("checkout-payment-ss-preview-wrap");
+    const previewImg = document.getElementById("checkout-payment-ss-preview");
+    if (!previewWrap || !previewImg) return;
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            checkoutPaymentSsBase64 = e.target.result;
+            previewImg.src = e.target.result;
+            previewWrap.style.display = "block";
+        };
+        reader.readAsDataURL(input.files[0]);
     } else {
-        finalizeOrderPlacement(newOrder, orderId);
+        checkoutPaymentSsBase64 = "";
+        previewImg.src = "";
+        previewWrap.style.display = "none";
     }
 }
 
@@ -1264,6 +1286,20 @@ function finalizeOrderPlacement(newOrder, orderId) {
     STATE.orders.push(newOrder);
     saveOrders(newOrder);
     
+    // Mark coupon as used if single use
+    if (STATE.activeCoupon) {
+        const couponCode = STATE.activeCoupon;
+        const coupon = STATE.coupons[couponCode];
+        if (coupon && coupon.single_use) {
+            coupon.is_used = true;
+            supaClient.from('coupons')
+                .update({ is_used: true })
+                .eq('code', couponCode)
+                .then()
+                .catch(err => console.error("Error marking coupon as used in DB:", err));
+        }
+    }
+    
     // Empty Cart
     STATE.cart = [];
     STATE.activeCoupon = null;
@@ -1274,10 +1310,27 @@ function finalizeOrderPlacement(newOrder, orderId) {
     closeCheckoutModal();
     closeDrawer("cart");
     
+    // Reset payment SS
+    checkoutPaymentSsBase64 = "";
+    const ssInp = document.getElementById("checkout-payment-ss");
+    if (ssInp) ssInp.value = "";
+    const ssPrevWrap = document.getElementById("checkout-payment-ss-preview-wrap");
+    if (ssPrevWrap) ssPrevWrap.style.display = "none";
+    
     // Show user order success modal instead of native alert
     CURRENT_SUCCESS_ORDER_ID = orderId;
     const successIdDisplay = document.getElementById("success-order-id");
     if (successIdDisplay) successIdDisplay.textContent = orderId;
+    
+    const successTitle = document.getElementById("order-success-title");
+    const successDesc = document.getElementById("order-success-desc");
+    if (newOrder.status === "awaiting_approval") {
+        if (successTitle) successTitle.textContent = "Verification Pending!";
+        if (successDesc) successDesc.textContent = "Your order details and payment screenshot have been submitted. Once our admin approves the payment, your order will be confirmed and processed.";
+    } else {
+        if (successTitle) successTitle.textContent = "Order Confirmed!";
+        if (successDesc) successDesc.textContent = "Thank you for shopping with us. Your order has been securely registered and is being processed by our master artisans.";
+    }
     
     const overlay = document.getElementById("order-success-overlay");
     const modal = document.getElementById("order-success-modal");
@@ -1287,7 +1340,7 @@ function finalizeOrderPlacement(newOrder, orderId) {
     }
     
     // Redirect to WhatsApp if WhatsApp Order method was selected
-    if (newOrder.paymentMethod === "WhatsApp Order") {
+    if (newOrder.paymentMethod.startsWith("WhatsApp Order")) {
         let itemsText = "";
         newOrder.items.forEach((item, idx) => {
             const isBase64 = item.image && item.image.startsWith("data:");
@@ -1295,7 +1348,7 @@ function finalizeOrderPlacement(newOrder, orderId) {
             itemsText += `${idx + 1}. *Product:* ${item.title}\n   *Price:* ₹${item.price.toLocaleString("en-IN")}\n   *Quantity:* ${item.qty}\n   *Product Photo:* ${photoUrl}\n\n`;
         });
         
-        const text = encodeURIComponent(`Hello MRT Silver Palace! I have placed an order and want to complete it on WhatsApp:\n\n*Order ID:* ${orderId}\n*Customer Name:* ${newOrder.customer}\n*Phone:* ${newOrder.phone}\n*Shipping Address:* ${newOrder.address}\n\n*Order Items:*\n${itemsText}*Shipping Fee:* ₹150\n*Grand Total:* ₹${newOrder.total.toLocaleString("en-IN")}\n\nPlease confirm my order!`);
+        const text = encodeURIComponent(`Hello MRT Silver Palace! I have placed an order and uploaded my payment screenshot:\n\n*Order ID:* ${orderId}\n*Customer Name:* ${newOrder.customer}\n*Phone:* ${newOrder.phone}\n*Shipping Address:* ${newOrder.address}\n\n*Order Items:*\n${itemsText}*Shipping Fee:* ₹150\n*Grand Total:* ₹${newOrder.total.toLocaleString("en-IN")}\n\nPlease verify my payment screenshot and confirm my order!`);
         
         window.open(`https://api.whatsapp.com/send?phone=916289974877&text=${text}`, "_blank");
     }
@@ -1487,7 +1540,7 @@ function renderAdminOrders() {
     if (!ordersTbody) return;
     
     if (STATE.orders.length === 0) {
-        ordersTbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No Customer Orders Placed Yet.</td></tr>`;
+        ordersTbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No Customer Orders Placed Yet.</td></tr>`;
         return;
     }
     
@@ -1500,6 +1553,28 @@ function renderAdminOrders() {
             </div>
         `).join("");
         
+        let ssBtnHtml = "";
+        if (o.payment_screenshot) {
+            ssBtnHtml = `
+                <div style="margin-top: 8px;">
+                    <button onclick="viewPaymentScreenshot('${o.id}')" style="background-color: #3B82F6; color: #FFFFFF; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                        👁️ View Payment SS
+                    </button>
+                </div>
+            `;
+        }
+        
+        let approveBtnHtml = "";
+        if (o.status === "awaiting_approval") {
+            approveBtnHtml = `
+                <div style="margin-top: 6px;">
+                    <button onclick="approveOrderPayment('${o.id}')" style="background-color: #10B981; color: #FFFFFF; border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(16,185,129,0.2);">
+                        ✓ Approve Payment
+                    </button>
+                </div>
+            `;
+        }
+        
         return `
             <tr>
                 <td style="font-weight:700; vertical-align: top;">${o.id}</td>
@@ -1509,6 +1584,7 @@ function renderAdminOrders() {
                     <div style="font-size:0.75rem;color:var(--color-silver-dark);">${o.phone}</div>
                     <div style="font-size:0.75rem;color:var(--color-silver-dark);margin-top:4px; max-width:250px; white-space:pre-wrap; line-height:1.4;">📍 <strong>Address:</strong> ${o.address}</div>
                     <div style="font-size:0.7rem;font-weight:700;color:var(--color-accent-pink);margin-top:6px; text-transform:uppercase;">💳 ${o.paymentMethod || "COD"}</div>
+                    ${ssBtnHtml}
                 </td>
                 <td style="vertical-align: top; max-width:320px;">
                     <div style="display:flex; flex-direction:column;">
@@ -1524,11 +1600,13 @@ function renderAdminOrders() {
                 </td>
                 <td style="vertical-align: top;">
                     <select class="admin-status-badge status-${o.status}" onchange="changeOrderStatus('${o.id}', this.value)" style="border:none;outline:none;cursor:pointer; font-weight:600;">
+                        <option value="awaiting_approval" ${o.status === "awaiting_approval" ? "selected" : ""}>Awaiting Approval</option>
                         <option value="placed" ${o.status === "placed" ? "selected" : ""}>Placed</option>
                         <option value="processing" ${o.status === "processing" ? "selected" : ""}>Processing</option>
                         <option value="dispatched" ${o.status === "dispatched" ? "selected" : ""}>Dispatched</option>
                         <option value="delivered" ${o.status === "delivered" ? "selected" : ""}>Delivered</option>
                     </select>
+                    ${approveBtnHtml}
                 </td>
                 <td style="vertical-align: top; text-align: center;">
                     <button class="btn-checkout" onclick="downloadOrderInvoicePdf('${o.id}')" style="padding: 6px 12px; font-size: 0.72rem; margin-top: 0; background: linear-gradient(135deg, #1A365D 0%, #2A4365 100%); color: #FFFFFF; border: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -1538,6 +1616,69 @@ function renderAdminOrders() {
             </tr>
         `;
     }).join("");
+}
+
+function approveOrderPayment(orderId) {
+    if (confirm("Are you sure you want to approve the payment for this order? This will transition the status to Placed (Confirmed).")) {
+        const order = STATE.orders.find(o => o.id === orderId);
+        if (order) {
+            order.status = "placed";
+            renderAdminOrders();
+            supaClient.from('orders').update({ status: "placed" }).eq('id', orderId)
+                .then(() => {
+                    alert("Order approved successfully!");
+                    // Sync lookup portal if open
+                    const trackInp = document.getElementById("track-order-id-input");
+                    if (trackInp && trackInp.value.trim().toUpperCase() === orderId.toUpperCase()) {
+                        lookupOrderStatus();
+                    }
+                })
+                .catch(e => console.error("Error approving order in DB:", e));
+        }
+    }
+}
+
+function viewPaymentScreenshot(orderId) {
+    const order = STATE.orders.find(o => o.id === orderId);
+    if (!order || !order.payment_screenshot) {
+        alert("No payment screenshot available for this order.");
+        return;
+    }
+    
+    let ssOverlay = document.getElementById("admin-ss-view-overlay");
+    let ssModal = document.getElementById("admin-ss-view-modal");
+    if (!ssOverlay) {
+        ssOverlay = document.createElement("div");
+        ssOverlay.id = "admin-ss-view-overlay";
+        ssOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; display:flex; align-items:center; justify-content:center; cursor:pointer;";
+        ssOverlay.onclick = () => {
+            ssOverlay.style.display = "none";
+        };
+        
+        ssModal = document.createElement("div");
+        ssModal.id = "admin-ss-view-modal";
+        ssModal.style.cssText = "background:#FFFFFF; padding:20px; border-radius:12px; max-width:90%; max-height:90vh; overflow-y:auto; cursor:default; position:relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column; align-items:center;";
+        ssModal.onclick = (e) => e.stopPropagation();
+        
+        const closeBtn = document.createElement("button");
+        closeBtn.innerHTML = "✕";
+        closeBtn.style.cssText = "position:absolute; top:10px; right:15px; background:none; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer; color:#333;";
+        closeBtn.onclick = () => {
+            ssOverlay.style.display = "none";
+        };
+        
+        const img = document.createElement("img");
+        img.id = "admin-ss-view-img";
+        img.style.cssText = "width:100%; height:auto; max-height:80vh; object-fit:contain; border-radius:6px; margin-top:20px;";
+        
+        ssModal.appendChild(closeBtn);
+        ssModal.appendChild(img);
+        ssOverlay.appendChild(ssModal);
+        document.body.appendChild(ssOverlay);
+    }
+    
+    document.getElementById("admin-ss-view-img").src = order.payment_screenshot;
+    ssOverlay.style.display = "flex";
 }
 
 function changeOrderStatus(orderId, newStatus) {
@@ -1559,24 +1700,77 @@ function changeOrderStatus(orderId, newStatus) {
 function createAdminCoupon() {
     const codeInp = document.getElementById("admin-coupon-code");
     const valInp = document.getElementById("admin-coupon-value");
+    const typeSel = document.getElementById("admin-coupon-type");
+    const singleUseCb = document.getElementById("admin-coupon-single-use");
     
-    if (!codeInp || !valInp) return;
+    if (!codeInp || !valInp || !typeSel) return;
     
     const code = codeInp.value.trim().toUpperCase();
-    const value = parseInt(valInp.value);
+    const type = typeSel.value;
+    const value = parseFloat(valInp.value);
+    const singleUse = singleUseCb ? singleUseCb.checked : false;
     
-    if (!code || isNaN(value) || value <= 0 || value > 100) {
-        alert("Please enter a valid coupon code and a percentage between 1 and 100.");
+    if (!code || isNaN(value) || value <= 0) {
+        alert("Please enter a valid coupon code and value.");
         return;
     }
     
-    STATE.coupons[code] = value;
+    if (type === "percentage" && (value <= 0 || value > 100)) {
+        alert("Please enter a percentage value between 1 and 100.");
+        return;
+    }
     
-    supaClient.from('coupons').insert([{ code: code, discount: value }]).then(() => {
-        alert(`Success! Created Coupon Code: ${code} (${value}% OFF). Ready for Cart use.`);
-    }).catch(err => console.error(err));
+    // Cache locally
+    STATE.coupons[code] = {
+        code: code,
+        type: type,
+        value: value,
+        is_used: false,
+        single_use: singleUse
+    };
+    
+    supaClient.from('coupons').insert([{ 
+        code: code, 
+        discount: type === 'percentage' ? value : 0, // legacy compatibility
+        type: type,
+        value: value,
+        is_used: false,
+        single_use: singleUse
+    }]).then(() => {
+        const typeStr = type === 'free_silver' ? `${value}g Free Silver` : `${value}% OFF`;
+        const limitStr = singleUse ? ' (Single Use)' : '';
+        alert(`Success! Created Coupon Code: ${code} (${typeStr})${limitStr}. Ready for Cart use.`);
+    }).catch(err => {
+        console.error(err);
+        alert("Error creating coupon code. It might already exist.");
+    });
+    
     codeInp.value = "";
     valInp.value = "";
+    if (singleUseCb) {
+        singleUseCb.checked = (type === 'free_silver');
+    }
+}
+
+function adjustCouponPlaceholder(selectEl) {
+    const valueLabel = document.getElementById("admin-coupon-value-label");
+    const valueInp = document.getElementById("admin-coupon-value");
+    const singleUseCb = document.getElementById("admin-coupon-single-use");
+    if (!valueLabel || !valueInp) return;
+    
+    if (selectEl.value === "free_silver") {
+        valueLabel.textContent = "Free Silver Weight (Grams)";
+        valueInp.placeholder = "e.g. 5.5";
+        valueInp.removeAttribute("max");
+        valueInp.removeAttribute("min");
+        if (singleUseCb) singleUseCb.checked = true;
+    } else {
+        valueLabel.textContent = "Discount Value Percentage (1-100%)";
+        valueInp.placeholder = "e.g. 20";
+        valueInp.min = 1;
+        valueInp.max = 100;
+        if (singleUseCb) singleUseCb.checked = false;
+    }
 }
 
 // Admin Catalog items list render
