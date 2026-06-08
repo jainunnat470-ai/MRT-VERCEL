@@ -126,13 +126,7 @@ async function initState() {
         }
     } catch(err) { console.error("Error loading rates", err); }
 
-    // Fallback for Rates Load
-    const localRates = localStorage.getItem("mrt_rates");
-    if (localRates) {
-        STATE.rates = JSON.parse(localRates);
-    } else {
-        
-    }
+    // Rates loaded strictly from Supabase - no local storage fallback
     
     // Admin Password Load
     if (!localStorage.getItem("mrt_admin_password")) {
@@ -1437,7 +1431,7 @@ function renderAdminRates() {
     if (inpFine) inpFine.value = STATE.rates.fine.toFixed(2);
 }
 
-function updateAdminRates() {
+async function updateAdminRates() {
     const sterlingVal = parseFloat(document.getElementById("admin-rate-sterling").value);
     const fineVal = parseFloat(document.getElementById("admin-rate-fine").value);
     
@@ -1450,10 +1444,22 @@ function updateAdminRates() {
     STATE.rates.fine = fineVal;
     STATE.rates.trend = "up";
     
-    
     renderRatesTicker();
     
-    alert("Live Silver Rates updated on the scrolling marquee ticker successfully!");
+    try {
+        const { error } = await supaClient.from('rates').upsert([{
+            id: 1,
+            sterling: sterlingVal,
+            fine: fineVal,
+            trend: 'up',
+            updated_at: new Date().toISOString()
+        }]);
+        if (error) throw error;
+        alert("Live Silver Rates updated on the scrolling marquee ticker and saved to Supabase successfully!");
+    } catch (err) {
+        console.error("Supabase rates update error:", err);
+        alert("Rates updated locally, but failed to save to Supabase: " + err.message);
+    }
 }
 
 // Admin Orders list render
