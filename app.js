@@ -1100,13 +1100,17 @@ function applyCheckoutCouponCode() {
 }
 
 function togglePaymentFields(method) {
-    const upiSubfields = document.getElementById("checkout-upi-subfields");
-    if (upiSubfields) {
-        upiSubfields.style.display = method === "UPI" ? "block" : "none";
-        if (method === "UPI") {
-            const upiIdInp = document.getElementById("checkout-upi-id");
-            if (upiIdInp) setTimeout(() => upiIdInp.focus(), 50);
-        }
+    const ssFields = document.getElementById("checkout-payment-ss-fields");
+    const waNote = document.getElementById("checkout-wa-note");
+    if (ssFields) ssFields.style.display = method === "UPI" ? "block" : "none";
+    if (waNote) waNote.style.display = method === "WhatsApp" ? "block" : "none";
+    // Clear screenshot when switching to WhatsApp
+    if (method === "WhatsApp") {
+        checkoutPaymentSsBase64 = "";
+        const ssInput = document.getElementById("checkout-payment-ss");
+        if (ssInput) ssInput.value = "";
+        const previewWrap = document.getElementById("checkout-payment-ss-preview-wrap");
+        if (previewWrap) previewWrap.style.display = "none";
     }
 }
 
@@ -1196,8 +1200,9 @@ function submitCheckoutOrder() {
     const paymentRadio = document.querySelector('input[name="checkout-payment"]:checked');
     const paymentMethod = paymentRadio ? paymentRadio.value : "UPI";
     
-    if (!checkoutPaymentSsBase64) {
-        alert("Please upload your payment screenshot (SS) to complete checkout.");
+    // Screenshot required ONLY for UPI payment
+    if (paymentMethod === "UPI" && !checkoutPaymentSsBase64) {
+        alert("Please upload your UPI payment screenshot to complete checkout.");
         return;
     }
     
@@ -1220,19 +1225,22 @@ function submitCheckoutOrder() {
     const shippingFee = 150;
     const total = subtotal - discount + shippingFee;
     
+    // WhatsApp orders go straight to placed; UPI orders need admin approval
+    const orderStatus = paymentMethod === "WhatsApp" ? "placed" : "awaiting_approval";
+    
     const newOrder = {
         id: orderId,
         date: new Date().toISOString().split("T")[0],
         customer: name,
         phone: phone,
         address: address,
-        paymentMethod: paymentMethod === "WhatsApp" ? "WhatsApp Order (SS Verification)" : "UPI Payment (SS Verification)",
+        paymentMethod: paymentMethod === "WhatsApp" ? "WhatsApp Order" : "UPI Payment (SS Verification)",
         items: [...STATE.cart],
         subtotal: subtotal,
         discount: discount,
         total: total,
-        status: "awaiting_approval",
-        payment_screenshot: checkoutPaymentSsBase64
+        status: orderStatus,
+        payment_screenshot: paymentMethod === "UPI" ? checkoutPaymentSsBase64 : null
     };
     
     // Call finalizeOrderPlacement directly since verification is manual
