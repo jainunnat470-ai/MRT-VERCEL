@@ -84,29 +84,7 @@ async function initState() {
     const localWishlist = localStorage.getItem("mrt_wishlist");
     if (localWishlist) STATE.wishlist = JSON.parse(localWishlist);
 
-    // Orders Load
-    const localOrders = localStorage.getItem("mrt_orders");
-    if (localOrders) {
-        STATE.orders = JSON.parse(localOrders);
-    } else {
-        // Mock default order for tracking demonstration
-        const mockOrder = {
-            id: "MRT-SLV-7483",
-            date: "2026-05-30",
-            customer: "Suresh Kumar",
-            phone: "+91 98765 43210",
-            address: "12, Park Avenue, Chennai - 600001",
-            items: [
-                { id: "prod-1", title: "Adira Sterling Silver Ring", price: 1299, qty: 1 }
-            ],
-            subtotal: 1299,
-            discount: 130,
-            total: 1169,
-            status: "processing" // placed, processing, dispatched, delivered
-        };
-        STATE.orders = [mockOrder];
-        
-    }
+    // Orders are loaded strictly from Supabase above - no local storage fallback
 
     // Coupons Load from Supabase
     try {
