@@ -972,7 +972,8 @@ header {
 
 .product-img-wrap {
     width: 100%;
-    height: 250px;
+    aspect-ratio: 1 / 1;
+    height: auto;
     overflow: hidden;
     position: relative;
     background-color: #F8FAFC;
@@ -1279,7 +1280,8 @@ header {
 
 .detail-main-img-wrap {
     width: 100%;
-    height: 500px;
+    aspect-ratio: 1 / 1;
+    height: auto;
     border-radius: 20px;
     overflow: hidden;
     border: none;
@@ -1977,6 +1979,7 @@ header {
     text-transform: uppercase;
 }
 
+.status-awaiting_approval { background-color: #FEE2E2; color: #EF4444; }
 .status-placed { background-color: #E0F2FE; color: #0369A1; }
 .status-processing { background-color: #FEF3C7; color: #D97706; }
 .status-dispatched { background-color: #EDE9FE; color: #6D28D9; }
