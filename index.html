@@ -208,7 +208,7 @@
         <!-- Shop for Him and Her Split -->
         <section class="container gender-banners">
             <div class="gender-banner-card" onclick="navigateTo('shop', 'men')">
-                <img class="gender-banner-img" src="https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=800&q=80" alt="Collection for Him">
+                <img id="gender-banner-him-img" class="gender-banner-img" src="https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=800&q=80" alt="Collection for Him">
                 <div class="gender-banner-overlay">
                     <h3 class="gender-title">Collection for Him</h3>
                     <span class="gender-link">Shop Bold Chains & Rings 
@@ -217,7 +217,7 @@
                 </div>
             </div>
             <div class="gender-banner-card" onclick="navigateTo('shop', 'stud')" style="border: 2px solid #FFFFFF;">
-                <img class="gender-banner-img" src="https://images.unsplash.com/photo-1635767798638-3e25273a8236?auto=format&fit=crop&w=800&q=80" alt="Collection for Her">
+                <img id="gender-banner-her-img" class="gender-banner-img" src="https://images.unsplash.com/photo-1635767798638-3e25273a8236?auto=format&fit=crop&w=800&q=80" alt="Collection for Her">
                 <div class="gender-banner-overlay">
                     <h3 class="gender-title">Collection for Her</h3>
                     <span class="gender-link">Shop Sparkling Pendants &amp; Studs
@@ -448,8 +448,11 @@
                         <label class="custom-form-label" style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0; display: block;">Select Size</label>
                         <a href="javascript:void(0)" id="ring-size-guide-link" onclick="openSizeGuideModal()" style="font-size: 0.72rem; color: var(--color-accent-pink); font-weight: 600; text-decoration: underline; display: none;">📏 Size Guide</a>
                     </div>
-                    <div id="detail-size-options" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    </div>
+                    <!-- Size selector trigger button -->
+                    <button id="size-selector-trigger-btn" onclick="openSizeSelectorModal()" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); background-color: #FFFFFF; color: var(--color-primary); font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; outline: none; text-align: left;">
+                        <span>Selected Size: <strong id="selected-size-text">-</strong></span>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                    </button>
                 </div>
                 
                 <!-- Premium Gift Box Option -->
@@ -1253,6 +1256,36 @@
                             </div>
                         </div>
 
+                        <!-- For Him Split Banner -->
+                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 72px; height: 72px; border-radius: 8px; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
+                                <img id="banner-preview-him" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=80&q=80'">
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">👨 For Him Banner</div>
+                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'him')">
+                                </label>
+                                <button onclick="resetBannerImage('him')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                            </div>
+                        </div>
+
+                        <!-- For Her Split Banner -->
+                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 72px; height: 72px; border-radius: 8px; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
+                                <img id="banner-preview-her" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=80&q=80'">
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">👩 For Her Banner</div>
+                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'her')">
+                                </label>
+                                <button onclick="resetBannerImage('her')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                            </div>
+                        </div>
+
                     </div>
 
                     <div style="background: #FFFBEB; border: 1px solid #FBBF24; border-radius: 10px; padding: 14px 18px; font-size: 0.85rem; color: #92400E;">
@@ -1580,6 +1613,18 @@
         <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--color-silver-light); padding-top: 15px; margin-top: 20px; flex-wrap: wrap;">
             <button class="btn-add-cart" style="padding: 10px 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); margin-top: 0;" onclick="closeTryOnModal()">Cancel</button>
             <button id="tryon-submit-btn" class="btn-checkout" style="padding: 10px 25px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; border-radius: var(--border-radius-sm); margin-top: 0; background-color: var(--color-primary); display: none;" onclick="generateAiTryOn()">Generate AI Try-On</button>
+        </div>
+    </div>
+
+    <!-- Size Selector Popup Modal -->
+    <div class="drawer-overlay" id="size-selector-overlay" onclick="closeSizeSelectorModal()" style="z-index: 190; display: none;"></div>
+    <div class="custom-form-panel" id="size-selector-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 200; width: 90%; max-width: 400px; box-shadow: var(--shadow-lux); border-radius: var(--border-radius-md); padding: 25px; background-color: #FFFFFF;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--color-primary); margin: 0; text-transform: uppercase; letter-spacing: 1px;">Select Size</h3>
+            <button onclick="closeSizeSelectorModal()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--color-silver-dark); font-weight: 600; line-height: 1;">✕</button>
+        </div>
+        <div id="size-selector-modal-options" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+            <!-- Loaded dynamically in app.js -->
         </div>
     </div>
 
