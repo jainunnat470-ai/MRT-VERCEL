@@ -917,10 +917,10 @@ function renderCartDrawer() {
         if (coupon) {
             let labelSuffix = "";
             if (coupon.type === 'free_silver') {
-                discount = Math.round(coupon.value * STATE.rates.sterling);
+                discount = coupon.value * STATE.rates.sterling;
                 labelSuffix = `Free Silver: ${coupon.value}g`;
             } else {
-                discount = Math.round(subtotal * (coupon.value / 100));
+                discount = subtotal * (coupon.value / 100);
                 labelSuffix = `${coupon.value}%`;
             }
             discount = Math.min(discount, subtotal);
@@ -1034,16 +1034,16 @@ function openCheckoutModal() {
             if (coupon) {
                 let labelSuffix = "";
                 if (coupon.type === 'free_silver') {
-                    discount = Math.round(coupon.value * STATE.rates.sterling);
+                    discount = parseFloat(coupon.value * STATE.rates.sterling);
                     labelSuffix = `Free Silver: ${coupon.value}g`;
                 } else {
-                    discount = Math.round(subtotal * (coupon.value / 100));
+                    discount = parseFloat(subtotal * (coupon.value / 100));
                     labelSuffix = `${coupon.value}%`;
                 }
                 discount = Math.min(discount, subtotal);
                 if (summaryDiscountRow && summaryDiscount) {
                     summaryDiscountRow.style.display = "flex";
-                    summaryDiscount.textContent = `-₹${discount.toLocaleString("en-IN")} (${labelSuffix})`;
+                    summaryDiscount.textContent = `-₹${Math.round(discount).toLocaleString("en-IN")} (${labelSuffix})`;
                 }
             }
         } else {
@@ -1052,7 +1052,7 @@ function openCheckoutModal() {
         
         const shippingFee = 150;
         const total = subtotal - discount + shippingFee;
-        const gst = Math.round((subtotal - discount) * 0.03); // GST is 3% included
+        const gst = (subtotal - discount) * 0.03; // GST is 3% included
         
         if (summarySubtotal) summarySubtotal.textContent = `₹${subtotal.toLocaleString("en-IN")}`;
         if (summaryGst) summaryGst.textContent = `₹${gst.toLocaleString("en-IN")}`;
@@ -1214,9 +1214,9 @@ function submitCheckoutOrder() {
         const coupon = STATE.coupons[STATE.activeCoupon];
         if (coupon) {
             if (coupon.type === 'free_silver') {
-                discount = Math.round(coupon.value * STATE.rates.sterling);
+                discount = coupon.value * STATE.rates.sterling;
             } else {
-                discount = Math.round(subtotal * (coupon.value / 100));
+                discount = subtotal * (coupon.value / 100);
             }
             discount = Math.min(discount, subtotal);
         }
@@ -3131,7 +3131,7 @@ function downloadOrderInvoicePdf(orderId) {
     const shippingFee = 150;
     const total = o.total;
     const itemsTotal = total - shippingFee;
-    const gstIncluded = Math.round(itemsTotal * 0.03);
+    const gstIncluded = itemsTotal * 0.03;
     const cgst = (gstIncluded / 2).toFixed(2);
     const sgst = (gstIncluded / 2).toFixed(2);
     const taxableAmount = (total - gstIncluded).toFixed(2);
