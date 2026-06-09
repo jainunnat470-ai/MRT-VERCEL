@@ -2037,6 +2037,157 @@ function initTryOnDragAndDrop() {
     console.log("Virtual Try-On is currently disabled.");
 }
 
+// --- BANNER IMAGE MANAGER ---
+// Default fallback URLs for each slot
+const BANNER_DEFAULTS = {
+    hero: 'hero_banner.png',
+    rings: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=300&q=80',
+    earrings: 'https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?auto=format&fit=crop&w=300&q=80',
+    pendants: 'https://images.unsplash.com/photo-1599643477877-530eb83abc8e?auto=format&fit=crop&w=300&q=80',
+    bracelets: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=300&q=80',
+    anklets: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=300&q=80',
+    chains: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=300&q=80',
+};
+
+// Upload image to Supabase Storage, save URL in settings table, apply live
+async function handleBannerUpload(event, slot) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const toastEl = document.createElement('div');
+    toastEl.textContent = `⏳ Uploading ${slot} image...`;
+    Object.assign(toastEl.style, {
+        position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)',
+        background: '#1a0a2e', color: '#FFD700', padding: '12px 24px',
+        borderRadius: '30px', fontWeight: '700', zIndex: '99999', fontSize: '0.9rem',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+    });
+    document.body.appendChild(toastEl);
+
+    try {
+        // Upload to Supabase Storage bucket "banners"
+        const fileName = `banner_${slot}_${Date.now()}.${file.name.split('.').pop()}`;
+        const { data: uploadData, error: uploadError } = await supaClient.storage
+            .from('banners')
+            .upload(fileName, file, { upsert: true, contentType: file.type });
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: urlData } = supaClient.storage.from('banners').getPublicUrl(fileName);
+        const publicUrl = urlData.publicUrl;
+
+        // Save to settings table
+        await supaClient.from('settings').upsert(
+            { key: `banner_${slot}`, value: publicUrl },
+            { onConflict: 'key' }
+        );
+
+        // Apply live immediately
+        applyBannerSlot(slot, publicUrl);
+
+        // Update preview in admin panel
+        const preview = document.getElementById(`banner-preview-${slot}`);
+        if (preview) preview.src = publicUrl;
+
+        toastEl.textContent = `✅ ${slot.charAt(0).toUpperCase() + slot.slice(1)} image updated!`;
+        toastEl.style.background = '#065F46';
+        toastEl.style.color = '#fff';
+    } catch (err) {
+        // Fallback: use base64 via FileReader if Supabase storage not available
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const dataUrl = e.target.result;
+            // Save as base64 in settings table
+            await supaClient.from('settings').upsert(
+                { key: `banner_${slot}`, value: dataUrl },
+                { onConflict: 'key' }
+            );
+            applyBannerSlot(slot, dataUrl);
+            const preview = document.getElementById(`banner-preview-${slot}`);
+            if (preview) preview.src = dataUrl;
+            toastEl.textContent = `✅ ${slot.charAt(0).toUpperCase() + slot.slice(1)} image updated!`;
+            toastEl.style.background = '#065F46';
+            toastEl.style.color = '#fff';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    setTimeout(() => toastEl.remove(), 3000);
+}
+
+// Reset banner back to default
+async function resetBannerImage(slot) {
+    const defaultUrl = BANNER_DEFAULTS[slot] || '';
+    // Remove from settings table
+    await supaClient.from('settings').delete().eq('key', `banner_${slot}`);
+    // Apply default
+    applyBannerSlot(slot, defaultUrl);
+    const preview = document.getElementById(`banner-preview-${slot}`);
+    if (preview) preview.src = defaultUrl;
+    showToast(`${slot.charAt(0).toUpperCase() + slot.slice(1)} reset to default.`);
+}
+
+// Apply a banner URL to the actual live page elements
+function applyBannerSlot(slot, url) {
+    if (slot === 'hero') {
+        const heroBg = document.querySelector('.hero-slide-bg');
+        if (heroBg) heroBg.style.backgroundImage = `url('${url}')`;
+        return;
+    }
+    // Category circles: find the img inside cat-circle-item for the given category
+    const catMap = {
+        rings: 'rings', earrings: 'earrings', pendants: 'pendants',
+        bracelets: 'bracelets', anklets: 'anklets', chains: 'chains'
+    };
+    if (catMap[slot]) {
+        // Find by onclick attribute containing the category name
+        const items = document.querySelectorAll('.cat-circle-item');
+        items.forEach(item => {
+            const onclick = item.getAttribute('onclick') || '';
+            if (onclick.includes(`'${catMap[slot]}'`)) {
+                const img = item.querySelector('.cat-circle-img-wrap img');
+                if (img) img.src = url;
+            }
+        });
+    }
+}
+
+// Load all saved banner images from Supabase on page load
+async function applyBannerImages() {
+    try {
+        const { data, error } = await supaClient
+            .from('settings')
+            .select('key, value')
+            .like('key', 'banner_%');
+
+        if (error || !data) return;
+        data.forEach(row => {
+            const slot = row.key.replace('banner_', '');
+            if (row.value) applyBannerSlot(slot, row.value);
+            // Also update admin previews if visible
+            const preview = document.getElementById(`banner-preview-${slot}`);
+            if (preview && row.value) preview.src = row.value;
+        });
+    } catch (e) {
+        console.warn('Banner load failed:', e);
+    }
+}
+
+// Simple toast helper
+function showToast(msg, duration = 3000) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    Object.assign(t.style, {
+        position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)',
+        background: '#1a0a2e', color: '#fff', padding: '11px 22px',
+        borderRadius: '30px', fontWeight: '600', zIndex: '99999', fontSize: '0.88rem',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
+    });
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), duration);
+}
+
 // --- LIVE STATS FROM SUPABASE ---
 async function loadLiveStats() {
     try {
@@ -2103,6 +2254,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     renderHomeProducts();
     updateHeaderCounters();
     loadLiveStats(); // Load real delivered orders & products count
+    applyBannerImages(); // Apply admin-uploaded banner images
     
     // Clear admin authentication state on fresh load / reload to enforce login prompt
     sessionStorage.removeItem("mrt_admin_authenticated");
