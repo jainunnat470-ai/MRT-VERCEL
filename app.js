@@ -3315,7 +3315,7 @@ function downloadOrderInvoicePdf(orderId) {
                 <div class="invoice-header">
                     <div>
                         <div class="brand-title">M. R. THANGA MAALIGAI</div>
-                        <div class="brand-sub">925 Pure Sterling Silver & Gold Jewellery</div>
+                        <div class="brand-sub">925 Pure Sterling Jewellery</div>
                         <div style="font-size: 0.8rem; color: #4A5568; margin-top: 8px; line-height: 1.6;">
                             <strong>Legal Name:</strong> RAMCHAND SURESH KUMAR<br>
                             <strong>Trade Name:</strong> M. R. THANGA MAALIGAI<br>
