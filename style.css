@@ -269,27 +269,12 @@ header {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     font-weight: 700;
-    padding: 6px 14px;
-    border: 1.5px solid rgba(124, 58, 237, 0.35);
-    border-radius: 20px;
     position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
     letter-spacing: 1px;
 }
 
 .nav-link--customise::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(192,38,211,0.08));
-    border-radius: 20px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.nav-link--customise:hover::before {
-    opacity: 1;
+    display: none;
 }
 
 .nav-link--customise::after {
@@ -297,8 +282,6 @@ header {
 }
 
 .nav-link--customise:hover {
-    border-color: rgba(124, 58, 237, 0.6);
-    box-shadow: 0 0 12px rgba(124, 58, 237, 0.25);
     transform: translateY(-1px);
 }
 
