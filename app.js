@@ -511,7 +511,8 @@ function addToCart(prodId, count = 1) {
     // Determine the size to add
     let size = null;
     const isToeRing = prod.title.toLowerCase().includes("toe");
-    const isRing = (prod.category === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing;
+    const isEarring = prod.category === "earrings" || prod.title.toLowerCase().includes("earring");
+    const isRing = (prod.category === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing && !isEarring;
     const isChain = prod.category === "chains";
     
     if (STATE.selectedProduct && STATE.selectedProduct.id === prod.id && STATE.selectedSize) {
@@ -605,14 +606,14 @@ function viewProductDetail(prodId) {
     
     // Ring, Toe Ring, and Chain Size rendering
     const isToeRing = prod.title.toLowerCase().includes("toe");
-    const isRing = (prod.category === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing;
+    const isEarring = prod.category === "earrings" || prod.title.toLowerCase().includes("earring");
+    const isRing = (prod.category === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing && !isEarring;
     const isChain = prod.category === "chains";
     
     const sizeSection = document.getElementById("detail-size-section");
-    const sizeOptionsContainer = document.getElementById("detail-size-options");
     const sizeLabel = sizeSection ? sizeSection.querySelector(".custom-form-label") : null;
     
-    if (sizeSection && sizeOptionsContainer) {
+    if (sizeSection) {
         if (isRing || isToeRing || isChain) {
             sizeSection.style.display = "block";
             let sizes = [];
@@ -636,29 +637,22 @@ function viewProductDetail(prodId) {
                 sizeLabel.textContent = labelText;
             }
             
-            // Format layout: Horizontal scrollable container for rings, flex-wrap for other sizes
-            if (isRing) {
-                sizeOptionsContainer.style.display = "flex";
-                sizeOptionsContainer.style.overflowX = "auto";
-                sizeOptionsContainer.style.gap = "8px";
-                sizeOptionsContainer.style.paddingBottom = "8px";
-                sizeOptionsContainer.style.flexWrap = "nowrap";
-                sizeOptionsContainer.style.WebkitOverflowScrolling = "touch";
-                
-                // Hide scrollbar but keep functionality
-                sizeOptionsContainer.style.scrollbarWidth = "none";
-                sizeOptionsContainer.style.msOverflowStyle = "none";
-            } else {
-                sizeOptionsContainer.style.display = "flex";
-                sizeOptionsContainer.style.gap = "10px";
-                sizeOptionsContainer.style.flexWrap = "wrap";
-                sizeOptionsContainer.style.overflowX = "visible";
-            }
-            
-            sizeOptionsContainer.innerHTML = sizes.map((size, idx) => `
-                <div class="size-option-circle ${idx === 0 ? 'active-size' : ''}" style="${isRing ? 'flex: 0 0 auto;' : ''}" onclick="selectProductSize('${size}', this)">${size}</div>
-            `).join("");
             STATE.selectedSize = sizes[0];
+            
+            const selectedText = document.getElementById("selected-size-text");
+            if (selectedText) {
+                selectedText.textContent = STATE.selectedSize;
+            }
+
+            const modalOptions = document.getElementById("size-selector-modal-options");
+            if (modalOptions) {
+                modalOptions.innerHTML = sizes.map((size) => {
+                    const isActive = STATE.selectedSize === size;
+                    return `
+                        <div class="size-option-circle ${isActive ? 'active-size' : ''}" style="width: 100%; height: 42px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; border: 1px solid var(--color-silver-mid); transition: all 0.2s ease; user-select: none;" onclick="selectProductSize('${size}', this)">${size}</div>
+                    `;
+                }).join("");
+            }
         } else {
             sizeSection.style.display = "none";
             STATE.selectedSize = null;
@@ -787,6 +781,13 @@ function selectProductSize(size, element) {
             element.classList.add("active-size");
             console.log("Active class applied to:", element);
         }
+        const selectedText = document.getElementById("selected-size-text");
+        if (selectedText) {
+            selectedText.textContent = size;
+        }
+        setTimeout(() => {
+            closeSizeSelectorModal();
+        }, 150);
     } catch (err) {
         console.error("Error in selectProductSize:", err);
     }
@@ -805,7 +806,8 @@ function triggerBuyNow() {
         const wrapSuffix = hasGiftWrap ? " + Gift Box" : "";
         
         const isToeRing = prod.title.toLowerCase().includes("toe");
-        const isRing = (prod.category === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing;
+        const isEarring = prod.category === "earrings" || prod.title.toLowerCase().includes("earring");
+        const isRing = (prod.category === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing && !isEarring;
         const isChain = prod.category === "chains";
         
         let size = STATE.selectedSize;
@@ -2051,6 +2053,8 @@ const BANNER_DEFAULTS = {
     bracelets: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=300&q=80',
     anklets: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=300&q=80',
     chains: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=300&q=80',
+    him: 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=800&q=80',
+    her: 'https://images.unsplash.com/photo-1635767798638-3e25273a8236?auto=format&fit=crop&w=800&q=80',
 };
 
 // Upload image to Supabase Storage, save URL in settings table, apply live
@@ -2137,6 +2141,16 @@ function applyBannerSlot(slot, url) {
     if (slot === 'hero') {
         const heroBg = document.querySelector('.hero-slide-bg');
         if (heroBg) heroBg.src = url;
+        return;
+    }
+    if (slot === 'him') {
+        const himImg = document.getElementById('gender-banner-him-img');
+        if (himImg) himImg.src = url;
+        return;
+    }
+    if (slot === 'her') {
+        const herImg = document.getElementById('gender-banner-her-img');
+        if (herImg) herImg.src = url;
         return;
     }
     // Category circles: find the img inside cat-circle-item for the given category
@@ -3718,6 +3732,20 @@ const INDIAN_RING_SIZES = [
 ];
 
 let STATE_CALCULATED_SIZE = "";
+
+function openSizeSelectorModal() {
+    const overlay = document.getElementById("size-selector-overlay");
+    const modal = document.getElementById("size-selector-modal");
+    if (overlay) overlay.style.display = "block";
+    if (modal) modal.style.display = "block";
+}
+
+function closeSizeSelectorModal() {
+    const overlay = document.getElementById("size-selector-overlay");
+    const modal = document.getElementById("size-selector-modal");
+    if (overlay) overlay.style.display = "none";
+    if (modal) modal.style.display = "none";
+}
 
 function openSizeGuideModal() {
     document.getElementById("size-guide-overlay").style.display = "block";
