@@ -404,17 +404,13 @@ header {
 /* Hero Carousel */
 .hero-slider {
     position: relative;
-    height: 520px;
     background-color: #ECEFF1;
     overflow: hidden;
 }
 
 .hero-slide {
-    position: absolute;
-    top: 0;
-    left: 0;
+    position: relative;
     width: 100%;
-    height: 100%;
     opacity: 0;
     transition: opacity 0.8s ease-in-out;
     display: flex;
@@ -2727,7 +2723,7 @@ footer {
     }
     
     .hero-slider {
-        height: 360px;
+        /* adaptive height */
     }
     
     .hero-slide-content {
@@ -3651,7 +3647,7 @@ footer {
 
     /* Banners & Titles */
     .hero-slider {
-        height: 300px;
+        /* adaptive height */
     }
 
     .hero-slide-content {
