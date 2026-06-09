@@ -194,6 +194,9 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 12px;
+    overflow: visible;
 }
 
 .logo {
@@ -204,9 +207,9 @@ header {
 
 .logo-main {
     font-family: var(--font-heading);
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     font-weight: 700;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     line-height: 1.2;
     color: var(--color-primary);
     text-transform: uppercase;
@@ -224,17 +227,20 @@ header {
 /* Nav Links */
 .nav-menu {
     display: flex;
-    gap: 32px;
+    gap: 18px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
 }
 
 .nav-link {
-    font-size: 0.9rem;
+    font-size: 0.78rem;
     font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
+    letter-spacing: 1px;
     padding: 8px 0;
     position: relative;
     color: var(--color-secondary);
+    white-space: nowrap;
 }
 
 .nav-link::after {
@@ -300,12 +306,14 @@ header {
 .header-utils {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 10px;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
 }
 
 .search-box {
     position: relative;
-    width: 240px;
+    width: 160px;
 }
 
 .search-input {
@@ -369,12 +377,13 @@ header {
 
 .admin-toggle-btn {
     border: 1px solid var(--color-silver-dark);
-    padding: 6px 14px;
+    padding: 5px 10px;
     border-radius: var(--border-radius-lg);
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     font-weight: 600;
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
+    white-space: nowrap;
 }
 
 .admin-toggle-btn:hover {
