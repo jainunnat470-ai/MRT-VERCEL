@@ -2727,6 +2727,21 @@ footer {
         height: 180px; /* Constrain height on mobile */
     }
     
+    .categories-circles-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px 8px;
+    }
+    
+    .cat-circle-img-wrap {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .cat-circle-title {
+        font-size: 0.72rem;
+        text-align: center;
+    }
+    
     .hero-slide-content {
         max-width: 90%;
         margin-left: 5%;
@@ -3743,8 +3758,8 @@ footer {
 
     /* Stack categories */
     .categories-circles-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px 6px;
     }
 
     /* Stack products */
