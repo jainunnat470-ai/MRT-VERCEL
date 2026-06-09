@@ -2132,7 +2132,7 @@ async function resetBannerImage(slot) {
 function applyBannerSlot(slot, url) {
     if (slot === 'hero') {
         const heroBg = document.querySelector('.hero-slide-bg');
-        if (heroBg) heroBg.style.backgroundImage = `url('${url}')`;
+        if (heroBg) heroBg.src = url;
         return;
     }
     // Category circles: find the img inside cat-circle-item for the given category
