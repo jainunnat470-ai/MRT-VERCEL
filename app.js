@@ -2532,6 +2532,8 @@ function editProduct(prodId) {
     // Populate form fields
     document.getElementById("new-prod-title").value = p.title;
     document.getElementById("new-prod-cat").value = p.category;
+    document.getElementById("new-prod-price").value = p.price || "";
+    document.getElementById("new-prod-orig").value = p.originalPrice || "";
     document.getElementById("new-prod-finish").value = p.plating;
     
     // Infer market purity base from specs.metal
