@@ -1872,7 +1872,8 @@ async function addNewProduct() {
             calc_making: parseFloat(document.getElementById("new-prod-calc-making").value) || 0,
             calc_making_type: document.getElementById("new-prod-calc-making-type").value,
             calc_gst: parseFloat(document.getElementById("new-prod-calc-gst").value) || 3,
-            market_base: document.getElementById("new-prod-market-base").value
+            market_base: document.getElementById("new-prod-market-base").value,
+            disable_auto_rate: document.getElementById("new-prod-disable-autorate").checked
         }
     };
     
@@ -1929,6 +1930,9 @@ async function addNewProduct() {
         breakdown.innerHTML = "";
         breakdown.style.display = "none";
     }
+    const disableCheckbox = document.getElementById("new-prod-disable-autorate");
+    if (disableCheckbox) disableCheckbox.checked = false;
+    toggleAutoRateFields();
     
     alert(`Success! "${title}" added to the shop catalog.`);
     renderAdminInventoryList();
@@ -2295,6 +2299,10 @@ function recalculateAllProductPrices() {
 
     STATE.products.forEach(p => {
         let specs = p.specs || {};
+        if (specs.disable_auto_rate === true) {
+            // Skip price recalculation for manually priced products!
+            return;
+        }
         let weightVal = parseFloat(specs.calc_weight);
         
         if (isNaN(weightVal) && specs.weight) {
@@ -2386,6 +2394,12 @@ function recalculateAllProductPrices() {
 
 // --- DYNAMIC RATE AUTO-CALCULATOR FOR INVENTORY UPLOADS ---
 function autoCalculateJewelRate() {
+    const disableCheckbox = document.getElementById("new-prod-disable-autorate");
+    if (disableCheckbox && disableCheckbox.checked) {
+        const breakdownDiv = document.getElementById("rate-calculation-breakdown");
+        if (breakdownDiv) breakdownDiv.style.display = "none";
+        return;
+    }
     const weightVal = parseFloat(document.getElementById("new-prod-calc-weight").value);
     const makingVal = parseFloat(document.getElementById("new-prod-calc-making").value) || 0;
     const makingType = document.getElementById("new-prod-calc-making-type").value;
@@ -2441,6 +2455,47 @@ function autoCalculateJewelRate() {
             • GST (${gstVal}%): ₹${gstCost.toFixed(2)}<br>
             • <strong>Final Calculated Price: ₹${totalCost}</strong> (Original Price set to ₹${totalCost * 2})
         `;
+    }
+}
+
+// Toggle enabled/disabled state of auto-rate calculator fields
+function toggleAutoRateFields() {
+    const isChecked = document.getElementById("new-prod-disable-autorate").checked;
+    const fields = [
+        "new-prod-calc-weight",
+        "new-prod-calc-making",
+        "new-prod-calc-making-type",
+        "new-prod-calc-gst",
+        "new-prod-market-base"
+    ];
+    
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.disabled = isChecked;
+            el.style.opacity = isChecked ? "0.5" : "1";
+        }
+    });
+
+    const manualFields = [
+        "new-prod-weight",
+        "new-prod-price",
+        "new-prod-orig"
+    ];
+    
+    manualFields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.readOnly = !isChecked;
+            el.style.backgroundColor = !isChecked ? "#f1f5f9" : "";
+        }
+    });
+    
+    const breakdown = document.getElementById("rate-calculation-breakdown");
+    if (isChecked && breakdown) {
+        breakdown.style.display = "none";
+    } else if (!isChecked) {
+        autoCalculateJewelRate();
     }
 }
 
@@ -2517,11 +2572,19 @@ function editProduct(prodId) {
     document.getElementById("new-prod-calc-weight").value = isNaN(weightVal) || weightVal === 0 ? "" : weightVal;
     
     // Load dynamic pricing calculator parameters if available
+    const disableCheckbox = document.getElementById("new-prod-disable-autorate");
+    if (disableCheckbox) {
+        disableCheckbox.checked = !!(p.specs && p.specs.disable_auto_rate);
+    }
+    toggleAutoRateFields();
+
     if (p.specs && p.specs.calc_making !== undefined) {
         document.getElementById("new-prod-calc-making").value = p.specs.calc_making;
         document.getElementById("new-prod-calc-making-type").value = p.specs.calc_making_type || "per-gram";
         document.getElementById("new-prod-calc-gst").value = p.specs.calc_gst !== undefined ? p.specs.calc_gst : "3";
-        autoCalculateJewelRate();
+        if (!p.specs.disable_auto_rate) {
+            autoCalculateJewelRate();
+        }
     } else {
         document.getElementById("new-prod-calc-making").value = "";
         document.getElementById("new-prod-calc-making-type").value = "per-gram";
@@ -2652,7 +2715,8 @@ async function updateExistingProduct() {
             calc_making: parseFloat(document.getElementById("new-prod-calc-making").value) || 0,
             calc_making_type: document.getElementById("new-prod-calc-making-type").value,
             calc_gst: parseFloat(document.getElementById("new-prod-calc-gst").value) || 3,
-            market_base: document.getElementById("new-prod-market-base").value
+            market_base: document.getElementById("new-prod-market-base").value,
+            disable_auto_rate: document.getElementById("new-prod-disable-autorate").checked
         }
     };
     
@@ -2728,6 +2792,9 @@ function cancelEditProduct() {
         breakdown.innerHTML = "";
         breakdown.style.display = "none";
     }
+    const disableCheckbox = document.getElementById("new-prod-disable-autorate");
+    if (disableCheckbox) disableCheckbox.checked = false;
+    toggleAutoRateFields();
     
     // Restore header & submit button
     const titleHeader = document.getElementById("admin-add-tab-title");
