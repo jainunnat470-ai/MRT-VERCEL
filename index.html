@@ -856,6 +856,10 @@
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     <span>Settings</span>
                 </div>
+                <div class="admin-side-menu-item" data-tab="banners" onclick="navigateAdminTab('banners')">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>Banner Manager</span>
+                </div>
             </aside>
             
             <!-- Main Content tabs area -->
@@ -1151,6 +1155,132 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- 9. Banner Manager -->
+                <div class="admin-tab-view" id="admin-tab-banners">
+                    <h3 class="admin-tab-title">🖼️ Banner & Category Image Manager</h3>
+                    <p style="color: var(--color-silver-dark); margin-bottom: 24px; font-size: 0.9rem;">Upload images from your device. Changes apply instantly to all visitors on the live website.</p>
+
+                    <!-- Hero Banner -->
+                    <div style="background: linear-gradient(135deg, #1a0a2e, #3D0024); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                        <h4 style="color: #FFD700; margin-bottom: 16px; font-size: 1rem; letter-spacing: 1px; text-transform: uppercase;">🎯 Hero Banner (Main Homepage)</h4>
+                        <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                            <div style="width: 220px; height: 110px; border-radius: 8px; overflow: hidden; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;">
+                                <img id="banner-preview-hero" src="hero_banner.png" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://placehold.co/220x110/3D0024/FFD700?text=Hero+Banner'">
+                            </div>
+                            <div style="flex: 1;">
+                                <p style="color: rgba(255,255,255,0.7); font-size: 0.82rem; margin-bottom: 12px;">Recommended: 1600×600px, landscape. Shown at top of homepage for desktop users.</p>
+                                <label style="display: inline-flex; align-items: center; gap: 8px; background: #FFD700; color: #1a0a2e; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.82rem;">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                    Upload Hero Image
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'hero')">
+                                </label>
+                                <button onclick="resetBannerImage('hero')" style="margin-left: 10px; background: transparent; border: 1px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.7); padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 0.8rem;">↺ Reset</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Images -->
+                    <h4 style="color: var(--color-primary); margin-bottom: 16px; font-size: 1rem; letter-spacing: 1px; text-transform: uppercase;">📂 Category Circle Images</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px;">
+
+                        <!-- Rings -->
+                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
+                                <img id="banner-preview-rings" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=80&q=80'">
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">💍 Rings</div>
+                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'rings')">
+                                </label>
+                                <button onclick="resetBannerImage('rings')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                            </div>
+                        </div>
+
+                        <!-- Earrings -->
+                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
+                                <img id="banner-preview-earrings" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=80&q=80'">
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">👂 Earrings</div>
+                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'earrings')">
+                                </label>
+                                <button onclick="resetBannerImage('earrings')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                            </div>
+                        </div>
+
+                        <!-- Pendants -->
+                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
+                                <img id="banner-preview-pendants" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=80&q=80'">
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">📿 Pendants</div>
+                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'pendants')">
+                                </label>
+                                <button onclick="resetBannerImage('pendants')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                            </div>
+                        </div>
+
+                        <!-- Bracelets -->
+                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
+                                <img id="banner-preview-bracelets" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=80&q=80'">
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">⌚ Bracelets</div>
+                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'bracelets')">
+                                </label>
+                                <button onclick="resetBannerImage('bracelets')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                            </div>
+                        </div>
+
+                        <!-- Anklets -->
+                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
+                                <img id="banner-preview-anklets" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=80&q=80'">
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">🦶 Anklets</div>
+                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'anklets')">
+                                </label>
+                                <button onclick="resetBannerImage('anklets')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                            </div>
+                        </div>
+
+                        <!-- Chains -->
+                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
+                                <img id="banner-preview-chains" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=80&q=80'">
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">🔗 Chains</div>
+                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'chains')">
+                                </label>
+                                <button onclick="resetBannerImage('chains')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div style="background: #FFFBEB; border: 1px solid #FBBF24; border-radius: 10px; padding: 14px 18px; font-size: 0.85rem; color: #92400E;">
+                        ⚠️ <strong>How it works:</strong> Select an image file → it saves to the database instantly → all visitors see the new image immediately. Click <strong>Reset</strong> to revert to the default image.
+                    </div>
+                </div>
+
             </main>
         </div>
     </div>
