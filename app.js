@@ -169,21 +169,34 @@ function saveWishlist() {
 async function saveOrders(newOrder) {
     
     if (newOrder) {
+        const basePayload = {
+            id: newOrder.id,
+            date: newOrder.date,
+            customer: newOrder.customer,
+            phone: newOrder.phone,
+            address: newOrder.address,
+            payment_method: newOrder.paymentMethod,
+            subtotal: newOrder.subtotal,
+            discount: newOrder.discount,
+            total: newOrder.total,
+            status: newOrder.status,
+            items: newOrder.items,
+            payment_screenshot: newOrder.payment_screenshot
+        };
+        
         try {
-            await supaClient.from('orders').insert([{
-                id: newOrder.id,
-                date: newOrder.date,
-                customer: newOrder.customer,
-                phone: newOrder.phone,
-                address: newOrder.address,
-                payment_method: newOrder.paymentMethod,
-                subtotal: newOrder.subtotal,
-                discount: newOrder.discount,
-                total: newOrder.total,
-                status: newOrder.status,
-                items: newOrder.items,
-                payment_screenshot: newOrder.payment_screenshot
+            // Try with GST fields
+            const { error } = await supaClient.from('orders').insert([{
+                ...basePayload,
+                gst_amount: newOrder.gst_amount || 0,
+                shipping: newOrder.shipping || 0,
+                digi_subtotal: newOrder.digi_subtotal || 0
             }]);
+            if (error) {
+                // Fallback: insert without new columns if they don't exist yet
+                console.warn("Insert with GST fields failed, retrying without:", error.message);
+                await supaClient.from('orders').insert([basePayload]);
+            }
         } catch (err) {
             console.error("Supabase order insert error:", err);
         }
@@ -1100,14 +1113,25 @@ function openCheckoutModal() {
         const hasPhysicalItems = physicalSubtotal > 0;
         const shippingFee = hasPhysicalItems ? 150 : 0;
         
-        const addedGst = digiSubtotal * 0.03;
-        const total = subtotal - discount + shippingFee + addedGst;
-        const displayGst = addedGst > 0 ? addedGst : (physicalSubtotal - discount) * 0.03;
+        // Digi Silver: 3% GST is EXTRA (added on top)
+        // Physical items: 3% GST is INCLUDED in price
+        const digiGst = Math.round(digiSubtotal * 0.03);
+        const physicalGst = Math.round((physicalSubtotal - Math.min(discount, physicalSubtotal)) * 0.03);
+        const total = subtotal - discount + shippingFee + digiGst;
         
         const gstLabel = document.getElementById("checkout-summary-gst-label");
         if (gstLabel) {
-            gstLabel.textContent = (addedGst > 0 && physicalSubtotal === 0) ? "GST (3% Extra):" : "GST (3% Included):";
+            if (digiSubtotal > 0 && physicalSubtotal === 0) {
+                gstLabel.textContent = "GST (3% Extra):";
+            } else if (digiSubtotal > 0 && physicalSubtotal > 0) {
+                gstLabel.textContent = "GST (3% Extra on Digi):";
+            } else {
+                gstLabel.textContent = "GST (3% Included):";
+            }
         }
+        
+        // Display: for digi-only show digiGst, for physical-only show physicalGst, for mixed show digiGst (extra part)
+        const displayGst = digiSubtotal > 0 ? digiGst : physicalGst;
         
         const shippingEl = document.getElementById("checkout-summary-shipping");
         if (shippingEl) {
@@ -1297,8 +1321,8 @@ function submitCheckoutOrder() {
     
     const hasPhysicalItems = physicalSubtotal > 0;
     const shippingFee = hasPhysicalItems ? 150 : 0;
-    const addedGst = digiSubtotal * 0.03;
-    const total = subtotal - discount + shippingFee + addedGst;
+    const digiGst = Math.round(digiSubtotal * 0.03);
+    const total = subtotal - discount + shippingFee + digiGst;
     
     // WhatsApp orders go straight to placed; UPI orders need admin approval
     const orderStatus = paymentMethod === "WhatsApp" ? "placed" : "awaiting_approval";
@@ -1320,6 +1344,9 @@ function submitCheckoutOrder() {
         subtotal: subtotal,
         discount: discount,
         total: total,
+        gst_amount: digiGst,
+        shipping: shippingFee,
+        digi_subtotal: digiSubtotal,
         status: orderStatus,
         payment_screenshot: paymentMethod === "UPI" ? checkoutPaymentSsBase64 : null
     };
@@ -3257,7 +3284,23 @@ function renderAdminGstPortal() {
     let taxSum = 0;
     
     const tableHtml = filtered.map(o => {
-        const gst = Math.round(o.total * 0.03);
+        // Use stored gst_amount if available, otherwise compute from items
+        let gst = 0;
+        if (o.gst_amount !== undefined && o.gst_amount !== null) {
+            gst = Math.round(o.gst_amount);
+        } else {
+            // Legacy: check if order has digi silver items
+            const itemsArr = typeof o.items === 'string' ? safeJSONParse(o.items, []) : (o.items || []);
+            const hasDigi = itemsArr.some(i => i.isDigiSilver);
+            if (hasDigi) {
+                // Digi orders: GST was added extra, so back-calculate
+                const digiTotal = itemsArr.filter(i => i.isDigiSilver).reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
+                gst = Math.round(digiTotal * 0.03);
+            } else {
+                // Physical: GST included in total
+                gst = Math.round(o.total * 3 / 103);
+            }
+        }
         grossSum += (o.total - gst);
         taxSum += gst;
         
@@ -3315,7 +3358,19 @@ function downloadGstReportCsv() {
     let totalTaxable = 0;
     
     filteredOrders.forEach(o => {
-        const gst = Math.round(o.total * 0.03);
+        let gst = 0;
+        if (o.gst_amount !== undefined && o.gst_amount !== null) {
+            gst = Math.round(o.gst_amount);
+        } else {
+            const itemsArr = typeof o.items === 'string' ? safeJSONParse(o.items, []) : (o.items || []);
+            const hasDigi = itemsArr.some(i => i.isDigiSilver);
+            if (hasDigi) {
+                const digiTotal = itemsArr.filter(i => i.isDigiSilver).reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
+                gst = Math.round(digiTotal * 0.03);
+            } else {
+                gst = Math.round(o.total * 3 / 103);
+            }
+        }
         const taxable = o.total - gst;
         csvContent += `"${o.id}","${o.date}","${o.customer.replace(/"/g, '""')}","${o.phone}","${o.paymentMethod}",${o.total},${gst},${taxable}\r\n`;
         totalSales += o.total;
@@ -3660,14 +3715,25 @@ function downloadOrderInvoicePdf(orderId) {
     // Calculate values
     const subtotal = o.subtotal;
     const discount = o.discount || 0;
-    const hasPhysicalItems = typeof o.items === 'string' ? safeJSONParse(o.items, []).some(item => !item.isDigiSilver) : (o.items || []).some(item => !item.isDigiSilver);
-    const shippingFee = hasPhysicalItems ? 150 : 0;
+    const itemsArr = typeof o.items === 'string' ? safeJSONParse(o.items, []) : (o.items || []);
+    const hasPhysicalItems = itemsArr.some(item => !item.isDigiSilver);
+    const hasDigi = itemsArr.some(item => item.isDigiSilver);
+    const shippingFee = o.shipping !== undefined ? o.shipping : (hasPhysicalItems ? 150 : 0);
     const total = o.total;
-    const itemsTotal = total - shippingFee;
-    const gstIncluded = itemsTotal * 0.03;
-    const cgst = (gstIncluded / 2).toFixed(2);
-    const sgst = (gstIncluded / 2).toFixed(2);
-    const taxableAmount = (itemsTotal - gstIncluded).toFixed(2);
+    
+    // Use stored GST if available, else compute
+    let gstTotal = 0;
+    if (o.gst_amount !== undefined && o.gst_amount !== null) {
+        gstTotal = o.gst_amount;
+    } else if (hasDigi) {
+        const digiTotal = itemsArr.filter(i => i.isDigiSilver).reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
+        gstTotal = Math.round(digiTotal * 0.03);
+    } else {
+        gstTotal = Math.round((total - shippingFee) * 3 / 103);
+    }
+    const cgst = (gstTotal / 2).toFixed(2);
+    const sgst = (gstTotal / 2).toFixed(2);
+    const taxableAmount = (total - shippingFee - gstTotal).toFixed(2);
     const customerName = typeof o.customer === 'object' && o.customer.name ? o.customer.name : (typeof o.customer === 'string' ? safeJSONParse(o.customer, {name: o.customer}).name : "Guest");
     
     const itemsRows = o.items.map((item, idx) => {
