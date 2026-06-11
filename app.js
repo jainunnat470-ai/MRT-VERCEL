@@ -1057,7 +1057,13 @@ function openCheckoutModal() {
         }
         
         // Calculate and Render totals
-        const subtotal = STATE.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        let digiSubtotal = 0;
+        let physicalSubtotal = 0;
+        STATE.cart.forEach(item => {
+            if (item.isDigiSilver) digiSubtotal += (item.price * item.qty);
+            else physicalSubtotal += (item.price * item.qty);
+        });
+        const subtotal = digiSubtotal + physicalSubtotal;
         let discount = 0;
         
         const summarySubtotal = document.getElementById("checkout-summary-subtotal");
@@ -1090,14 +1096,24 @@ function openCheckoutModal() {
             if (summaryDiscountRow) summaryDiscountRow.style.display = "none";
         }
         
-        const hasPhysicalItems = STATE.cart.some(item => !item.isDigiSilver);
+        const hasPhysicalItems = physicalSubtotal > 0;
         const shippingFee = hasPhysicalItems ? 150 : 0;
-        const total = subtotal - discount + shippingFee;
-        const gst = (subtotal - discount) * 0.03; // GST is 3% included
+        
+        const addedGst = digiSubtotal * 0.03;
+        const total = subtotal - discount + shippingFee + addedGst;
+        const displayGst = addedGst > 0 ? addedGst : (physicalSubtotal - discount) * 0.03;
+        
+        const gstLabel = document.getElementById("checkout-summary-gst-label");
+        if (gstLabel) {
+            gstLabel.textContent = (addedGst > 0 && physicalSubtotal === 0) ? "GST (3% Extra):" : "GST (3% Included):";
+        }
+        
+        const shippingEl = document.getElementById("checkout-summary-shipping");
+        if (shippingEl) shippingEl.textContent = `₹${shippingFee.toLocaleString("en-IN")}`;
         
         if (summarySubtotal) summarySubtotal.textContent = `₹${subtotal.toLocaleString("en-IN")}`;
-        if (summaryGst) summaryGst.textContent = `₹${gst.toLocaleString("en-IN")}`;
-        if (summaryTotal) summaryTotal.textContent = `₹${total.toLocaleString("en-IN")}`;
+        if (summaryGst) summaryGst.textContent = `₹${Math.round(displayGst).toLocaleString("en-IN")}`;
+        if (summaryTotal) summaryTotal.textContent = `₹${Math.round(total).toLocaleString("en-IN")}`;
 
         modal.style.display = "block";
         overlay.style.display = "block";
@@ -1248,7 +1264,13 @@ function submitCheckoutOrder() {
     }
     
     const orderId = `MRT-SLV-${Math.floor(1000 + Math.random() * 9000)}`;
-    const subtotal = STATE.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    let digiSubtotal = 0;
+    let physicalSubtotal = 0;
+    STATE.cart.forEach(item => {
+        if (item.isDigiSilver) digiSubtotal += (item.price * item.qty);
+        else physicalSubtotal += (item.price * item.qty);
+    });
+    const subtotal = digiSubtotal + physicalSubtotal;
     
     let discount = 0;
     if (STATE.activeCoupon) {
@@ -1265,9 +1287,10 @@ function submitCheckoutOrder() {
         }
     }
     
-    const hasPhysicalItems = STATE.cart.some(item => !item.isDigiSilver);
+    const hasPhysicalItems = physicalSubtotal > 0;
     const shippingFee = hasPhysicalItems ? 150 : 0;
-    const total = subtotal - discount + shippingFee;
+    const addedGst = digiSubtotal * 0.03;
+    const total = subtotal - discount + shippingFee + addedGst;
     
     // WhatsApp orders go straight to placed; UPI orders need admin approval
     const orderStatus = paymentMethod === "WhatsApp" ? "placed" : "awaiting_approval";
