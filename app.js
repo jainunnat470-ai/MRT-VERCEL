@@ -4334,17 +4334,17 @@ async function handleLogout() {
 
 // --- DIGI SILVER ---
 function buyDigiSilver() {
-    const gramsStr = document.getElementById('buy-digi-grams').value;
-    const grams = parseFloat(gramsStr);
-    if (!grams || grams <= 0) return alert("Enter valid grams.");
+    const amountStr = document.getElementById('buy-digi-amount').value;
+    const amount = parseFloat(amountStr);
+    if (!amount || amount < 100) return alert("Minimum investment is ₹100.");
     
-    const cost = Math.round(grams * STATE.rates.fine);
+    const grams = parseFloat((amount / STATE.rates.fine).toFixed(4));
     
     // Create a mock checkout cart item specifically for Digi Silver
     STATE.cart = [{
         id: "DIGI-SILVER-BUY",
         title: `Digi Silver (${grams}g)`,
-        price: cost,
+        price: amount,
         image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=300&q=80",
         qty: 1,
         isDigiSilver: true,
