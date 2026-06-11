@@ -1056,11 +1056,11 @@ function openCheckoutModal() {
             `).join("");
         }
         
-        // Calculate and Render totals
         let digiSubtotal = 0;
         let physicalSubtotal = 0;
         STATE.cart.forEach(item => {
-            if (item.isDigiSilver) digiSubtotal += (item.price * item.qty);
+            const isDigi = item.isDigiSilver || (item.title && item.title.toLowerCase().includes('digi silver'));
+            if (isDigi) digiSubtotal += (item.price * item.qty);
             else physicalSubtotal += (item.price * item.qty);
         });
         const subtotal = digiSubtotal + physicalSubtotal;
@@ -1109,7 +1109,13 @@ function openCheckoutModal() {
         }
         
         const shippingEl = document.getElementById("checkout-summary-shipping");
-        if (shippingEl) shippingEl.textContent = `₹${shippingFee.toLocaleString("en-IN")}`;
+        if (shippingEl) {
+            if (shippingFee === 0 && physicalSubtotal === 0 && digiSubtotal > 0) {
+                shippingEl.innerHTML = `<span style="text-decoration: line-through; color: var(--color-silver-dark); margin-right: 6px;">₹150</span>₹0`;
+            } else {
+                shippingEl.textContent = `₹${shippingFee.toLocaleString("en-IN")}`;
+            }
+        }
         
         if (summarySubtotal) summarySubtotal.textContent = `₹${subtotal.toLocaleString("en-IN")}`;
         if (summaryGst) summaryGst.textContent = `₹${Math.round(displayGst).toLocaleString("en-IN")}`;
@@ -1267,7 +1273,8 @@ function submitCheckoutOrder() {
     let digiSubtotal = 0;
     let physicalSubtotal = 0;
     STATE.cart.forEach(item => {
-        if (item.isDigiSilver) digiSubtotal += (item.price * item.qty);
+        const isDigi = item.isDigiSilver || (item.title && item.title.toLowerCase().includes('digi silver'));
+        if (isDigi) digiSubtotal += (item.price * item.qty);
         else physicalSubtotal += (item.price * item.qty);
     });
     const subtotal = digiSubtotal + physicalSubtotal;
