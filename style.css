@@ -1584,6 +1584,7 @@ header {
     border: 1px solid var(--color-silver-mid);
     font-family: var(--font-body);
     font-size: 0.95rem;
+    color: var(--color-primary);
     outline: none;
 }
 
