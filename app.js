@@ -26,11 +26,23 @@ const STATE = {
     currentView: "home",
     activeAdminTab: "dashboard",
     editingProductId: null,
-    selectedSize: null
+    selectedSize: null,
+    user: null,
+    profile: null
 };
+
+function safeJSONParse(str, fallback) {
+    try {
+        if (typeof str !== 'string') return str;
+        return JSON.parse(str);
+    } catch (e) {
+        return fallback;
+    }
+}
 
 // --- INITIALIZE APPLICATION STATE ---
 async function initState() {
+    initAuthListener();
     // Products Load from Supabase
     try {
         const { data, error } = await supaClient.from('products').select('*');
@@ -63,7 +75,7 @@ async function initState() {
             STATE.orders = data.map(o => ({
                 id: o.id,
                 date: o.date,
-                customer: o.customer,
+                customer: typeof o.customer === 'string' ? (o.customer.startsWith('{') ? safeJSONParse(o.customer, { name: o.customer }) : { name: o.customer }) : (o.customer || {}),
                 phone: o.phone,
                 address: o.address,
                 paymentMethod: o.payment_method,
@@ -71,7 +83,7 @@ async function initState() {
                 discount: parseFloat(o.discount) || 0,
                 total: parseFloat(o.total) || 0,
                 status: o.status,
-                items: o.items,
+                items: typeof o.items === 'string' ? safeJSONParse(o.items, []) : (o.items || []),
                 payment_screenshot: o.payment_screenshot
             }));
         }
@@ -511,9 +523,9 @@ function addToCart(prodId, count = 1) {
     // Determine the size to add
     let size = null;
     const isToeRing = prod.title.toLowerCase().includes("toe");
-    const isEarring = prod.category === "earrings" || prod.title.toLowerCase().includes("earring");
-    const isRing = (prod.category === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing && !isEarring;
-    const isChain = prod.category === "chains";
+    const isEarring = (prod.category || "").toLowerCase() === "earrings" || prod.title.toLowerCase().includes("earring");
+    const isRing = ((prod.category || "").toLowerCase() === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing && !isEarring;
+    const isChain = (prod.category || "").toLowerCase().includes("chain");
     
     if (STATE.selectedProduct && STATE.selectedProduct.id === prod.id && STATE.selectedSize) {
         // If we are adding the product that is currently viewed in detail, use the selected size!
@@ -530,14 +542,21 @@ function addToCart(prodId, count = 1) {
     }
     
     const giftWrapCheck = document.getElementById("detail-gift-wrap");
+    const giftMessageEl = document.getElementById("detail-gift-message");
     // Only apply gift wrap if adding the currently viewed product in details and checked
     const hasGiftWrap = STATE.selectedProduct && STATE.selectedProduct.id === prod.id && giftWrapCheck && giftWrapCheck.checked;
-    const wrapSuffix = hasGiftWrap ? " + Gift Box" : "";
+    
+    let wrapSuffix = "";
+    if (hasGiftWrap) {
+        wrapSuffix = " + Gift Box";
+        const msg = giftMessageEl ? giftMessageEl.value.trim().substring(0, 300) : "";
+        if (msg) wrapSuffix += ` [Msg: ${msg}]`;
+    }
     
     const sizeSuffix = size ? ` (Size: ${size})` : "";
     const cartTitle = `${prod.title}${sizeSuffix}${wrapSuffix}`;
     
-    const unitPrice = prod.price + (hasGiftWrap ? 99 : 0);
+    const unitPrice = prod.price + (hasGiftWrap ? 100 : 0);
     
     const existing = STATE.cart.find(item => item.title === cartTitle);
     if (existing) {
@@ -606,9 +625,9 @@ function viewProductDetail(prodId) {
     
     // Ring, Toe Ring, and Chain Size rendering
     const isToeRing = prod.title.toLowerCase().includes("toe");
-    const isEarring = prod.category === "earrings" || prod.title.toLowerCase().includes("earring");
-    const isRing = (prod.category === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing && !isEarring;
-    const isChain = prod.category === "chains";
+    const isEarring = (prod.category || "").toLowerCase() === "earrings" || prod.title.toLowerCase().includes("earring");
+    const isRing = ((prod.category || "").toLowerCase() === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing && !isEarring;
+    const isChain = (prod.category || "").toLowerCase().includes("chain");
     
     const sizeSection = document.getElementById("detail-size-section");
     const sizeLabel = sizeSection ? sizeSection.querySelector(".custom-form-label") : null;
@@ -621,16 +640,13 @@ function viewProductDetail(prodId) {
             
             if (isToeRing) {
                 sizes = ["Adjustable"];
-                labelText = "Select Size";
-                if (document.getElementById("ring-size-guide-link")) document.getElementById("ring-size-guide-link").style.display = "none";
+                labelText = "SELECT SIZE / VARIANT";
             } else if (isRing) {
-                sizes = Array.from({ length: 16 }, (_, i) => (13 + i).toString());
-                labelText = "Select Size (Indian Ring Size)";
-                if (document.getElementById("ring-size-guide-link")) document.getElementById("ring-size-guide-link").style.display = "inline";
+                sizes = Array.from({ length: 19 }, (_, i) => (10 + i).toString());
+                labelText = "SELECT SIZE / VARIANT";
             } else if (isChain) {
-                sizes = ["18 Inches", "20 Inches"];
-                labelText = "Select Length (Chain Length)";
-                if (document.getElementById("ring-size-guide-link")) document.getElementById("ring-size-guide-link").style.display = "none";
+                sizes = ["16 Inches", "18 Inches", "20 Inches"];
+                labelText = "SELECT SIZE / VARIANT";
             }
             
             if (sizeLabel) {
@@ -656,7 +672,6 @@ function viewProductDetail(prodId) {
         } else {
             sizeSection.style.display = "none";
             STATE.selectedSize = null;
-            if (document.getElementById("ring-size-guide-link")) document.getElementById("ring-size-guide-link").style.display = "none";
         }
     }
     
@@ -665,7 +680,7 @@ function viewProductDetail(prodId) {
     if (category) category.textContent = prod.category;
     if (title) title.textContent = prod.title;
     if (stars) stars.textContent = prod.rating.toFixed(1);
-    if (reviews) reviews.textContent = `(${prod.reviewsCount} customer reviews)`;
+    // Reviews removed per client request
     if (price) price.textContent = `₹${prod.price.toLocaleString("en-IN")}`;
     
     if (originalPrice) {
@@ -802,13 +817,20 @@ function triggerBuyNow() {
         if (!prod || !prod.inStock) return;
         
         const giftWrapCheck = document.getElementById("detail-gift-wrap");
+        const giftMessageEl = document.getElementById("detail-gift-message");
         const hasGiftWrap = giftWrapCheck && giftWrapCheck.checked;
-        const wrapSuffix = hasGiftWrap ? " + Gift Box" : "";
+        
+        let wrapSuffix = "";
+        if (hasGiftWrap) {
+            wrapSuffix = " + Gift Box";
+            const msg = giftMessageEl ? giftMessageEl.value.trim().substring(0, 300) : "";
+            if (msg) wrapSuffix += ` [Msg: ${msg}]`;
+        }
         
         const isToeRing = prod.title.toLowerCase().includes("toe");
-        const isEarring = prod.category === "earrings" || prod.title.toLowerCase().includes("earring");
-        const isRing = (prod.category === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing && !isEarring;
-        const isChain = prod.category === "chains";
+        const isEarring = (prod.category || "").toLowerCase() === "earrings" || prod.title.toLowerCase().includes("earring");
+        const isRing = ((prod.category || "").toLowerCase() === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing && !isEarring;
+        const isChain = (prod.category || "").toLowerCase().includes("chain");
         
         let size = STATE.selectedSize;
         if (!size) {
@@ -820,7 +842,7 @@ function triggerBuyNow() {
         const sizeSuffix = size ? ` (Size: ${size})` : "";
         const cartTitle = `${prod.title}${sizeSuffix}${wrapSuffix}`;
         
-        const unitPrice = prod.price + (hasGiftWrap ? 99 : 0);
+        const unitPrice = prod.price + (hasGiftWrap ? 100 : 0);
         
         const existing = STATE.cart.find(item => item.title === cartTitle);
         if (existing) {
@@ -917,6 +939,9 @@ function renderCartDrawer() {
             if (coupon.type === 'free_silver') {
                 discount = coupon.value * STATE.rates.sterling;
                 labelSuffix = `Free Silver: ${coupon.value}g`;
+            } else if (coupon.type === 'fixed') {
+                discount = coupon.value;
+                labelSuffix = `₹${coupon.value}`;
             } else {
                 discount = subtotal * (coupon.value / 100);
                 labelSuffix = `${coupon.value}%`;
@@ -1034,6 +1059,9 @@ function openCheckoutModal() {
                 if (coupon.type === 'free_silver') {
                     discount = parseFloat(coupon.value * STATE.rates.sterling);
                     labelSuffix = `Free Silver: ${coupon.value}g`;
+                } else if (coupon.type === 'fixed') {
+                    discount = parseFloat(coupon.value);
+                    labelSuffix = `₹${coupon.value}`;
                 } else {
                     discount = parseFloat(subtotal * (coupon.value / 100));
                     labelSuffix = `${coupon.value}%`;
@@ -1048,7 +1076,8 @@ function openCheckoutModal() {
             if (summaryDiscountRow) summaryDiscountRow.style.display = "none";
         }
         
-        const shippingFee = 150;
+        const hasPhysicalItems = STATE.cart.some(item => !item.isDigiSilver);
+        const shippingFee = hasPhysicalItems ? 150 : 0;
         const total = subtotal - discount + shippingFee;
         const gst = (subtotal - discount) * 0.03; // GST is 3% included
         
@@ -1213,6 +1242,8 @@ function submitCheckoutOrder() {
         if (coupon) {
             if (coupon.type === 'free_silver') {
                 discount = coupon.value * STATE.rates.sterling;
+            } else if (coupon.type === 'fixed') {
+                discount = coupon.value;
             } else {
                 discount = subtotal * (coupon.value / 100);
             }
@@ -1220,20 +1251,27 @@ function submitCheckoutOrder() {
         }
     }
     
-    const shippingFee = 150;
+    const hasPhysicalItems = STATE.cart.some(item => !item.isDigiSilver);
+    const shippingFee = hasPhysicalItems ? 150 : 0;
     const total = subtotal - discount + shippingFee;
     
     // WhatsApp orders go straight to placed; UPI orders need admin approval
     const orderStatus = paymentMethod === "WhatsApp" ? "placed" : "awaiting_approval";
     
+    const customerData = {
+        name: name,
+        email: STATE.user ? STATE.user.email : null,
+        token: STATE.user ? STATE.user.token : null
+    };
+    
     const newOrder = {
         id: orderId,
         date: new Date().toISOString().split("T")[0],
-        customer: name,
+        customer: JSON.stringify(customerData),
         phone: phone,
         address: address,
-        paymentMethod: paymentMethod === "WhatsApp" ? "WhatsApp Order" : "UPI Payment (SS Verification)",
-        items: [...STATE.cart],
+        paymentMethod: paymentMethod === "WhatsApp" ? "WhatsApp" : "UPI",
+        items: JSON.stringify([...STATE.cart]),
         subtotal: subtotal,
         discount: discount,
         total: total,
@@ -1419,7 +1457,7 @@ function lookupOrderStatus() {
     const displayDate = document.getElementById("order-date-display");
     
     if (displayId) displayId.textContent = order.id;
-    if (displayDate) displayDate.textContent = `Order placed on: ${order.date} | Customer: ${order.customer} | Payment Mode: ${order.paymentMethod || "COD"}`;
+    if (displayDate) displayDate.textContent = `Order placed on: ${order.date} | Customer: ${order.customer} | Payment Mode: ${order.paymentMethod || order.payment_method || "COD"}`;
     
     // Setup Timeline Nodes based on Status: placed, processing, dispatched, delivered
     const steps = ["placed", "processing", "dispatched", "delivered"];
@@ -1465,12 +1503,36 @@ function navigateAdminTab(tabId) {
     if (tabId === "orders") renderAdminOrders();
     if (tabId === "inventory") renderAdminInventoryList();
     if (tabId === "gst") renderAdminGstPortal();
+    if (tabId === "coupons") loadAdminCoupons();
     if (tabId === "settings") {
         const curPass = document.getElementById("admin-current-password");
         const newPass = document.getElementById("admin-new-password");
         if (curPass) curPass.value = "";
         if (newPass) newPass.value = "";
     }
+}
+
+function loadAdminCoupons() {
+    const tbody = document.getElementById("admin-coupons-tbody");
+    if (!tbody) return;
+    
+    supaClient.from('coupons').select('*').then(({ data, error }) => {
+        if (error || !data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No coupons found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = data.map(c => `
+            <tr>
+                <td style="font-weight: 700; color: var(--color-primary);">${c.code}</td>
+                <td><span class="admin-badge ${c.type === 'percentage' ? 'status-pending' : 'status-completed'}">${c.type}</span></td>
+                <td>${c.type === 'percentage' ? c.value + '%' : '₹' + c.value}</td>
+                <td>${c.single_use ? 'Yes' : 'No'}</td>
+                <td><span class="admin-badge ${c.is_used ? 'status-failed' : 'status-completed'}">${c.is_used ? 'Used' : 'Available'}</span></td>
+                <td>${c.owner_email || 'Admin/Public'}</td>
+            </tr>
+        `).join('');
+    });
 }
 
 function renderAdminDashboard() {
@@ -1551,8 +1613,9 @@ function renderAdminOrders() {
     }
     
     ordersTbody.innerHTML = STATE.orders.map(o => {
-        const itemTitles = o.items.map(item => `${item.title} (x${item.qty})`).join(", ");
-        const itemsListHtml = o.items.map(item => `
+        const safeItems = Array.isArray(o.items) ? o.items : [];
+        const itemTitles = safeItems.map(item => `${item.title} (x${item.qty})`).join(", ");
+        const itemsListHtml = safeItems.map(item => `
             <div style="font-size:0.8rem; margin-bottom:2px; display:flex; justify-content:space-between; gap:12px;">
                 <span>• ${item.title} <span style="color:var(--color-silver-dark); font-weight:600;">x${item.qty}</span></span>
                 <span style="font-weight:600;">₹${(item.price * item.qty).toLocaleString("en-IN")}</span>
@@ -1586,10 +1649,10 @@ function renderAdminOrders() {
                 <td style="font-weight:700; vertical-align: top;">${o.id}</td>
                 <td style="vertical-align: top;">${o.date}</td>
                 <td style="vertical-align: top;">
-                    <div style="font-weight:600;">${o.customer}</div>
+                    <div style="font-weight:600;">${o.customer && o.customer.name ? o.customer.name : o.customer}</div>
                     <div style="font-size:0.75rem;color:var(--color-silver-dark);">${o.phone}</div>
                     <div style="font-size:0.75rem;color:var(--color-silver-dark);margin-top:4px; max-width:250px; white-space:pre-wrap; line-height:1.4;">📍 <strong>Address:</strong> ${o.address}</div>
-                    <div style="font-size:0.7rem;font-weight:700;color:var(--color-accent-pink);margin-top:6px; text-transform:uppercase;">💳 ${o.paymentMethod || "COD"}</div>
+                    <div style="font-size:0.7rem;font-weight:700;color:var(--color-accent-pink);margin-top:6px; text-transform:uppercase;">💳 ${o.paymentMethod || o.payment_method || "COD"}</div>
                     ${ssBtnHtml}
                 </td>
                 <td style="vertical-align: top; max-width:320px;">
@@ -1598,9 +1661,9 @@ function renderAdminOrders() {
                     </div>
                 </td>
                 <td style="vertical-align: top;">
-                    <div style="font-weight:700; font-size: 0.95rem; color: var(--color-primary);">₹${o.total.toLocaleString("en-IN")}</div>
+                    <div style="font-weight:700; font-size: 0.95rem; color: var(--color-primary);">₹${(o.total || 0).toLocaleString("en-IN")}</div>
                     <div style="font-size:0.72rem;color:var(--color-silver-dark);margin-top:4px; line-height: 1.4;">
-                        Subtotal: ₹${o.subtotal.toLocaleString("en-IN")}<br>
+                        Subtotal: ₹${(o.subtotal || 0).toLocaleString("en-IN")}<br>
                         Discount: -₹${(o.discount || 0).toLocaleString("en-IN")}
                     </div>
                 </td>
@@ -1615,8 +1678,11 @@ function renderAdminOrders() {
                     ${approveBtnHtml}
                 </td>
                 <td style="vertical-align: top; text-align: center;">
-                    <button class="btn-checkout" onclick="downloadOrderInvoicePdf('${o.id}')" style="padding: 6px 12px; font-size: 0.72rem; margin-top: 0; background: linear-gradient(135deg, #1A365D 0%, #2A4365 100%); color: #FFFFFF; border: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <button class="btn-checkout" onclick="downloadOrderInvoicePdf('${o.id}')" style="padding: 6px 12px; font-size: 0.72rem; margin-top: 0; background: linear-gradient(135deg, #1A365D 0%, #2A4365 100%); color: #FFFFFF; border: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 6px;">
                         📄 PDF Copy
+                    </button>
+                    <button onclick="deleteInvalidOrder('${o.id}')" style="padding: 6px 12px; font-size: 0.72rem; background: #fee2e2; color: #ef4444; border: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 2px 4px rgba(239,68,68,0.1);">
+                        🗑️ Delete
                     </button>
                 </td>
             </tr>
@@ -1631,8 +1697,30 @@ function approveOrderPayment(orderId) {
             order.status = "placed";
             renderAdminOrders();
             supaClient.from('orders').update({ status: "placed" }).eq('id', orderId)
-                .then(() => {
+                .then(async () => {
                     alert("Order approved successfully!");
+                    
+                    // Sync DigiSilver to buyer's Custom DB Profile
+                    let digiGrams = 0;
+                    const itemsArr = typeof order.items === 'string' ? safeJSONParse(order.items, []) : (order.items || []);
+                    itemsArr.forEach(item => {
+                        if (item.isDigiSilver && item.grams) digiGrams += parseFloat(item.grams);
+                    });
+                    
+                    const cust = typeof order.customer === 'string' ? safeJSONParse(order.customer, {}) : (order.customer || {});
+                    if (digiGrams > 0 && cust.token && cust.email) {
+                        const { data: userData } = await supaClient.from('settings').select('value').eq('key', 'user_' + cust.email).single();
+                        if (userData && userData.value) {
+                            try {
+                                const uRec = JSON.parse(userData.value);
+                                if (uRec.token === cust.token) {
+                                    uRec.digi_silver_balance = (uRec.digi_silver_balance || 0) + digiGrams;
+                                    await supaClient.from('settings').update({ value: JSON.stringify(uRec) }).eq('key', 'user_' + cust.email);
+                                }
+                            } catch(e) { console.error("Error updating user balance", e); }
+                        }
+                    }
+                    
                     // Sync lookup portal if open
                     const trackInp = document.getElementById("track-order-id-input");
                     if (trackInp && trackInp.value.trim().toUpperCase() === orderId.toUpperCase()) {
@@ -1640,6 +1728,22 @@ function approveOrderPayment(orderId) {
                     }
                 })
                 .catch(e => console.error("Error approving order in DB:", e));
+        }
+    }
+}
+
+async function deleteInvalidOrder(orderId) {
+    if (confirm("Are you sure you want to permanently delete this order? This action cannot be undone.")) {
+        // Update UI immediately
+        STATE.orders = STATE.orders.filter(o => o.id !== orderId);
+        renderAdminOrders();
+        
+        try {
+            const { error } = await supaClient.from('orders').delete().eq('id', orderId);
+            if (error) throw error;
+        } catch (e) {
+            console.error("Error deleting order:", e);
+            alert("Failed to delete order from database: " + e.message);
         }
     }
 }
@@ -2047,14 +2151,21 @@ function initTryOnDragAndDrop() {
 // Default fallback URLs for each slot
 const BANNER_DEFAULTS = {
     hero: 'hero_banner.png',
-    rings: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=300&q=80',
-    earrings: 'https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?auto=format&fit=crop&w=300&q=80',
-    pendants: 'https://images.unsplash.com/photo-1599643477877-530eb83abc8e?auto=format&fit=crop&w=300&q=80',
-    bracelets: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=300&q=80',
+    'hero-mobile': 'hero_banner_mobile.png',
+    rings: 'ring.jpeg',
+    earrings: 'earring.jpeg',
+    pendants: 'pendant.jpeg',
+    bracelets: 'bracelet.jpeg',
     anklets: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=300&q=80',
     chains: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=300&q=80',
     him: 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=800&q=80',
     her: 'https://images.unsplash.com/photo-1635767798638-3e25273a8236?auto=format&fit=crop&w=800&q=80',
+    'him-mobile': 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=400&q=80',
+    'her-mobile': 'https://images.unsplash.com/photo-1635767798638-3e25273a8236?auto=format&fit=crop&w=400&q=80',
+    gold: 'https://images.unsplash.com/photo-1575377427642-087cf684f29d?auto=format&fit=crop&w=300&q=80',
+    kids: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=300&q=80',
+    customised: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=300&q=80',
+    qr: ''
 };
 
 // Upload image to Supabase Storage, save URL in settings table, apply live
@@ -2139,8 +2250,13 @@ async function resetBannerImage(slot) {
 // Apply a banner URL to the actual live page elements
 function applyBannerSlot(slot, url) {
     if (slot === 'hero') {
-        const heroBg = document.querySelector('.hero-slide-bg');
+        const heroBg = document.getElementById('hero-bg-desktop') || document.querySelector('.hero-slide-bg');
         if (heroBg) heroBg.src = url;
+        return;
+    }
+    if (slot === 'hero-mobile') {
+        const heroMobileBg = document.getElementById('hero-bg-mobile');
+        if (heroMobileBg) heroMobileBg.srcset = url;
         return;
     }
     if (slot === 'him') {
@@ -2153,10 +2269,33 @@ function applyBannerSlot(slot, url) {
         if (herImg) herImg.src = url;
         return;
     }
+    if (slot === 'him-mobile') {
+        const himMobileImg = document.getElementById('gender-banner-him-mobile-img');
+        if (himMobileImg) himMobileImg.srcset = url;
+        return;
+    }
+    if (slot === 'her-mobile') {
+        const herMobileImg = document.getElementById('gender-banner-her-mobile-img');
+        if (herMobileImg) herMobileImg.srcset = url;
+        return;
+    }
+    if (slot === 'qr') {
+        const qrImg = document.getElementById('checkout-upi-qr-img');
+        const qrSvg = document.getElementById('checkout-upi-qr-svg');
+        if (url && url.trim() !== '') {
+            if (qrImg) { qrImg.src = url; qrImg.style.display = 'block'; }
+            if (qrSvg) qrSvg.style.display = 'none';
+        } else {
+            if (qrImg) qrImg.style.display = 'none';
+            if (qrSvg) qrSvg.style.display = 'block';
+        }
+        return;
+    }
     // Category circles: find the img inside cat-circle-item for the given category
     const catMap = {
         rings: 'rings', earrings: 'earrings', pendants: 'pendants',
-        bracelets: 'bracelets', anklets: 'anklets', chains: 'chains'
+        bracelets: 'bracelets', anklets: 'anklets', chains: 'chains',
+        gold: 'gold', kids: 'kids', customised: 'customisation'
     };
     if (catMap[slot]) {
         // Find by onclick attribute containing the category name
@@ -2186,9 +2325,36 @@ async function applyBannerImages() {
             // Also update admin previews if visible
             const preview = document.getElementById(`banner-preview-${slot}`);
             if (preview && row.value) preview.src = row.value;
+            
+            // Handle UPI ID setting specifically
+            if (row.key === 'admin_upi_id') {
+                const upiDisplay = document.getElementById('checkout-upi-id-display');
+                if (upiDisplay) upiDisplay.textContent = `UPI ID: ${row.value}`;
+                const upiInput = document.getElementById('admin-upi-id-input');
+                if (upiInput) upiInput.value = row.value;
+            }
         });
     } catch (e) {
         console.warn('Banner load failed:', e);
+    }
+}
+
+async function saveAdminUpiId() {
+    const upiInput = document.getElementById('admin-upi-id-input');
+    if (!upiInput) return;
+    const val = upiInput.value.trim();
+    if (!val) {
+        alert("Please enter a valid UPI ID.");
+        return;
+    }
+    try {
+        await supaClient.from('settings').upsert({ key: 'admin_upi_id', value: val }, { onConflict: 'key' });
+        const upiDisplay = document.getElementById('checkout-upi-id-display');
+        if (upiDisplay) upiDisplay.textContent = `UPI ID: ${val}`;
+        showToast("UPI ID saved successfully.");
+    } catch (err) {
+        console.error("Error saving UPI ID:", err);
+        alert("Failed to save UPI ID.");
     }
 }
 
@@ -2392,7 +2558,7 @@ function recalculateAllProductPrices() {
             const prod = STATE.products.find(p => p.id === item.id);
             if (prod) {
                 const hasGiftWrap = item.title.includes("+ Gift Box");
-                const newUnitPrice = prod.price + (hasGiftWrap ? 99 : 0);
+                const newUnitPrice = prod.price + (hasGiftWrap ? 100 : 0);
                 if (item.price !== newUnitPrice) {
                     item.price = newUnitPrice;
                     cartUpdated = true;
@@ -3051,7 +3217,7 @@ function renderAdminGstPortal() {
                 <td>${o.customer}</td>
                 <td>₹${(o.total - gst).toLocaleString("en-IN")}</td>
                 <td style="color:var(--color-accent-pink);font-weight:600;">₹${gst.toLocaleString("en-IN")}</td>
-                <td style="font-size:0.75rem;text-transform:uppercase;">${o.paymentMethod}</td>
+                <td style="font-size:0.75rem;text-transform:uppercase;">${o.paymentMethod || o.payment_method || 'COD'}</td>
                 <td style="text-align: center;">
                     <button class="btn-checkout" onclick="downloadOrderInvoicePdf('${o.id}')" style="padding: 4px 8px; font-size: 0.68rem; margin-top: 0; background: linear-gradient(135deg, #1A365D 0%, #2A4365 100%); color: #FFFFFF; border: none; border-radius: 4px; cursor: pointer;">
                         📄 PDF
@@ -3416,20 +3582,33 @@ function downloadOrderInvoicePdf(orderId) {
     // Calculate values
     const subtotal = o.subtotal;
     const discount = o.discount || 0;
-    const shippingFee = 150;
+    const hasPhysicalItems = typeof o.items === 'string' ? safeJSONParse(o.items, []).some(item => !item.isDigiSilver) : (o.items || []).some(item => !item.isDigiSilver);
+    const shippingFee = hasPhysicalItems ? 150 : 0;
     const total = o.total;
     const itemsTotal = total - shippingFee;
     const gstIncluded = itemsTotal * 0.03;
     const cgst = (gstIncluded / 2).toFixed(2);
     const sgst = (gstIncluded / 2).toFixed(2);
-    const taxableAmount = (total - gstIncluded).toFixed(2);
+    const taxableAmount = (itemsTotal - gstIncluded).toFixed(2);
+    const customerName = typeof o.customer === 'object' && o.customer.name ? o.customer.name : (typeof o.customer === 'string' ? safeJSONParse(o.customer, {name: o.customer}).name : "Guest");
     
     const itemsRows = o.items.map((item, idx) => {
+        let displayTitle = item.title;
+        const prod = STATE.products.find(p => p.id === item.id);
+        if (prod && prod.category) {
+            const catLower = prod.category.toLowerCase();
+            const catSingular = catLower.endsWith('s') ? catLower.slice(0, -1) : catLower;
+            if (!displayTitle.toLowerCase().includes(catSingular)) {
+                const catName = catSingular.charAt(0).toUpperCase() + catSingular.slice(1);
+                displayTitle += ` - ${catName}`;
+            }
+        }
+        
         return `
             <tr>
                 <td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: center;">${idx + 1}</td>
                 <td style="padding: 10px; border-bottom: 1px solid #E2E8F0;">
-                    <div style="font-weight: 600;">${item.title}</div>
+                    <div style="font-weight: 600;">${displayTitle}</div>
                 </td>
                 <td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: right;">₹${item.price.toLocaleString("en-IN")}</td>
                 <td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: center;">${item.qty}</td>
@@ -3603,7 +3782,7 @@ function downloadOrderInvoicePdf(orderId) {
                 <div class="invoice-header">
                     <div>
                         <div class="brand-title">M. R. THANGA MAALIGAI</div>
-                        <div class="brand-sub">925 Pure Sterling Jewellery</div>
+                        <div class="brand-sub">Silver & Gold Jewellery</div>
                         <div style="font-size: 0.8rem; color: #4A5568; margin-top: 8px; line-height: 1.6;">
                             <strong>Legal Name:</strong> RAMCHAND SURESH KUMAR<br>
                             <strong>Trade Name:</strong> M. R. THANGA MAALIGAI<br>
@@ -3616,7 +3795,7 @@ function downloadOrderInvoicePdf(orderId) {
                         <div class="invoice-title">TAX INVOICE</div>
                         <div class="meta-row">Invoice No: <span class="meta-val">${o.id}</span></div>
                         <div class="meta-row">Date: <span class="meta-val">${o.date}</span></div>
-                        <div class="meta-row">Payment Mode: <span class="meta-val">${o.paymentMethod || "COD"}</span></div>
+                        <div class="meta-row">Payment Mode: <span class="meta-val">${o.paymentMethod || o.payment_method || "COD"}</span></div>
                     </div>
                 </div>
                 
@@ -3624,7 +3803,7 @@ function downloadOrderInvoicePdf(orderId) {
                     <div class="billing-box">
                         <div class="box-title">Billed To (Customer)</div>
                         <div class="box-content">
-                            <strong>${o.customer}</strong><br>
+                            <strong>${customerName}</strong><br>
                             Phone: ${o.phone}<br>
                             Address: ${o.address}
                         </div>
@@ -3674,7 +3853,7 @@ function downloadOrderInvoicePdf(orderId) {
                         </tr>
                         <tr>
                             <td class="totals-row-label">Shipping:</td>
-                            <td class="totals-row-val">₹150</td>
+                            <td class="totals-row-val">₹${shippingFee}</td>
                         </tr>
                         <tr>
                             <td class="totals-row-label">CGST (1.5%):</td>
@@ -3867,4 +4046,348 @@ function toggleShopFilters() {
     if (filters) {
         filters.classList.toggle('filters-open');
     }
+}
+
+// QR Zoom Modal Functions
+function openQrZoom() {
+    const overlay = document.getElementById('qr-zoom-overlay');
+    const modal = document.getElementById('qr-zoom-modal');
+    const content = document.getElementById('qr-zoom-content');
+    const container = document.getElementById('checkout-upi-qr-container');
+    
+    if (overlay && modal && content && container) {
+        content.innerHTML = container.innerHTML; // Clone the image/svg
+        // Increase size of cloned content
+        const clonedImg = content.querySelector('img');
+        const clonedSvg = content.querySelector('svg');
+        if (clonedImg) {
+            clonedImg.style.width = '100%';
+            clonedImg.style.height = '100%';
+            clonedImg.style.objectFit = 'contain';
+        }
+        if (clonedSvg) {
+            clonedSvg.setAttribute('width', '100%');
+            clonedSvg.setAttribute('height', '100%');
+        }
+        
+        overlay.style.display = 'block';
+        modal.style.display = 'block';
+    }
+}
+
+function closeQrZoom() {
+    const overlay = document.getElementById('qr-zoom-overlay');
+    const modal = document.getElementById('qr-zoom-modal');
+    if (overlay) overlay.style.display = 'none';
+    if (modal) modal.style.display = 'none';
+}
+
+// --- AUTHENTICATION & USER PROFILES ---
+let isAuthSignupMode = false;
+
+function initAuthListener() {
+    const savedToken = localStorage.getItem('mrt_user_token');
+    const savedEmail = localStorage.getItem('mrt_user_email');
+    if (savedToken && savedEmail) {
+        fetchUserProfile(savedEmail, savedToken);
+    } else {
+        STATE.user = null;
+        STATE.profile = null;
+    }
+}
+
+async function fetchUserProfile(email, token) {
+    const { data, error } = await supaClient.from('settings').select('value').eq('key', 'user_' + email).single();
+    if (data && data.value) {
+        try {
+            const userData = JSON.parse(data.value);
+            if (userData.token === token) {
+                STATE.user = userData;
+                STATE.profile = { digi_silver_balance: userData.digi_silver_balance || 0 };
+                updateProfileUI();
+                return;
+            }
+        } catch(e) {}
+    }
+    // Fallback if mismatched or not found
+    handleLogout();
+}
+
+
+function updateProfileUI() {
+    const balEl = document.getElementById('profile-digi-balance');
+    const rateEl = document.getElementById('profile-silver-rate');
+    const ordersList = document.getElementById('profile-orders-list');
+    if (balEl && STATE.profile) {
+        balEl.textContent = parseFloat(STATE.profile.digi_silver_balance).toFixed(2);
+    }
+    if (rateEl && STATE.rates) {
+        rateEl.textContent = `₹${STATE.rates.sterling} / g`;
+    }
+    if (ordersList && STATE.user) {
+        const savedPhone = localStorage.getItem("mrt_checkout_phone");
+        const userOrders = STATE.orders.filter(o => {
+            const cust = typeof o.customer === 'string' ? safeJSONParse(o.customer, {}) : (o.customer || {});
+            
+            // New strict token matching
+            if (cust.token && STATE.user.token && cust.token === STATE.user.token) return true;
+            
+            // Legacy fallbacks
+            if (typeof o.customer === 'string') {
+                if (o.customer.toLowerCase().includes(STATE.user.email.toLowerCase())) return true;
+            } else if (o.customer && o.customer.email) {
+                if (o.customer.email.toLowerCase() === STATE.user.email.toLowerCase()) return true;
+            }
+            
+            // Fallback for older orders placed before email linking
+            if (savedPhone && o.phone && o.phone.replace(/[^0-9]/g, '') === savedPhone.replace(/[^0-9]/g, '')) {
+                return true;
+            }
+            
+            return false;
+        });
+        if (userOrders.length === 0) {
+            ordersList.innerHTML = '<p style="color: var(--color-silver-dark);">You have no orders yet.</p>';
+        } else {
+            ordersList.innerHTML = userOrders.map(o => {
+                const itemsList = (o.items || []).map(item => `
+                    <div style="font-size: 0.85rem; color: var(--color-silver-dark); margin-top: 4px; display: flex; justify-content: space-between;">
+                        <span>• ${item.title} (x${item.qty})</span>
+                        <span>₹${(item.price * item.qty).toLocaleString("en-IN")}</span>
+                    </div>
+                `).join('');
+                
+                return `
+                <div style="background: #fff; padding: 20px; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid); display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f1f1; padding-bottom: 12px;">
+                        <div>
+                            <div style="font-weight: 800; font-family: var(--font-heading); font-size: 1.1rem; color: var(--color-primary); margin-bottom: 5px;">Order #${o.id}</div>
+                            <div style="font-size: 0.85rem; color: var(--color-silver-dark);">${o.date}</div>
+                        </div>
+                        <div style="background-color: var(--color-primary); color: white; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">
+                            ${o.status || 'Pending'}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px;">Items Ordered:</div>
+                        ${itemsList}
+                    </div>
+                    
+                    <div style="border-top: 1px solid #f1f1f1; padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.85rem; color: var(--color-silver-dark);">Payment: ${o.paymentMethod || o.payment_method || 'COD'}</span>
+                        <div style="font-weight: 700; color: var(--color-accent-pink); font-size: 1.1rem;">Total: ₹${o.total.toLocaleString("en-IN")}</div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+    }
+    
+    // Load User Coupons
+    const couponsList = document.getElementById('profile-coupons-list');
+    if (couponsList && STATE.user && STATE.user.email) {
+        supaClient.from('coupons').select('*').eq('owner_email', STATE.user.email).then(({ data, error }) => {
+            if (error || !data || data.length === 0) {
+                couponsList.innerHTML = '<div style="color: var(--color-silver-dark); font-size: 0.9rem;">No coupons found. Convert Digi Silver to get discount codes!</div>';
+            } else {
+                couponsList.innerHTML = data.map(c => `
+                <div style="background: #fff; padding: 15px; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid); display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div>
+                        <div style="font-weight: 800; font-family: var(--font-heading); font-size: 1.1rem; color: var(--color-primary); margin-bottom: 5px;">${c.code}</div>
+                        <div style="font-size: 0.85rem; color: var(--color-silver-dark);">${c.type === 'percentage' ? c.value + '% OFF' : '₹' + c.value + ' OFF'}</div>
+                    </div>
+                    <div style="background-color: ${c.is_used ? '#EF4444' : '#10B981'}; color: white; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; text-transform: uppercase; font-weight: 700;">
+                        ${c.is_used ? 'Used' : 'Available'}
+                    </div>
+                </div>`).join('');
+            }
+        });
+    }
+}
+
+function openUserProfile() {
+    if (STATE.user) {
+        navigateTo('profile');
+        updateProfileUI();
+    } else {
+        document.getElementById('auth-overlay').style.display = 'block';
+        document.getElementById('auth-modal').style.display = 'block';
+    }
+}
+
+function closeAuthModal() {
+    document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('auth-modal').style.display = 'none';
+}
+
+function toggleAuthMode() {
+    isAuthSignupMode = !isAuthSignupMode;
+    document.getElementById('auth-title').textContent = isAuthSignupMode ? 'Sign Up' : 'Login to M R Thangamaaligai';
+    document.getElementById('auth-submit-btn').textContent = isAuthSignupMode ? 'Create Account' : 'Login';
+    document.getElementById('auth-toggle-text').textContent = isAuthSignupMode ? 'Already have an account?' : "Don't have an account?";
+    document.getElementById('auth-toggle-link').textContent = isAuthSignupMode ? 'Login' : 'Sign up';
+    document.getElementById('auth-error').style.display = 'none';
+}
+
+async function handleAuthSubmit() {
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const errEl = document.getElementById('auth-error');
+    errEl.style.display = 'none';
+
+    if (!email || !password) {
+        errEl.textContent = "Please enter email and password.";
+        errEl.style.display = 'block';
+        return;
+    }
+
+    document.getElementById('auth-submit-btn').textContent = "Please wait...";
+
+    try {
+        if (isAuthSignupMode) {
+            const { data: exist } = await supaClient.from('settings').select('key').eq('key', 'user_' + email).single();
+            if (exist) throw new Error("Email already registered. Please login.");
+            
+            const token = 'MRT-USER-' + Math.random().toString(36).substr(2, 9);
+            const newUser = { token, email, password, name: email.split('@')[0], digi_silver_balance: 0 };
+            
+            await supaClient.from('settings').insert([{ key: 'user_' + email, value: JSON.stringify(newUser) }]);
+            
+            alert("Signup successful! Please login.");
+            toggleAuthMode();
+        } else {
+            const { data, error } = await supaClient.from('settings').select('value').eq('key', 'user_' + email).single();
+            if (!data || !data.value) throw new Error("Invalid login credentials.");
+            
+            const userRecord = JSON.parse(data.value);
+            if (userRecord.password !== password) throw new Error("Invalid login credentials.");
+            
+            localStorage.setItem('mrt_user_token', userRecord.token);
+            localStorage.setItem('mrt_user_email', userRecord.email);
+            
+            STATE.user = userRecord;
+            STATE.profile = { digi_silver_balance: userRecord.digi_silver_balance || 0 };
+            
+            closeAuthModal();
+            openUserProfile();
+            updateProfileUI();
+        }
+    } catch (err) {
+        errEl.textContent = err.message || "Authentication failed.";
+        errEl.style.display = 'block';
+    } finally {
+        document.getElementById('auth-submit-btn').textContent = isAuthSignupMode ? 'Create Account' : 'Login';
+    }
+}
+
+async function handleLogout() {
+    localStorage.removeItem('mrt_user_token');
+    localStorage.removeItem('mrt_user_email');
+    STATE.user = null;
+    STATE.profile = null;
+    navigateTo('home');
+}
+
+// --- DIGI SILVER ---
+function buyDigiSilver() {
+    const gramsStr = document.getElementById('buy-digi-grams').value;
+    const grams = parseFloat(gramsStr);
+    if (!grams || grams <= 0) return alert("Enter valid grams.");
+    
+    const cost = Math.round(grams * STATE.rates.sterling);
+    
+    // Create a mock checkout cart item specifically for Digi Silver
+    STATE.cart = [{
+        id: "DIGI-SILVER-BUY",
+        title: `Digi Silver (${grams}g)`,
+        price: cost,
+        image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=300&q=80",
+        qty: 1,
+        isDigiSilver: true,
+        grams: grams
+    }];
+    
+    saveCart();
+    checkoutCart();
+}
+
+function redeemDigiSilver() {
+    const gramsStr = document.getElementById('redeem-digi-grams').value;
+    const grams = parseFloat(gramsStr);
+    
+    if (!STATE.profile || grams > STATE.profile.digi_silver_balance) {
+        return alert("Insufficient Digi Silver balance.");
+    }
+    if (!grams || grams <= 0) return alert("Enter valid grams.");
+
+    const value = Math.round(grams * STATE.rates.sterling);
+    
+    // Simulate redeeming logic
+    // Generate a unique local coupon and apply it to cart.
+    const code = `DIGI-${Math.floor(Math.random() * 10000)}`;
+    
+    STATE.coupons[code] = {
+        code: code,
+        type: "fixed",
+        value: value,
+        is_used: false,
+        single_use: true
+    };
+    
+    // Save coupon to Supabase
+    const ownerEmail = (STATE.user && STATE.user.email) ? STATE.user.email : null;
+    supaClient.from('coupons').insert([{ 
+        code: code, 
+        discount: 0,
+        type: "fixed",
+        value: value,
+        is_used: false,
+        single_use: true,
+        owner_email: ownerEmail
+    }]).then(res => {
+        if(res.error) console.error("Error saving digi silver coupon:", res.error);
+    });
+
+    alert(`Successfully redeemed ${grams}g!\nYour discount code is: ${code} (Value: ₹${value})\nYou can apply this at checkout.`);
+    
+    // Apply deductive balance and sync to Custom DB
+    STATE.profile.digi_silver_balance -= grams;
+    
+    // Save to user if logged in
+    if (STATE.user && STATE.user.email) {
+        STATE.user.digi_silver_balance = STATE.profile.digi_silver_balance;
+        supaClient.from('settings').update({ value: JSON.stringify(STATE.user) }).eq('key', 'user_' + STATE.user.email).then().catch(e=>console.error(e));
+    }
+    
+    // Save redemption to Order History
+    const rdmOrderId = `MRT-RDM-${Math.floor(Math.random() * 10000)}`;
+    const dateStr = new Date().toISOString().split("T")[0];
+    const newOrder = {
+        id: rdmOrderId,
+        date: dateStr,
+        customer: JSON.stringify({
+            name: STATE.user && STATE.user.name ? STATE.user.name : "Digi Silver User",
+            email: STATE.user ? STATE.user.email : null,
+            token: STATE.user ? STATE.user.token : null
+        }),
+        phone: localStorage.getItem("mrt_checkout_phone") || "",
+        address: "Digi Silver Wallet",
+        payment_method: "Digi Silver Redemption",
+        subtotal: value,
+        discount: 0,
+        total: value,
+        status: "Redeemed",
+        items: JSON.stringify([{
+            title: `Redeemed ${grams}g Digi Silver (Code: ${code})`,
+            price: value,
+            qty: 1,
+            isDigiSilver: false
+        }])
+    };
+    
+    STATE.orders.push(newOrder);
+    supaClient.from('orders').insert(newOrder).then().catch(e=>console.error(e));
+    
+    updateProfileUI();
 }
