@@ -1399,7 +1399,21 @@ function handleSuccessTrack() {
 }
 
 function finalizeOrderPlacement(newOrder, orderId) {
-    STATE.orders.push(newOrder);
+    const mappedOrder = {
+        id: newOrder.id,
+        date: newOrder.date,
+        customer: typeof newOrder.customer === 'string' ? safeJSONParse(newOrder.customer, { name: newOrder.customer }) : (newOrder.customer || {}),
+        phone: newOrder.phone,
+        address: newOrder.address,
+        paymentMethod: newOrder.paymentMethod,
+        subtotal: parseFloat(newOrder.subtotal) || 0,
+        discount: parseFloat(newOrder.discount) || 0,
+        total: parseFloat(newOrder.total) || 0,
+        status: newOrder.status,
+        items: typeof newOrder.items === 'string' ? safeJSONParse(newOrder.items, []) : (newOrder.items || []),
+        payment_screenshot: newOrder.payment_screenshot
+    };
+    STATE.orders.push(mappedOrder);
     saveOrders(newOrder);
     
     // Mark coupon as used if single use
@@ -4370,7 +4384,8 @@ function updateProfileUI() {
             ordersList.innerHTML = '<p style="color: var(--color-silver-dark);">You have no orders yet.</p>';
         } else {
             ordersList.innerHTML = userOrders.map(o => {
-                const itemsList = (o.items || []).map(item => `
+                const itemsArr = Array.isArray(o.items) ? o.items : (typeof o.items === 'string' ? safeJSONParse(o.items, []) : []);
+                const itemsList = itemsArr.map(item => `
                     <div style="font-size: 0.85rem; color: var(--color-silver-dark); margin-top: 4px; display: flex; justify-content: space-between;">
                         <span>• ${item.title} (x${item.qty})</span>
                         <span>₹${(item.price * item.qty).toLocaleString("en-IN")}</span>
