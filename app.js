@@ -4316,14 +4316,20 @@ async function fetchUserProfile(email, token) {
 
 function updateProfileUI() {
     const balEl = document.getElementById('profile-digi-balance');
+    const lockedEl = document.getElementById('profile-locked-balance');
     const rateEl = document.getElementById('profile-silver-rate');
     const ordersList = document.getElementById('profile-orders-list');
+    
     if (balEl && STATE.profile) {
         balEl.textContent = parseFloat(STATE.profile.digi_silver_balance).toFixed(2);
+    }
+    if (lockedEl) {
+        lockedEl.textContent = "0.00";
     }
     if (rateEl && STATE.rates) {
         rateEl.textContent = `₹${STATE.rates.fine} / g`;
     }
+    
     if (ordersList && STATE.user) {
         const savedPhone = localStorage.getItem("mrt_checkout_phone");
         const userOrders = STATE.orders.filter(o => {
@@ -4341,6 +4347,25 @@ function updateProfileUI() {
             
             return false;
         });
+        
+        // Calculate locked balance (awaiting_approval or processing orders with Digi Silver)
+        let lockedGrams = 0;
+        userOrders.forEach(o => {
+            const isPending = o.status === 'awaiting_approval' || o.status === 'processing';
+            if (isPending) {
+                const itemsArr = Array.isArray(o.items) ? o.items : (typeof o.items === 'string' ? safeJSONParse(o.items, []) : []);
+                itemsArr.forEach(item => {
+                    const isDigi = item.isDigiSilver || (item.title && item.title.toLowerCase().includes('digi silver'));
+                    if (isDigi && item.grams) {
+                        lockedGrams += parseFloat(item.grams);
+                    }
+                });
+            }
+        });
+        if (lockedEl) {
+            lockedEl.textContent = lockedGrams.toFixed(2);
+        }
+        
         if (userOrders.length === 0) {
             ordersList.innerHTML = '<p style="color: var(--color-silver-dark);">You have no orders yet.</p>';
         } else {
