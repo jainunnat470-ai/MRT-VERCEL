@@ -1603,14 +1603,18 @@ async function loadAdminUsers() {
     const tbody = document.getElementById("admin-users-tbody");
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px;">Loading users...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">Loading users...</td></tr>';
+    
+    // Clear search input on reload
+    const searchInp = document.getElementById("admin-users-search");
+    if (searchInp) searchInp.value = "";
     
     try {
         const { data, error } = await supaClient.from('settings').select('*').like('key', 'user_%');
         if (error) throw error;
         
         if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px;">No registered users found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No registered users found</td></tr>';
             return;
         }
         
@@ -1629,18 +1633,96 @@ async function loadAdminUsers() {
         
         users.sort((a, b) => b.balance - a.balance);
         
-        tbody.innerHTML = users.map(u => `
-            <tr>
-                <td style="font-weight: 600; color: var(--color-primary);">${u.email}</td>
-                <td>${u.name}</td>
-                <td style="font-weight: 700; color: var(--color-accent-pink);">
-                    ${u.balance.toFixed(2)} g
-                </td>
-            </tr>
-        `).join('');
+        // Cache globally for fast filtering
+        STATE.adminUsers = users;
+        
+        renderUsersTable(users);
     } catch (err) {
         console.error("Error loading admin users:", err);
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 20px; color: red;">Failed to load users: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: red;">Failed to load users: ${err.message}</td></tr>`;
+    }
+}
+
+function renderUsersTable(users) {
+    const tbody = document.getElementById("admin-users-tbody");
+    if (!tbody) return;
+    
+    tbody.innerHTML = users.map(u => `
+        <tr>
+            <td style="font-weight: 600; color: var(--color-primary);">${u.email}</td>
+            <td>${u.name}</td>
+            <td style="font-weight: 700; color: var(--color-accent-pink);">
+                ${u.balance.toFixed(2)} g
+            </td>
+            <td style="text-align: center;">
+                <button class="btn-checkout" onclick="downloadUserData('${u.email}')" style="padding: 4px 8px; font-size: 0.68rem; margin-top: 0; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFFFFF; border: none; border-radius: 4px; cursor: pointer;">
+                    📥 Download Data
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function filterAdminUsers() {
+    const query = document.getElementById("admin-users-search").value.toLowerCase().trim();
+    const tbody = document.getElementById("admin-users-tbody");
+    if (!tbody || !STATE.adminUsers) return;
+    
+    const filtered = STATE.adminUsers.filter(u => 
+        u.email.toLowerCase().includes(query) || 
+        u.name.toLowerCase().includes(query)
+    );
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No matching users found</td></tr>';
+        return;
+    }
+    
+    renderUsersTable(filtered);
+}
+
+async function downloadUserData(email) {
+    try {
+        // Fetch raw user record
+        const { data: userDataRow } = await supaClient.from('settings').select('value').eq('key', 'user_' + email).single();
+        let userProfile = null;
+        if (userDataRow && userDataRow.value) {
+            userProfile = JSON.parse(userDataRow.value);
+            // Hide password for security
+            if (userProfile.password) userProfile.password = "********";
+        }
+        
+        // Filter all orders placed by this user
+        const userOrders = STATE.orders.filter(o => {
+            const custStr = typeof o.customer === 'string' ? o.customer : JSON.stringify(o.customer || {});
+            return custStr.toLowerCase().includes(email.toLowerCase());
+        });
+        
+        const exportData = {
+            exported_at: new Date().toISOString(),
+            user_profile: userProfile || { email: email, name: "N/A", message: "No profile settings row found" },
+            orders_count: userOrders.length,
+            orders: userOrders
+        };
+        
+        // Trigger file download
+        const jsonString = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
+        const link = document.createElement("a");
+        const filename = `User_Data_${email.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+        
+        if (navigator.msSaveBlob) { // IE 10+
+            navigator.msSaveBlob(blob, filename);
+        } else {
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    } catch (e) {
+        console.error("Error exporting user data:", e);
+        alert("Failed to export user data: " + e.message);
     }
 }
 
