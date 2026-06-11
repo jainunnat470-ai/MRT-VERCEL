@@ -4443,3 +4443,73 @@ function redeemDigiSilver() {
     
     updateProfileUI();
 }
+
+function sellDigiSilver() {
+    const amountStr = document.getElementById('sell-digi-amount').value;
+    const amount = parseFloat(amountStr);
+    
+    if (!amount || amount <= 0) return alert("Enter a valid amount to cash out.");
+    
+    const grams = parseFloat((amount / STATE.rates.fine).toFixed(4));
+    
+    if (!STATE.profile || grams > STATE.profile.digi_silver_balance) {
+        return alert(`Insufficient Digi Silver balance. You need at least ${grams}g to cash out ₹${amount}.`);
+    }
+
+    // Deduct grams
+    STATE.profile.digi_silver_balance -= grams;
+    
+    alert(`Success! You have requested to cash out ₹${amount} (${grams}g). The funds will be transferred to your registered Bank/UPI account in 1-2 working days.`);
+    
+    // Save deduction to Supabase Profile (settings)
+    if (STATE.user && STATE.user.email) {
+        supaClient.from('settings').select('value').eq('key', 'user_' + STATE.user.email).single().then(({data}) => {
+            if (data && data.value) {
+                try {
+                    const ud = JSON.parse(data.value);
+                    ud.digi_silver_balance = STATE.profile.digi_silver_balance;
+                    supaClient.from('settings').update({ value: JSON.stringify(ud) }).eq('key', 'user_' + STATE.user.email).then().catch(e=>console.log(e));
+                } catch(e) {}
+            }
+        });
+    }
+    
+    // Save to Order History
+    const sellOrderId = `MRT-SELL-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newOrder = {
+        id: sellOrderId,
+        date: new Date().toISOString().split("T")[0],
+        customer: JSON.stringify({ name: STATE.user && STATE.user.name ? STATE.user.name : "Digi Seller", email: STATE.user ? STATE.user.email : null, token: STATE.user ? STATE.user.token : null }),
+        phone: localStorage.getItem("mrt_checkout_phone") || "",
+        address: "Digi Silver Cash Out to Bank/UPI",
+        paymentMethod: "Bank Transfer",
+        subtotal: amount,
+        discount: 0,
+        total: amount,
+        status: "Processing (1-2 days)",
+        items: JSON.stringify([{
+            title: `Sold ${grams}g Digi Silver`,
+            price: amount,
+            qty: 1,
+            isDigiSilver: false
+        }])
+    };
+    
+    STATE.orders.push(newOrder);
+    supaClient.from('orders').insert({
+        id: newOrder.id,
+        date: newOrder.date,
+        customer: newOrder.customer,
+        phone: newOrder.phone,
+        address: newOrder.address,
+        payment_method: newOrder.paymentMethod,
+        subtotal: newOrder.subtotal,
+        discount: newOrder.discount,
+        total: newOrder.total,
+        status: newOrder.status,
+        items: newOrder.items
+    }).then().catch(e=>console.error(e));
+    
+    document.getElementById('sell-digi-amount').value = "";
+    updateProfileUI();
+}
