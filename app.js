@@ -318,6 +318,8 @@ function applyQuickFilter(filterType) {
         document.getElementById("filter-type-pendants").checked = false;
         document.getElementById("filter-type-anklets").checked = false;
         document.getElementById("filter-type-chains").checked = false;
+        const chainPendantInput = document.getElementById("filter-type-chain_pendant");
+        if (chainPendantInput) chainPendantInput.checked = false;
         document.getElementById("filter-type-coins").checked = false;
         const gcInput = document.getElementById("filter-type-gold_coins");
         if (gcInput) gcInput.checked = false;
@@ -328,7 +330,7 @@ function applyQuickFilter(filterType) {
     const priceMaxSlider = document.getElementById("filter-price-max");
     const priceDisplay = document.getElementById("filter-price-val");
     
-    const categoriesList = ["rings", "earrings", "pendants", "anklets", "chains", "coins", "gold", "gold_coins", "kids", "customised"];
+    const categoriesList = ["rings", "earrings", "pendants", "anklets", "chains", "chain_pendant", "coins", "gold", "gold_coins", "kids", "customised"];
     
     if (filterType === "under-999") {
         priceMaxSlider.value = 999;
@@ -403,6 +405,8 @@ function renderShopCatalog() {
     if (ankletsCheck && ankletsCheck.checked) categories.push("anklets");
     const chainsCheck = document.getElementById("filter-type-chains");
     if (chainsCheck && chainsCheck.checked) categories.push("chains");
+    const chainPendantCheck = document.getElementById("filter-type-chain_pendant");
+    if (chainPendantCheck && chainPendantCheck.checked) categories.push("chain_pendant");
     const coinsCheck = document.getElementById("filter-type-coins");
     if (coinsCheck && coinsCheck.checked) categories.push("coins");
     const gcCheck = document.getElementById("filter-type-gold_coins");
