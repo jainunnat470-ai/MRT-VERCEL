@@ -4178,6 +4178,7 @@ function updateProfileUI() {
     if (ordersList && STATE.user) {
         const savedPhone = localStorage.getItem("mrt_checkout_phone");
         const userOrders = STATE.orders.filter(o => {
+            if (o.id && String(o.id).startsWith("MRT-RDM")) return false; // Hide coupon redemptions
             const custStr = typeof o.customer === 'string' ? o.customer : JSON.stringify(o.customer || {});
             
             // 1. Strict Email Match (most reliable)
@@ -4342,16 +4343,25 @@ function buyDigiSilver() {
     
     const grams = parseFloat((amount / STATE.rates.fine).toFixed(4));
     
-    // Create a mock checkout cart item specifically for Digi Silver
-    STATE.cart = [{
-        id: "DIGI-SILVER-BUY",
+    const digiItem = {
+        id: "DIGI-SILVER-BUY-" + Date.now(),
         title: `Digi Silver (${grams}g)`,
         price: amount,
         image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=300&q=80",
         qty: 1,
         isDigiSilver: true,
         grams: grams
-    }];
+    };
+    
+    // Check if there is already a Digi Silver item to merge
+    const existingIndex = STATE.cart.findIndex(i => i.isDigiSilver);
+    if (existingIndex > -1) {
+        STATE.cart[existingIndex].price += amount;
+        STATE.cart[existingIndex].grams = parseFloat((STATE.cart[existingIndex].grams + grams).toFixed(4));
+        STATE.cart[existingIndex].title = `Digi Silver (${STATE.cart[existingIndex].grams}g)`;
+    } else {
+        STATE.cart.push(digiItem);
+    }
     
     saveCart();
     checkoutCart();
