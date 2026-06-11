@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>M R THANGAMAALIGAI | Premium 925 Sterling Silver & Gold Jewellery</title>
     <meta name="description" content="Explore pure 92.5 Sterling Silver & Gold jewellery at M R THANGAMAALIGAI. From classic chains to custom designs, experience premium quality.">
-    <link rel="stylesheet" href="style.css?v=12">
+    <link rel="stylesheet" href="style.css?v=22">
 </head>
 <body>
 
@@ -64,6 +64,13 @@
                     <span class="badge" id="cart-count" style="display: none;">0</span>
                 </button>
 
+                <!-- Profile / Login Icon -->
+                <button class="icon-btn" onclick="openUserProfile()" aria-label="User Profile">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                </button>
+
                 <!-- Admin Dash Toggle -->
                 <button class="admin-toggle-btn" id="admin-toggle" onclick="toggleAdminMode()">Admin Panel</button>
             </div>
@@ -79,15 +86,24 @@
     <div id="home-view" class="app-view active-view">
         
         <!-- Hero Slides Carousel -->
-        <section class="hero-slider">
-            <div class="hero-slide active-slide">
-                <img class="hero-slide-bg" src="hero_banner.png" style="width: 100%; height: auto; display: block;" alt="Hero Banner">
+        <section class="hero-slider" style="position: relative; width: 100%; overflow: hidden;">
+            <div class="hero-slide active-slide" style="position: relative; width: 100%;">
+                <picture>
+                    <source media="(max-width: 768px)" srcset="hero_banner.png" id="banner-home-fallback-mobile">
+                    <img class="hero-slide-bg" id="banner-home-fallback-desktop" src="hero_banner.png" style="width: 100%; height: auto; display: block;" alt="Hero Banner">
+                </picture>
             </div>
-            <div class="hero-controls">
-                <div class="hero-dot active-dot" onclick="alert('Carousel is set to auto-cycle.')"></div>
-                <div class="hero-dot" onclick="alert('Carousel is set to auto-cycle.')"></div>
-            </div>
+            <!-- The hero image already contains text, so we remove the HTML text overlay -->
         </section>
+
+        <!-- Digi Silver Banner -->
+        <div style="cursor: pointer; text-align: center; margin: 40px auto; max-width: 1200px; padding: 0 20px;" onclick="openUserProfile()">
+            <div style="background: linear-gradient(135deg, #111 0%, #333 100%); border-radius: var(--border-radius-md); padding: 40px 20px; color: #fff; box-shadow: var(--shadow-lux); position: relative; overflow: hidden; border: 1px solid var(--color-silver-mid);">
+                <h2 style="font-family: var(--font-heading); color: #fff; font-size: 2.2rem; margin-bottom: 10px;">Invest in 925 Digi Silver</h2>
+                <p style="color: #ccc; font-size: 1.1rem; max-width: 600px; margin: 0 auto 20px;">Buy authentic digital silver at live market rates. Secure, instant, and redeemable for physical jewellery or coupons.</p>
+                <button style="background-color: var(--color-accent-pink); color: white; padding: 12px 30px; font-size: 1rem; font-weight: bold; border-radius: 30px; border: none; cursor: pointer;">View Live Rates & Buy</button>
+            </div>
+        </div>
 
         <!-- Categories Circle Quick Navigation -->
         <section class="container section-padding">
@@ -96,25 +112,25 @@
             <div class="categories-circles-grid">
                 <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'rings')" style="animation-delay: 0.1s;">
                     <div class="cat-circle-img-wrap">
-                        <img src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=150&q=80" alt="Rings">
+                        <img src="ring.jpeg" alt="Rings">
                     </div>
                     <span class="cat-circle-title">Rings</span>
                 </div>
                 <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'earrings')" style="animation-delay: 0.15s;">
                     <div class="cat-circle-img-wrap">
-                        <img src="https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?auto=format&fit=crop&w=150&q=80" alt="Earrings">
+                        <img src="earring.jpeg" alt="Earrings">
                     </div>
                     <span class="cat-circle-title">Earrings</span>
                 </div>
                 <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'pendants')" style="animation-delay: 0.2s;">
                     <div class="cat-circle-img-wrap">
-                        <img src="https://images.unsplash.com/photo-1599643477877-530eb83abc8e?auto=format&fit=crop&w=150&q=80" alt="Pendants">
+                        <img src="pendant.jpeg" alt="Pendants">
                     </div>
                     <span class="cat-circle-title">Pendants</span>
                 </div>
                 <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'bracelets')" style="animation-delay: 0.22s;">
                     <div class="cat-circle-img-wrap">
-                        <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=150&q=80" alt="Bracelets">
+                        <img src="bracelet.jpeg" alt="Bracelets">
                     </div>
                     <span class="cat-circle-title">Bracelets</span>
                 </div>
@@ -208,7 +224,10 @@
         <!-- Shop for Him and Her Split -->
         <section class="container gender-banners">
             <div class="gender-banner-card" onclick="navigateTo('shop', 'men')">
-                <img id="gender-banner-him-img" class="gender-banner-img" src="https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=800&q=80" alt="Collection for Him">
+                <picture>
+                    <source media="(max-width: 768px)" srcset="https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=400&q=80" id="gender-banner-him-mobile-img">
+                    <img id="gender-banner-him-img" class="gender-banner-img" src="https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=800&q=80" alt="Collection for Him">
+                </picture>
                 <div class="gender-banner-overlay">
                     <h3 class="gender-title">Collection for Him</h3>
                     <span class="gender-link">Shop Bold Chains & Rings 
@@ -217,7 +236,10 @@
                 </div>
             </div>
             <div class="gender-banner-card" onclick="navigateTo('shop', 'stud')" style="border: 2px solid #FFFFFF;">
-                <img id="gender-banner-her-img" class="gender-banner-img" src="https://images.unsplash.com/photo-1635767798638-3e25273a8236?auto=format&fit=crop&w=800&q=80" alt="Collection for Her">
+                <picture>
+                    <source media="(max-width: 768px)" srcset="https://images.unsplash.com/photo-1635767798638-3e25273a8236?auto=format&fit=crop&w=400&q=80" id="gender-banner-her-mobile-img">
+                    <img id="gender-banner-her-img" class="gender-banner-img" src="https://images.unsplash.com/photo-1635767798638-3e25273a8236?auto=format&fit=crop&w=800&q=80" alt="Collection for Her">
+                </picture>
                 <div class="gender-banner-overlay">
                     <h3 class="gender-title">Collection for Her</h3>
                     <span class="gender-link">Shop Sparkling Pendants &amp; Studs
@@ -394,6 +416,73 @@
     </div>
 
 
+
+    <!-- --- PROFILE VIEW PANEL --- -->
+    <div id="profile-view" class="app-view container section-padding" style="max-width: 800px; margin: 0 auto;">
+        <div style="background-color: var(--color-silver-light); border-radius: var(--border-radius-md); padding: 30px; box-shadow: var(--shadow-lux);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--color-silver-mid); padding-bottom: 15px; margin-bottom: 20px;">
+                <h2 style="font-family: var(--font-heading); color: var(--color-primary); margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    My Profile
+                </h2>
+                                    <button onclick="handleLogout()" style="background: transparent; border: 1px solid var(--color-accent-pink); color: var(--color-accent-pink); padding: 8px 16px; border-radius: var(--border-radius-sm); font-weight: 600; cursor: pointer;">Logout</button>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+                <!-- Digi Silver Section -->
+                <div style="background: #FFFFFF; border-radius: var(--border-radius-sm); padding: 25px; border: 1px solid var(--color-silver-mid);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h3 style="color: var(--color-primary); margin: 0 0 5px 0; font-size: 1.2rem;">✨ Digi Silver Wallet</h3>
+                            <div style="font-size: 0.85rem; color: var(--color-silver-dark);">Invest in 925 Pure Silver digitally.</div>
+                        </div>
+                        <div style="text-align: right; background: #F0FDF4; border: 1px solid #BBF7D0; padding: 8px 12px; border-radius: 8px;">
+                            <div style="font-size: 0.75rem; color: #166534; text-transform: uppercase; font-weight: 700;">Current Rate</div>
+                            <div id="profile-silver-rate" style="font-size: 1.1rem; color: #15803D; font-weight: 800;">₹94.8 / g</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 15px; background: #F8FAFC; padding: 20px; border-radius: var(--border-radius-sm); border: 1px solid #E2E8F0; margin-bottom: 25px;">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--color-accent-pink); color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700;">S</div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: var(--color-silver-dark); font-weight: 600; text-transform: uppercase;">Your Balance</div>
+                            <div style="font-family: var(--font-heading); font-size: 2rem; color: var(--color-primary); font-weight: 700;"><span id="profile-digi-balance">0.00</span> <span style="font-size: 1rem; color: var(--color-silver-dark);">Grams</span></div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div style="border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); padding: 15px; background: #FFFBEB;">
+                            <h4 style="margin: 0 0 10px 0; color: #92400E; font-size: 0.95rem;">Buy Digi Silver</h4>
+                            <input type="number" id="buy-digi-grams" class="custom-input" placeholder="Grams (e.g., 5)" step="0.1" style="margin-bottom: 10px;">
+                            <button onclick="buyDigiSilver()" class="btn-checkout" style="width: 100%; padding: 10px; margin: 0; background: #D97706;">Buy Now (UPI)</button>
+                        </div>
+                        <div style="border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); padding: 15px;">
+                            <h4 style="margin: 0 0 10px 0; color: var(--color-primary); font-size: 0.95rem;">Redeem as Coupon</h4>
+                            <input type="number" id="redeem-digi-grams" class="custom-input" placeholder="Grams (e.g., 2)" step="0.1" style="margin-bottom: 10px;">
+                            <button onclick="redeemDigiSilver()" class="btn-checkout" style="width: 100%; padding: 10px; margin: 0; background: #10B981;">Convert to Discount</button>
+                            <div style="font-size: 0.7rem; color: var(--color-silver-dark); margin-top: 6px; text-align: center;">Use discount at checkout.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Orders List -->
+        <div style="background-color: var(--color-silver-light); border-radius: var(--border-radius-md); padding: 30px; box-shadow: var(--shadow-lux); margin-top: 30px;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.5rem; color: var(--color-primary); margin-bottom: 20px; text-transform: uppercase;">My Orders</h3>
+            <div id="profile-orders-list" style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+
+        <!-- Coupons List -->
+        <div style="background-color: var(--color-silver-light); border-radius: var(--border-radius-md); padding: 30px; box-shadow: var(--shadow-lux); margin-top: 30px;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.5rem; color: var(--color-primary); margin-bottom: 20px; text-transform: uppercase;">My Coupons</h3>
+            <div id="profile-coupons-list" style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+    </div> <!-- Close profile-view -->
+
     <!-- --- C. PRODUCT DETAIL VIEW PANEL --- -->
     <div id="detail-view" class="app-view container section-padding">
         <!-- Back navigation link -->
@@ -444,9 +533,8 @@
                 </div>
                 <!-- Dynamic Size Selector (Visible for Rings/Toe Rings only) -->
                 <div id="detail-size-section" style="margin-top: 15px; margin-bottom: 20px; display: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <label class="custom-form-label" style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0; display: block;">Select Size</label>
-                        <a href="javascript:void(0)" id="ring-size-guide-link" onclick="openSizeGuideModal()" style="font-size: 0.72rem; color: var(--color-accent-pink); font-weight: 600; text-decoration: underline; display: none;">📏 Size Guide</a>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 24px;">
+                        <label class="custom-form-label" id="detail-size-label" style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0; color: #1f2937;">Select Size / Variant</label>
                     </div>
                     <!-- Size selector trigger button -->
                     <button id="size-selector-trigger-btn" onclick="openSizeSelectorModal()" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); background-color: #FFFFFF; color: var(--color-primary); font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; outline: none; text-align: left;">
@@ -458,11 +546,15 @@
                 <!-- Premium Gift Box Option -->
                 <div class="detail-gift-wrap-wrap" style="margin-top: 15px; margin-bottom: 20px;">
                     <label class="gift-wrap-checkbox-label" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); background-color: var(--color-silver-light); cursor: pointer; transition: all var(--transition-fast) ease; user-select: none;">
-                        <input type="checkbox" id="detail-gift-wrap" style="accent-color: var(--color-accent-pink); width: 18px; height: 18px; cursor: pointer;">
+                        <input type="checkbox" id="detail-gift-wrap" style="accent-color: var(--color-accent-pink); width: 18px; height: 18px; cursor: pointer;" onchange="document.getElementById('gift-message-container').style.display = this.checked ? 'block' : 'none'">
                         <div style="display: flex; flex-direction: column;">
                             <span style="font-size: 0.88rem; font-weight: 600; color: var(--color-primary);">🎁 Add Premium Gift Box (+₹99)</span>
                         </div>
                     </label>
+                    <div id="gift-message-container" style="display: none; margin-top: 10px;">
+                        <label class="custom-form-label" style="font-size: 0.75rem; font-weight: 600;">Gift Message (Max 50 words / 300 chars)</label>
+                        <textarea id="detail-gift-message" class="custom-form-input" placeholder="Write your heartfelt message here..." maxlength="300" style="height: 60px; resize: none;"></textarea>
+                    </div>
                 </div>
                 
                 <div class="detail-actions">
@@ -1064,6 +1156,25 @@
                         </div>
                     </div>
                     <button class="admin-btn-submit" onclick="createAdminCoupon()">Publish Discount Code</button>
+
+                    <h3 class="admin-tab-title" style="margin-top: 40px;">Active Coupons</h3>
+                    <div class="admin-table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Type</th>
+                                    <th>Value</th>
+                                    <th>Single Use</th>
+                                    <th>Status</th>
+                                    <th>Owner Email</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-coupons-tbody">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 
                 <!-- 7. Settings -->
@@ -1162,6 +1273,25 @@
                         </div>
                     </div>
 
+                    <!-- Mobile Hero Banner -->
+                    <div style="background: linear-gradient(135deg, #1a0a2e, #3D0024); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                        <h4 style="color: #FFD700; margin-bottom: 16px; font-size: 1rem; letter-spacing: 1px; text-transform: uppercase;">📱 Mobile Hero Banner (Small Screens)</h4>
+                        <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                            <div style="width: 120px; height: 160px; border-radius: 8px; overflow: hidden; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;">
+                                <img id="banner-preview-hero-mobile" src="hero_banner_mobile.png" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://placehold.co/600x800/3D0024/FFD700?text=Mobile+Hero'">
+                            </div>
+                            <div style="flex: 1;">
+                                <p style="color: rgba(255,255,255,0.7); font-size: 0.82rem; margin-bottom: 12px;">Recommended: 600×800px, portrait. Shown on phones.</p>
+                                <label style="display: inline-flex; align-items: center; gap: 8px; background: #FFD700; color: #1a0a2e; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.82rem;">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                    Upload Mobile Hero
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'hero-mobile')">
+                                </label>
+                                <button onclick="resetBannerImage('hero-mobile')" style="margin-left: 10px; background: transparent; border: 1px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.7); padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 0.8rem;">↺ Reset</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Category Images -->
                     <h4 style="color: var(--color-primary); margin-bottom: 16px; font-size: 1rem; letter-spacing: 1px; text-transform: uppercase;">📂 Category Circle Images</h4>
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px;">
@@ -1169,7 +1299,7 @@
                         <!-- Rings -->
                         <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
                             <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
-                                <img id="banner-preview-rings" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=80&q=80'">
+                                <img id="banner-preview-rings" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='ring.jpeg'">
                             </div>
                             <div style="flex:1;">
                                 <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">💍 Rings</div>
@@ -1184,7 +1314,7 @@
                         <!-- Earrings -->
                         <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
                             <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
-                                <img id="banner-preview-earrings" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=80&q=80'">
+                                <img id="banner-preview-earrings" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='earring.jpeg'">
                             </div>
                             <div style="flex:1;">
                                 <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">👂 Earrings</div>
@@ -1199,7 +1329,7 @@
                         <!-- Pendants -->
                         <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
                             <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
-                                <img id="banner-preview-pendants" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=80&q=80'">
+                                <img id="banner-preview-pendants" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='pendant.jpeg'">
                             </div>
                             <div style="flex:1;">
                                 <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">📿 Pendants</div>
@@ -1214,7 +1344,7 @@
                         <!-- Bracelets -->
                         <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
                             <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
-                                <img id="banner-preview-bracelets" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=80&q=80'">
+                                <img id="banner-preview-bracelets" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='bracelet.jpeg'">
                             </div>
                             <div style="flex:1;">
                                 <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">⌚ Bracelets</div>
@@ -1256,6 +1386,51 @@
                             </div>
                         </div>
 
+                        <!-- Gold -->
+                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
+                                <img id="banner-preview-gold" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1575377427642-087cf684f29d?w=80&q=80'">
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">✨ Gold</div>
+                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'gold')">
+                                </label>
+                                <button onclick="resetBannerImage('gold')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                            </div>
+                        </div>
+
+                        <!-- Kids -->
+                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
+                                <img id="banner-preview-kids" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=80&q=80'">
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">🧸 Kids</div>
+                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'kids')">
+                                </label>
+                                <button onclick="resetBannerImage('kids')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                            </div>
+                        </div>
+
+                        <!-- Customised -->
+                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
+                                <img id="banner-preview-customised" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=80&q=80'">
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">🛠️ Customised</div>
+                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'customised')">
+                                </label>
+                                <button onclick="resetBannerImage('customised')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                            </div>
+                        </div>
+
                         <!-- For Him Split Banner -->
                         <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
                             <div style="width: 72px; height: 72px; border-radius: 8px; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
@@ -1283,6 +1458,67 @@
                                     <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'her')">
                                 </label>
                                 <button onclick="resetBannerImage('her')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                            </div>
+                        </div>
+
+                        <!-- For Him Mobile Split Banner -->
+                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 72px; height: 72px; border-radius: 8px; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
+                                <img id="banner-preview-him-mobile" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=80&q=80'">
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">📱 For Him (Mobile)</div>
+                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'him-mobile')">
+                                </label>
+                                <button onclick="resetBannerImage('him-mobile')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                            </div>
+                        </div>
+
+                        <!-- For Her Mobile Split Banner -->
+                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 72px; height: 72px; border-radius: 8px; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
+                                <img id="banner-preview-her-mobile" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=80&q=80'">
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">📱 For Her (Mobile)</div>
+                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'her-mobile')">
+                                </label>
+                                <button onclick="resetBannerImage('her-mobile')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Payment Settings -->
+                    <h4 style="color: var(--color-primary); margin-bottom: 16px; margin-top: 30px; font-size: 1rem; letter-spacing: 1px; text-transform: uppercase;">💳 Payment Settings (UPI)</h4>
+                    <div style="background: var(--color-silver-light); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label class="custom-form-label">Store UPI ID (Text)</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="admin-upi-id-input" class="custom-form-input" placeholder="e.g. 9841739433@ybl" style="flex: 1;">
+                                <button onclick="saveAdminUpiId()" style="background: var(--color-primary); color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none;">Save ID</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="custom-form-label">Payment QR Code Image</label>
+                            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                                <div style="width: 100px; height: 100px; border-radius: 8px; overflow: hidden; border: 2px solid var(--color-silver-mid); flex-shrink: 0; background: #fff;">
+                                    <img id="banner-preview-qr" src="" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://placehold.co/200x200?text=QR+Code'">
+                                </div>
+                                <div style="flex: 1;">
+                                    <p style="color: var(--color-silver-dark); font-size: 0.82rem; margin-bottom: 12px;">Upload your UPI QR code. This will be shown to users during checkout.</p>
+                                    <label style="display: inline-flex; align-items: center; gap: 8px; background: var(--color-primary); color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.82rem;">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                        Upload QR Code
+                                        <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'qr')">
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
@@ -1796,31 +2032,34 @@
                 <!-- UPI/QR and Screenshot Upload — shown for UPI only -->
                 <div id="checkout-payment-ss-fields" style="margin-top: 15px; background-color: var(--color-silver-light); padding: 15px; border-radius: var(--border-radius-sm); border: 1px dashed var(--color-silver-mid);">
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #FFFFFF; padding: 15px; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid); margin: 0 auto 12px auto; max-width: 260px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
-                        <svg width="100" height="100" viewBox="0 0 100 100" style="color: var(--color-primary);">
-                            <rect x="5" y="5" width="25" height="25" fill="none" stroke="currentColor" stroke-width="4"/>
-                            <rect x="11" y="11" width="13" height="13" fill="currentColor"/>
-                            <rect x="70" y="5" width="25" height="25" fill="none" stroke="currentColor" stroke-width="4"/>
-                            <rect x="76" y="11" width="13" height="13" fill="currentColor"/>
-                            <rect x="5" y="70" width="25" height="25" fill="none" stroke="currentColor" stroke-width="4"/>
-                            <rect x="11" y="76" width="13" height="13" fill="currentColor"/>
-                            <rect x="40" y="10" width="6" height="12" fill="currentColor"/>
-                            <rect x="52" y="5" width="10" height="6" fill="currentColor"/>
-                            <rect x="40" y="30" width="15" height="6" fill="currentColor"/>
-                            <rect x="10" y="40" width="12" height="6" fill="currentColor"/>
-                            <rect x="25" y="45" width="6" height="15" fill="currentColor"/>
-                            <rect x="45" y="45" width="10" height="10" fill="currentColor"/>
-                            <rect x="60" y="40" width="15" height="6" fill="currentColor"/>
-                            <rect x="60" y="52" width="6" height="15" fill="currentColor"/>
-                            <rect x="75" y="45" width="15" height="10" fill="currentColor"/>
-                            <rect x="40" y="70" width="15" height="6" fill="currentColor"/>
-                            <rect x="52" y="80" width="10" height="12" fill="currentColor"/>
-                            <rect x="70" y="70" width="6" height="15" fill="currentColor"/>
-                            <rect x="82" y="82" width="12" height="12" fill="currentColor"/>
-                            <circle cx="50" cy="50" r="10" fill="var(--color-accent-pink)"/>
-                            <path d="M47 50 L53 50 M50 47 L50 47" stroke="#FFFFFF" stroke-width="2"/>
-                        </svg>
+                        <div id="checkout-upi-qr-container" style="width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;" onclick="openQrZoom()" title="Click to enlarge">
+                            <img id="checkout-upi-qr-img" src="" style="max-width: 100%; max-height: 100%; display: none;" alt="Payment QR Code">
+                            <svg id="checkout-upi-qr-svg" width="100" height="100" viewBox="0 0 100 100" style="color: var(--color-primary);">
+                                <rect x="5" y="5" width="25" height="25" fill="none" stroke="currentColor" stroke-width="4"/>
+                                <rect x="11" y="11" width="13" height="13" fill="currentColor"/>
+                                <rect x="70" y="5" width="25" height="25" fill="none" stroke="currentColor" stroke-width="4"/>
+                                <rect x="76" y="11" width="13" height="13" fill="currentColor"/>
+                                <rect x="5" y="70" width="25" height="25" fill="none" stroke="currentColor" stroke-width="4"/>
+                                <rect x="11" y="76" width="13" height="13" fill="currentColor"/>
+                                <rect x="40" y="10" width="6" height="12" fill="currentColor"/>
+                                <rect x="52" y="5" width="10" height="6" fill="currentColor"/>
+                                <rect x="40" y="30" width="15" height="6" fill="currentColor"/>
+                                <rect x="10" y="40" width="12" height="6" fill="currentColor"/>
+                                <rect x="25" y="45" width="6" height="15" fill="currentColor"/>
+                                <rect x="45" y="45" width="10" height="10" fill="currentColor"/>
+                                <rect x="60" y="40" width="15" height="6" fill="currentColor"/>
+                                <rect x="60" y="52" width="6" height="15" fill="currentColor"/>
+                                <rect x="75" y="45" width="15" height="10" fill="currentColor"/>
+                                <rect x="40" y="70" width="15" height="6" fill="currentColor"/>
+                                <rect x="52" y="80" width="10" height="12" fill="currentColor"/>
+                                <rect x="70" y="70" width="6" height="15" fill="currentColor"/>
+                                <rect x="82" y="82" width="12" height="12" fill="currentColor"/>
+                                <circle cx="50" cy="50" r="10" fill="var(--color-accent-pink)"/>
+                                <path d="M47 50 L53 50 M50 47 L50 47" stroke="#FFFFFF" stroke-width="2"/>
+                            </svg>
+                        </div>
                         <div style="font-size: 0.78rem; font-weight: 700; color: var(--color-primary); margin-top: 8px; text-align: center;">Scan QR to Pay with any UPI App</div>
-                        <div style="font-size: 0.72rem; color: var(--color-accent-pink); font-weight: 600; margin-top: 4px; border: 1px dashed var(--color-accent-pink); padding: 4px 8px; border-radius: 4px; background-color: #FFF5F7;">UPI ID: mrttm@ybl</div>
+                        <div id="checkout-upi-id-display" style="font-size: 0.72rem; color: var(--color-accent-pink); font-weight: 600; margin-top: 4px; border: 1px dashed var(--color-accent-pink); padding: 4px 8px; border-radius: 4px; background-color: #FFF5F7;">UPI ID: mrttm@ybl</div>
                     </div>
                     
                     <div class="custom-form-group" style="margin-bottom: 0;">
@@ -1926,6 +2165,35 @@
         </div>
     </div>
 
+    <!-- QR Zoom Modal -->
+    <div class="drawer-overlay" id="qr-zoom-overlay" style="z-index: 300; display: none; background-color: rgba(0,0,0,0.85);" onclick="closeQrZoom()"></div>
+    <div id="qr-zoom-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 310; width: 90%; max-width: 400px; text-align: center;">
+        <div style="background-color: #FFFFFF; padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div id="qr-zoom-content" style="width: 100%; height: auto; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;"></div>
+            <button onclick="closeQrZoom()" style="margin-top: 20px; background: var(--color-primary); color: #fff; padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%;">Close</button>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="drawer-overlay" id="auth-overlay" style="z-index: 400; display: none; background-color: rgba(18, 18, 20, 0.75);" onclick="closeAuthModal()"></div>
+    <div id="auth-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 410; width: 90%; max-width: 360px; background-color: #FFFFFF; border-radius: var(--border-radius-md); padding: 30px; box-shadow: var(--shadow-lux);">
+        <h3 id="auth-title" style="margin: 0 0 20px 0; color: var(--color-primary); font-family: var(--font-heading); text-align: center;">Login to M R Thangamaaligai</h3>
+        <div class="custom-form-group">
+            <label class="custom-form-label">Email</label>
+            <input type="email" id="auth-email" class="custom-input" placeholder="you@example.com">
+        </div>
+        <div class="custom-form-group">
+            <label class="custom-form-label">Password</label>
+            <input type="password" id="auth-password" class="custom-input" placeholder="••••••••">
+        </div>
+        <div id="auth-error" style="color: #EF4444; font-size: 0.8rem; margin-bottom: 15px; text-align: center; display: none;"></div>
+        <button id="auth-submit-btn" class="btn-checkout" style="width: 100%; margin: 0 0 15px 0;" onclick="handleAuthSubmit()">Login</button>
+        <div style="text-align: center; font-size: 0.85rem; color: var(--color-silver-dark);">
+            <span id="auth-toggle-text">Don't have an account?</span> 
+            <a href="#" onclick="toggleAuthMode(); return false;" style="color: var(--color-accent-pink); font-weight: 600; text-decoration: none;" id="auth-toggle-link">Sign up</a>
+        </div>
+    </div>
+
     <style>
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -1936,6 +2204,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <!-- Main Application Logic -->
-    <script src="app.js?v=18"></script>
+    <script src="app.js?v=36"></script>
 </body>
 </html>
