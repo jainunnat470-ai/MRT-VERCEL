@@ -989,6 +989,16 @@ function applyCouponCode() {
 
 function checkoutCart() {
     if (STATE.cart.length === 0) return;
+    if (!STATE.user) {
+        alert("Please login to proceed with checkout.");
+        const cartDrawer = document.getElementById('cart-drawer');
+        const drawerOverlay = document.getElementById('drawer-overlay');
+        if (cartDrawer) cartDrawer.classList.remove('drawer-open');
+        if (drawerOverlay) drawerOverlay.classList.remove('overlay-open');
+        document.getElementById('auth-overlay').style.display = 'block';
+        document.getElementById('auth-modal').style.display = 'block';
+        return;
+    }
     openCheckoutModal();
 }
 
@@ -1918,6 +1928,7 @@ async function addNewProduct() {
 
     const title = document.getElementById("new-prod-title").value.trim();
     const category = document.getElementById("new-prod-cat").value;
+    const gender = document.getElementById("new-prod-gender") ? document.getElementById("new-prod-gender").value : "both";
     const price = parseFloat(document.getElementById("new-prod-price").value);
     const origPrice = parseFloat(document.getElementById("new-prod-orig").value) || price;
     let image = "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80"; // default
@@ -1965,6 +1976,7 @@ async function addNewProduct() {
         id: newId,
         title: title,
         category: category,
+        gender: gender,
         price: price,
         originalPrice: origPrice,
         rating: 4.8,
@@ -2716,6 +2728,7 @@ function editProduct(prodId) {
     // Populate form fields
     document.getElementById("new-prod-title").value = p.title;
     document.getElementById("new-prod-cat").value = p.category;
+    if (document.getElementById("new-prod-gender")) document.getElementById("new-prod-gender").value = p.gender || "both";
     document.getElementById("new-prod-price").value = p.price || "";
     document.getElementById("new-prod-orig").value = p.originalPrice || "";
     document.getElementById("new-prod-finish").value = p.plating;
@@ -2828,6 +2841,7 @@ async function updateExistingProduct() {
     
     const title = document.getElementById("new-prod-title").value.trim();
     const category = document.getElementById("new-prod-cat").value;
+    const gender = document.getElementById("new-prod-gender") ? document.getElementById("new-prod-gender").value : "both";
     const price = parseFloat(document.getElementById("new-prod-price").value);
     const origPrice = parseFloat(document.getElementById("new-prod-orig").value) || price;
     let image = document.getElementById("new-prod-img-base64").value || "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80";
@@ -2886,6 +2900,7 @@ async function updateExistingProduct() {
         ...existingProduct,
         title: title,
         category: category,
+        gender: gender,
         price: price,
         originalPrice: origPrice,
         plating: plating,
@@ -2947,6 +2962,7 @@ function cancelEditProduct() {
     
     // Clear forms
     document.getElementById("new-prod-title").value = "";
+    if (document.getElementById("new-prod-gender")) document.getElementById("new-prod-gender").value = "both";
     document.getElementById("new-prod-price").value = "";
     document.getElementById("new-prod-orig").value = "";
     document.getElementById("new-prod-img-file").value = "";
