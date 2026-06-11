@@ -3480,6 +3480,14 @@ async function generateAiTryOn() {
     const prod = STATE.selectedProduct;
     if (!prod) return;
     
+    const apiKeyInp = document.getElementById("tryon-api-key");
+    const apiKey = apiKeyInp ? apiKeyInp.value.trim() : "";
+    
+    if (!apiKey) {
+        alert("Please enter your Gemini API Key to use AI Try-On. You can get a free key from Google AI Studio.");
+        return;
+    }
+    
     const loadingOverlay = document.getElementById("tryon-loading-overlay");
     const statusNode = document.getElementById("tryon-loading-status");
     const descNode = document.getElementById("tryon-loading-desc");
@@ -3487,9 +3495,9 @@ async function generateAiTryOn() {
     if (loadingOverlay) loadingOverlay.style.display = "flex";
     
     const statuses = [
-        { title: "Analyzing upload...", desc: "Gemini is inspecting facial structure, hands, or ears for matching..." },
-        { title: "Composing jewelry...", desc: "Resizing and aligning 925 sterling silver overlay..." },
-        { title: "Rendering Try-On...", desc: "Finalizing lighting contrast and shadows for realistic reflection..." }
+        { title: "Analyzing your photo...", desc: "Gemini is inspecting facial structure, hands, or ears for matching..." },
+        { title: "Composing jewelry overlay...", desc: "Resizing and aligning the jewelry on your photo..." },
+        { title: "Rendering final image...", desc: "Finalizing lighting, shadows, and realistic reflections..." }
     ];
     
     let statusIdx = 0;
@@ -3504,100 +3512,119 @@ async function generateAiTryOn() {
         } else {
             clearInterval(interval);
         }
-    }, 1200);
-    
-    const apiKeyInp = document.getElementById("tryon-api-key");
-    const apiKey = apiKeyInp ? apiKeyInp.value.trim() : "";
-    let promptText = "";
+    }, 2500);
     
     try {
-        if (apiKey) {
-            const base64Data = STATE_TRYON_BASE64.split(",")[1];
-            const mimeType = STATE_TRYON_BASE64.split(";")[0].split(":")[1] || "image/jpeg";
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-            
-            const response = await fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    contents: [
-                        {
-                            parts: [
-                                {
-                                    inlineData: {
-                                        mimeType: mimeType,
-                                        data: base64Data
-                                    }
-                                },
-                                {
-                                    text: `The user has provided this exact prompt instruction: "i want image 1 jewellery wore by model in image 2 hd quality". The jewelry is "${prod.title}". Output EXACTLY this prompt: "image 1 jewellery ${prod.title} wore by model in image 2 hd quality" without any additional text.`
-                                }
-                            ]
-                        }
-                    ]
-                })
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (text) {
-                    promptText = text.trim();
-                    console.log("Gemini prompt generated successfully:", promptText);
+        const userBase64Data = STATE_TRYON_BASE64.split(",")[1];
+        const userMimeType = STATE_TRYON_BASE64.split(";")[0].split(":")[1] || "image/jpeg";
+        
+        // Build the parts array: user photo + jewelry image (if available) + text prompt
+        const parts = [
+            {
+                inlineData: {
+                    mimeType: userMimeType,
+                    data: userBase64Data
                 }
-            } else {
-                console.warn("Gemini API call failed, falling back to simulated generation...");
+            }
+        ];
+        
+        // Try to load the product image as base64 to send to Gemini
+        let prodImageLoaded = false;
+        try {
+            const prodImgResponse = await fetch(prod.image);
+            if (prodImgResponse.ok) {
+                const blob = await prodImgResponse.blob();
+                const prodBase64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                });
+                const prodBase64Data = prodBase64.split(",")[1];
+                const prodMimeType = blob.type || "image/jpeg";
+                parts.push({
+                    inlineData: {
+                        mimeType: prodMimeType,
+                        data: prodBase64Data
+                    }
+                });
+                prodImageLoaded = true;
+            }
+        } catch(e) {
+            console.warn("Could not load product image for AI, using text-only prompt", e);
+        }
+        
+        let sizeStr = STATE.selectedSize ? `, size ${STATE.selectedSize}` : "";
+        let promptText = prodImageLoaded
+            ? `Image 1 is a photo of a person. Image 2 is a piece of jewelry called "${prod.title}" (${prod.category}${sizeStr}). Please generate a new realistic HD photo showing the person from Image 1 wearing the exact jewelry from Image 2 in the correct position on their body. Keep the person's face, clothing and background exactly the same. Make it look completely natural and photorealistic.`
+            : `This is a photo of a person. Please generate a new realistic HD photo showing this person wearing a piece of 925 sterling silver jewelry called "${prod.title}" (category: ${prod.category}${sizeStr}). Keep the person's face, clothing and background the same. Make it look completely natural and photorealistic.`;
+        
+        parts.push({ text: promptText });
+        
+        // Use Gemini 2.0 Flash with image generation
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
+        
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contents: [{ parts: parts }],
+                generationConfig: {
+                    responseModalities: ["TEXT", "IMAGE"]
+                }
+            })
+        });
+        
+        clearInterval(interval);
+        
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            console.error("Gemini API error:", errData);
+            if (loadingOverlay) loadingOverlay.style.display = "none";
+            alert("AI generation failed: " + (errData?.error?.message || `HTTP ${response.status}`));
+            return;
+        }
+        
+        const data = await response.json();
+        const candidateParts = data.candidates?.[0]?.content?.parts || [];
+        
+        // Find the generated image part
+        let generatedImageData = null;
+        let generatedMimeType = "image/png";
+        for (const part of candidateParts) {
+            if (part.inlineData) {
+                generatedImageData = part.inlineData.data;
+                generatedMimeType = part.inlineData.mimeType || "image/png";
+                break;
             }
         }
-    } catch (err) {
-        console.error("Error calling Gemini API:", err);
-    }
-    
-    if (!promptText) {
-        let sizeStr = STATE.selectedSize ? `size ${STATE.selectedSize}` : `default size`;
-        // User requested prompt string structure
-        promptText = `i want image 1 jewellery ${prod.title} wore by model in image 2 hd quality and size of ring change select option selcted ${sizeStr} with have different colour`;
-    }
-    
-    // Adding ?model=flux because the default free API model is returning 402 Payment Required
-    const finalUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=512&height=512&seed=${Math.floor(Math.random() * 100000)}&model=flux`;
-    
-    const img = new Image();
-    
-    const timeoutId = setTimeout(() => {
-        img.onload = null;
-        img.onerror = null;
-        clearInterval(interval);
-        if (loadingOverlay) loadingOverlay.style.display = "none";
-        alert("AI rendering took too long. Please try again later.");
-    }, 20000);
-    
-    img.onload = function() {
-        clearTimeout(timeoutId);
-        clearInterval(interval);
+        
+        if (!generatedImageData) {
+            if (loadingOverlay) loadingOverlay.style.display = "none";
+            const textResponse = candidateParts.find(p => p.text)?.text || "";
+            alert("AI could not generate the try-on image. " + (textResponse ? "Response: " + textResponse.substring(0, 200) : "Please try a different photo."));
+            return;
+        }
+        
+        const resultDataUrl = `data:${generatedMimeType};base64,${generatedImageData}`;
+        
         if (loadingOverlay) loadingOverlay.style.display = "none";
         
         const placeholder = document.getElementById("tryon-placeholder-content");
         const resultWrap = document.getElementById("tryon-result-wrap");
         const resultImg = document.getElementById("tryon-result-img");
         
-        STATE_TRYON_RESULT_URL = finalUrl;
+        STATE_TRYON_RESULT_URL = resultDataUrl;
         
         if (placeholder) placeholder.style.display = "none";
         if (resultWrap) resultWrap.style.display = "flex";
-        if (resultImg) resultImg.src = finalUrl;
-    };
-    
-    img.onerror = function() {
-        clearTimeout(timeoutId);
+        if (resultImg) resultImg.src = resultDataUrl;
+        
+    } catch (err) {
         clearInterval(interval);
         if (loadingOverlay) loadingOverlay.style.display = "none";
-        alert("Oops! Failed to render the AI image. Please try again.");
-    };
-    
-    img.src = finalUrl;
+        console.error("AI Try-On error:", err);
+        alert("Oops! Failed to render the AI image. Error: " + err.message);
+    }
 }
 
 function downloadTryOnResult() {
