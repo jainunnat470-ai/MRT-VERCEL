@@ -1214,6 +1214,12 @@
                     <p style="font-size:0.82rem; color:var(--color-silver-dark); line-height:1.5; margin-bottom: 20px;">
                         View all registered customers and their current available Digi Silver balances.
                     </p>
+                    
+                    <!-- Search Input -->
+                    <div style="margin-bottom: 20px; max-width: 400px;">
+                        <input type="text" id="admin-users-search" class="custom-input" placeholder="Search by email or name..." onkeyup="filterAdminUsers()">
+                    </div>
+
                     <div class="admin-table-wrap">
                         <table class="admin-table">
                             <thead>
@@ -1221,11 +1227,12 @@
                                     <th>Customer Email</th>
                                     <th>Customer Name</th>
                                     <th>Digi Silver Balance</th>
+                                    <th style="text-align: center;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="admin-users-tbody">
                                 <tr>
-                                    <td colspan="3" style="text-align: center; padding: 20px;">Loading registered users...</td>
+                                    <td colspan="4" style="text-align: center; padding: 20px;">Loading registered users...</td>
                                 </tr>
                             </tbody>
                         </table>
