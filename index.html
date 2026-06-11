@@ -146,36 +146,7 @@
                     </div>
                     <span class="cat-circle-title">Chains</span>
                 </div>
-                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'gold')" style="animation-delay: 0.32s;">
-                    <div class="cat-circle-img-wrap">
-                        <img src="https://images.unsplash.com/photo-1575377427642-087cf684f29d?auto=format&fit=crop&w=150&q=80" alt="Gold" style="filter: brightness(1.05) saturate(1.2);">
-                    </div>
-                    <span class="cat-circle-title">Gold</span>
-                </div>
-                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'kids')" style="animation-delay: 0.35s;">
-                    <div class="cat-circle-img-wrap">
-                        <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=150&q=80" alt="Kids">
-                    </div>
-                    <span class="cat-circle-title">Kids</span>
-                </div>
-                <div class="cat-circle-item animate-entrance" onclick="navigateTo('customisation')" style="animation-delay: 0.4s;">
-                    <div class="cat-circle-img-wrap">
-                        <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=150&q=80" alt="Customised" style="filter: brightness(0.95);">
-                    </div>
-                    <span class="cat-circle-title">Customised</span>
-                </div>
-                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'coins')" style="animation-delay: 0.45s;">
-                    <div class="cat-circle-img-wrap">
-                        <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=150&q=80" alt="Coins">
-                    </div>
-                    <span class="cat-circle-title">Silver Coin</span>
-                </div>
-                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'gold_coins')" style="animation-delay: 0.48s;">
-                    <div class="cat-circle-img-wrap">
-                        <img src="gold_coin.png" alt="Gold Coins" style="filter: brightness(1.05) saturate(1.2);">
-                    </div>
-                    <span class="cat-circle-title">Gold Coin</span>
-                </div>
+
                 <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop')" style="animation-delay: 0.5s;">
                     <div class="cat-circle-img-wrap">
                         <img src="https://images.unsplash.com/photo-1611085583191-a3b1a40ffd50?auto=format&fit=crop&w=150&q=80" alt="All Collections">
@@ -1382,52 +1353,7 @@
                                     <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
                                     <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'chains')">
                                 </label>
-                                <button onclick="resetBannerImage('chains')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
-                            </div>
-                        </div>
-
-                        <!-- Gold -->
-                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
-                            <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
-                                <img id="banner-preview-gold" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1575377427642-087cf684f29d?w=80&q=80'">
-                            </div>
-                            <div style="flex:1;">
-                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">✨ Gold</div>
-                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
-                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
-                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'gold')">
-                                </label>
-                                <button onclick="resetBannerImage('gold')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
-                            </div>
-                        </div>
-
-                        <!-- Kids -->
-                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
-                            <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
-                                <img id="banner-preview-kids" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=80&q=80'">
-                            </div>
-                            <div style="flex:1;">
-                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">🧸 Kids</div>
-                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
-                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
-                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'kids')">
-                                </label>
-                                <button onclick="resetBannerImage('kids')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
-                            </div>
-                        </div>
-
-                        <!-- Customised -->
-                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
-                            <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
-                                <img id="banner-preview-customised" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=80&q=80'">
-                            </div>
-                            <div style="flex:1;">
-                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">🛠️ Customised</div>
-                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
-                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
-                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'customised')">
-                                </label>
-                                <button onclick="resetBannerImage('customised')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                                <button onclick="resetBannerImage('chains')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor:8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
                             </div>
                         </div>
 
