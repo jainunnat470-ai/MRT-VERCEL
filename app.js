@@ -1772,26 +1772,8 @@ function approveOrderPayment(orderId) {
                 .then(async () => {
                     alert("Order approved successfully!");
                     
-                    // Sync DigiSilver to buyer's Custom DB Profile
-                    let digiGrams = 0;
-                    const itemsArr = typeof order.items === 'string' ? safeJSONParse(order.items, []) : (order.items || []);
-                    itemsArr.forEach(item => {
-                        if (item.isDigiSilver && item.grams) digiGrams += parseFloat(item.grams);
-                    });
-                    
-                    const cust = typeof order.customer === 'string' ? safeJSONParse(order.customer, {}) : (order.customer || {});
-                    if (digiGrams > 0 && cust.token && cust.email) {
-                        const { data: userData } = await supaClient.from('settings').select('value').eq('key', 'user_' + cust.email).single();
-                        if (userData && userData.value) {
-                            try {
-                                const uRec = JSON.parse(userData.value);
-                                if (uRec.token === cust.token) {
-                                    uRec.digi_silver_balance = (uRec.digi_silver_balance || 0) + digiGrams;
-                                    await supaClient.from('settings').update({ value: JSON.stringify(uRec) }).eq('key', 'user_' + cust.email);
-                                }
-                            } catch(e) { console.error("Error updating user balance", e); }
-                        }
-                    }
+                    // Credit Digi Silver balance
+                    await creditDigiSilverForOrder(order);
                     
                     // Sync lookup portal if open
                     const trackInp = document.getElementById("track-order-id-input");
@@ -1866,15 +1848,58 @@ function viewPaymentScreenshot(orderId) {
 function changeOrderStatus(orderId, newStatus) {
     const order = STATE.orders.find(o => o.id === orderId);
     if (order) {
+        const oldStatus = order.status;
         order.status = newStatus;
         
         renderAdminOrders();
         supaClient.from('orders').update({ status: newStatus }).eq('id', orderId).then().catch(e => console.error(e));
+        
+        // Credit Digi Silver when order moves to placed or delivered (if not already credited)
+        const creditStatuses = ["placed", "delivered"];
+        const nonCreditStatuses = ["awaiting_approval", "processing"];
+        if (creditStatuses.includes(newStatus) && (nonCreditStatuses.includes(oldStatus) || !oldStatus)) {
+            creditDigiSilverForOrder(order);
+        }
+        
         // If lookup order status currently renders this, sync details
         const trackInp = document.getElementById("track-order-id-input");
         if (trackInp && trackInp.value.trim().toUpperCase() === orderId.toUpperCase()) {
             lookupOrderStatus();
         }
+    }
+}
+
+async function creditDigiSilverForOrder(order) {
+    let digiGrams = 0;
+    const itemsArr = typeof order.items === 'string' ? safeJSONParse(order.items, []) : (order.items || []);
+    itemsArr.forEach(item => {
+        if (item.isDigiSilver && item.grams) digiGrams += parseFloat(item.grams);
+    });
+    
+    if (digiGrams <= 0) return;
+    
+    const cust = typeof order.customer === 'string' ? safeJSONParse(order.customer, {}) : (order.customer || {});
+    if (!cust.email) return;
+    
+    try {
+        const { data: userData } = await supaClient.from('settings').select('value').eq('key', 'user_' + cust.email).single();
+        if (userData && userData.value) {
+            const uRec = JSON.parse(userData.value);
+            if (!cust.token || uRec.token === cust.token) {
+                uRec.digi_silver_balance = (uRec.digi_silver_balance || 0) + digiGrams;
+                await supaClient.from('settings').update({ value: JSON.stringify(uRec) }).eq('key', 'user_' + cust.email);
+                console.log(`Credited ${digiGrams}g Digi Silver to ${cust.email}`);
+                
+                // Also update local STATE if this is the current user
+                if (STATE.user && STATE.user.email === cust.email) {
+                    STATE.profile.digi_silver_balance = uRec.digi_silver_balance;
+                    STATE.user.digi_silver_balance = uRec.digi_silver_balance;
+                    updateProfileUI();
+                }
+            }
+        }
+    } catch(e) {
+        console.error("Error crediting Digi Silver balance:", e);
     }
 }
 
