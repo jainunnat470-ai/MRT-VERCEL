@@ -406,17 +406,16 @@ header {
     position: relative;
     background-color: #ECEFF1;
     overflow: hidden;
-    height: 380px; /* Default desktop height */
+    height: auto;
 }
 
 .hero-slide {
     position: relative;
     width: 100%;
-    height: 100%;
+    height: auto;
     opacity: 0;
     transition: opacity 0.8s ease-in-out;
-    display: flex;
-    align-items: center;
+    display: block;
 }
 
 .hero-slide.active-slide {
@@ -425,12 +424,9 @@ header {
 }
 
 .hero-slide-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    display: block;
     z-index: 1;
 }
 
@@ -2724,7 +2720,7 @@ footer {
     }
     
     .hero-slider {
-        height: 180px; /* Constrain height on mobile */
+        height: auto;
     }
     
     .categories-circles-grid {
@@ -3663,7 +3659,7 @@ footer {
 
     /* Banners & Titles */
     .hero-slider {
-        height: 380px; /* Constrain height on desktop */
+        height: auto;
     }
 
     .hero-slide-content {
