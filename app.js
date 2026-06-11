@@ -181,7 +181,8 @@ async function saveOrders(newOrder) {
                 discount: newOrder.discount,
                 total: newOrder.total,
                 status: newOrder.status,
-                items: newOrder.items
+                items: newOrder.items,
+                payment_screenshot: newOrder.payment_screenshot
             }]);
         } catch (err) {
             console.error("Supabase order insert error:", err);
@@ -4177,22 +4178,16 @@ function updateProfileUI() {
     if (ordersList && STATE.user) {
         const savedPhone = localStorage.getItem("mrt_checkout_phone");
         const userOrders = STATE.orders.filter(o => {
-            const cust = typeof o.customer === 'string' ? safeJSONParse(o.customer, {}) : (o.customer || {});
+            const custStr = typeof o.customer === 'string' ? o.customer : JSON.stringify(o.customer || {});
             
-            // New strict token matching
-            if (cust.token && STATE.user.token && cust.token === STATE.user.token) return true;
+            // 1. Strict Email Match (most reliable)
+            if (STATE.user && STATE.user.email && custStr.toLowerCase().includes(STATE.user.email.toLowerCase())) return true;
             
-            // Legacy fallbacks
-            if (typeof o.customer === 'string') {
-                if (o.customer.toLowerCase().includes(STATE.user.email.toLowerCase())) return true;
-            } else if (o.customer && o.customer.email) {
-                if (o.customer.email.toLowerCase() === STATE.user.email.toLowerCase()) return true;
-            }
+            // 2. Strict Token Match
+            if (STATE.user && STATE.user.token && custStr.includes(STATE.user.token)) return true;
             
-            // Fallback for older orders placed before email linking
-            if (savedPhone && o.phone && o.phone.replace(/[^0-9]/g, '') === savedPhone.replace(/[^0-9]/g, '')) {
-                return true;
-            }
+            // 3. Fallback for older orders placed before email linking
+            if (savedPhone && o.phone && o.phone.replace(/[^0-9]/g, '') === savedPhone.replace(/[^0-9]/g, '')) return true;
             
             return false;
         });
@@ -4412,22 +4407,17 @@ function redeemDigiSilver() {
     
     // Save redemption to Order History
     const rdmOrderId = `MRT-RDM-${Math.floor(Math.random() * 10000)}`;
-    const dateStr = new Date().toISOString().split("T")[0];
     const newOrder = {
-        id: rdmOrderId,
-        date: dateStr,
-        customer: JSON.stringify({
-            name: STATE.user && STATE.user.name ? STATE.user.name : "Digi Silver User",
-            email: STATE.user ? STATE.user.email : null,
-            token: STATE.user ? STATE.user.token : null
-        }),
-        phone: localStorage.getItem("mrt_checkout_phone") || "",
-        address: "Digi Silver Wallet",
-        payment_method: "Digi Silver Redemption",
+        id: `MRT-RDM-${Math.floor(1000 + Math.random() * 9000)}`,
+        date: new Date().toISOString().split("T")[0],
+        customer: JSON.stringify({ name: STATE.user.name || "Digi Buyer", email: STATE.user.email, token: STATE.user.token }),
+        phone: "",
+        address: "Digi Silver Wallet Redemption",
+        paymentMethod: "Redeemed",
         subtotal: value,
-        discount: 0,
-        total: value,
-        status: "Redeemed",
+        discount: value,
+        total: 0,
+        status: "approved",
         items: JSON.stringify([{
             title: `Redeemed ${grams}g Digi Silver (Code: ${code})`,
             price: value,
@@ -4437,7 +4427,19 @@ function redeemDigiSilver() {
     };
     
     STATE.orders.push(newOrder);
-    supaClient.from('orders').insert(newOrder).then().catch(e=>console.error(e));
+    supaClient.from('orders').insert({
+        id: newOrder.id,
+        date: newOrder.date,
+        customer: newOrder.customer,
+        phone: newOrder.phone,
+        address: newOrder.address,
+        payment_method: newOrder.paymentMethod,
+        subtotal: newOrder.subtotal,
+        discount: newOrder.discount,
+        total: newOrder.total,
+        status: newOrder.status,
+        items: newOrder.items
+    }).then().catch(e=>console.error(e));
     
     updateProfileUI();
 }
