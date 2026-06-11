@@ -4126,7 +4126,7 @@ function updateProfileUI() {
         balEl.textContent = parseFloat(STATE.profile.digi_silver_balance).toFixed(2);
     }
     if (rateEl && STATE.rates) {
-        rateEl.textContent = `₹${STATE.rates.sterling} / g`;
+        rateEl.textContent = `₹${STATE.rates.fine} / g`;
     }
     if (ordersList && STATE.user) {
         const savedPhone = localStorage.getItem("mrt_checkout_phone");
@@ -4299,7 +4299,7 @@ function buyDigiSilver() {
     const grams = parseFloat(gramsStr);
     if (!grams || grams <= 0) return alert("Enter valid grams.");
     
-    const cost = Math.round(grams * STATE.rates.sterling);
+    const cost = Math.round(grams * STATE.rates.fine);
     
     // Create a mock checkout cart item specifically for Digi Silver
     STATE.cart = [{
@@ -4325,7 +4325,7 @@ function redeemDigiSilver() {
     }
     if (!grams || grams <= 0) return alert("Enter valid grams.");
 
-    const value = Math.round(grams * STATE.rates.sterling);
+    const value = Math.round(grams * STATE.rates.fine);
     
     // Simulate redeeming logic
     // Generate a unique local coupon and apply it to cart.
