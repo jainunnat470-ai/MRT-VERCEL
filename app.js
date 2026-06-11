@@ -1873,7 +1873,8 @@ async function creditDigiSilverForOrder(order) {
     let digiGrams = 0;
     const itemsArr = typeof order.items === 'string' ? safeJSONParse(order.items, []) : (order.items || []);
     itemsArr.forEach(item => {
-        if (item.isDigiSilver && item.grams) digiGrams += parseFloat(item.grams);
+        const isDigi = item.isDigiSilver || (item.title && item.title.toLowerCase().includes('digi silver'));
+        if (isDigi && item.grams) digiGrams += parseFloat(item.grams);
     });
     
     if (digiGrams <= 0) return;
@@ -1881,7 +1882,22 @@ async function creditDigiSilverForOrder(order) {
     const cust = typeof order.customer === 'string' ? safeJSONParse(order.customer, {}) : (order.customer || {});
     if (!cust.email) return;
     
+    // Prevent double crediting
+    if (cust.digi_credited) {
+        console.log(`Order ${order.id} Digi Silver already credited.`);
+        return;
+    }
+    
     try {
+        // Mark as credited first in the order object customer field
+        cust.digi_credited = true;
+        
+        // Sync local object customer representation
+        order.customer = cust;
+        
+        // Update the order in Supabase
+        await supaClient.from('orders').update({ customer: JSON.stringify(cust) }).eq('id', order.id);
+        
         const { data: userData } = await supaClient.from('settings').select('value').eq('key', 'user_' + cust.email).single();
         if (userData && userData.value) {
             const uRec = JSON.parse(userData.value);
@@ -3247,6 +3263,55 @@ function estimateDeliveryTime() {
 
 // --- GST CALCULATOR PORTAL FUNCTIONS ---
 
+function calculateOrderGstAndShipping(o) {
+    const itemsArr = typeof o.items === 'string' ? safeJSONParse(o.items, []) : (o.items || []);
+    let digiSubtotal = 0;
+    let physicalSubtotal = 0;
+    
+    itemsArr.forEach(item => {
+        const isDigi = item.isDigiSilver || (item.title && item.title.toLowerCase().includes('digi silver'));
+        if (isDigi) {
+            digiSubtotal += (item.price * (item.qty || 1));
+        } else {
+            physicalSubtotal += (item.price * (item.qty || 1));
+        }
+    });
+    
+    const discount = parseFloat(o.discount) || 0;
+    const total = parseFloat(o.total) || 0;
+    
+    // Digi GST is 3% added extra on the price
+    const digiGst = Math.round(digiSubtotal * 0.03);
+    
+    // Physical GST is 3% inclusive in the price (after discount)
+    const physicalTaxableBase = Math.max(0, physicalSubtotal - discount);
+    const physicalGst = Math.round(physicalTaxableBase * 3 / 103);
+    
+    const gstTotal = physicalGst + digiGst;
+    
+    const expectedTotalWithoutShipping = physicalTaxableBase + digiSubtotal + digiGst;
+    let shippingFee = 0;
+    if (physicalSubtotal > 0) {
+        if (Math.abs(total - expectedTotalWithoutShipping - 150) < 5) {
+            shippingFee = 150;
+        }
+    }
+    
+    const cgst = (gstTotal / 2).toFixed(2);
+    const sgst = (gstTotal / 2).toFixed(2);
+    const taxableAmount = ((physicalTaxableBase - physicalGst) + digiSubtotal).toFixed(2);
+    
+    return {
+        gstTotal,
+        shippingFee,
+        cgst,
+        sgst,
+        taxableAmount,
+        digiSubtotal,
+        physicalSubtotal
+    };
+}
+
 function renderAdminGstPortal() {
     const monthSelect = document.getElementById("gst-month-select");
     const grossNode = document.getElementById("gst-stat-gross");
@@ -3309,31 +3374,18 @@ function renderAdminGstPortal() {
     let taxSum = 0;
     
     const tableHtml = filtered.map(o => {
-        // Use stored gst_amount if available, otherwise compute from items
-        let gst = 0;
-        if (o.gst_amount !== undefined && o.gst_amount !== null) {
-            gst = Math.round(o.gst_amount);
-        } else {
-            // Legacy: check if order has digi silver items
-            const itemsArr = typeof o.items === 'string' ? safeJSONParse(o.items, []) : (o.items || []);
-            const hasDigi = itemsArr.some(i => i.isDigiSilver);
-            if (hasDigi) {
-                // Digi orders: GST was added extra, so back-calculate
-                const digiTotal = itemsArr.filter(i => i.isDigiSilver).reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
-                gst = Math.round(digiTotal * 0.03);
-            } else {
-                // Physical: GST included in total
-                gst = Math.round(o.total * 3 / 103);
-            }
-        }
+        const taxDetails = calculateOrderGstAndShipping(o);
+        const gst = taxDetails.gstTotal;
         grossSum += (o.total - gst);
         taxSum += gst;
+        
+        const customerName = typeof o.customer === 'object' && o.customer.name ? o.customer.name : (typeof o.customer === 'string' ? safeJSONParse(o.customer, {name: o.customer}).name : o.customer || "Guest");
         
         return `
             <tr>
                 <td style="font-weight:600;">${o.date}</td>
                 <td style="font-family:monospace;font-size:0.85rem;">${o.id}</td>
-                <td>${o.customer}</td>
+                <td>${customerName}</td>
                 <td>₹${(o.total - gst).toLocaleString("en-IN")}</td>
                 <td style="color:var(--color-accent-pink);font-weight:600;">₹${gst.toLocaleString("en-IN")}</td>
                 <td style="font-size:0.75rem;text-transform:uppercase;">${o.paymentMethod || o.payment_method || 'COD'}</td>
@@ -3383,21 +3435,12 @@ function downloadGstReportCsv() {
     let totalTaxable = 0;
     
     filteredOrders.forEach(o => {
-        let gst = 0;
-        if (o.gst_amount !== undefined && o.gst_amount !== null) {
-            gst = Math.round(o.gst_amount);
-        } else {
-            const itemsArr = typeof o.items === 'string' ? safeJSONParse(o.items, []) : (o.items || []);
-            const hasDigi = itemsArr.some(i => i.isDigiSilver);
-            if (hasDigi) {
-                const digiTotal = itemsArr.filter(i => i.isDigiSilver).reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
-                gst = Math.round(digiTotal * 0.03);
-            } else {
-                gst = Math.round(o.total * 3 / 103);
-            }
-        }
+        const taxDetails = calculateOrderGstAndShipping(o);
+        const gst = taxDetails.gstTotal;
         const taxable = o.total - gst;
-        csvContent += `"${o.id}","${o.date}","${o.customer.replace(/"/g, '""')}","${o.phone}","${o.paymentMethod}",${o.total},${gst},${taxable}\r\n`;
+        const customerName = typeof o.customer === 'object' && o.customer.name ? o.customer.name : (typeof o.customer === 'string' ? safeJSONParse(o.customer, {name: o.customer}).name : o.customer || "Guest");
+        const cleanCustomer = String(customerName).replace(/"/g, '""');
+        csvContent += `"${o.id}","${o.date}","${cleanCustomer}","${o.phone}","${o.paymentMethod || o.payment_method || 'COD'}",${o.total},${gst},${taxable}\r\n`;
         totalSales += o.total;
         totalGst += gst;
         totalTaxable += taxable;
@@ -3738,27 +3781,15 @@ function downloadOrderInvoicePdf(orderId) {
     }
     
     // Calculate values
+    const taxDetails = calculateOrderGstAndShipping(o);
     const subtotal = o.subtotal;
     const discount = o.discount || 0;
-    const itemsArr = typeof o.items === 'string' ? safeJSONParse(o.items, []) : (o.items || []);
-    const hasPhysicalItems = itemsArr.some(item => !item.isDigiSilver);
-    const hasDigi = itemsArr.some(item => item.isDigiSilver);
-    const shippingFee = o.shipping !== undefined ? o.shipping : (hasPhysicalItems ? 150 : 0);
     const total = o.total;
-    
-    // Use stored GST if available, else compute
-    let gstTotal = 0;
-    if (o.gst_amount !== undefined && o.gst_amount !== null) {
-        gstTotal = o.gst_amount;
-    } else if (hasDigi) {
-        const digiTotal = itemsArr.filter(i => i.isDigiSilver).reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
-        gstTotal = Math.round(digiTotal * 0.03);
-    } else {
-        gstTotal = Math.round((total - shippingFee) * 3 / 103);
-    }
-    const cgst = (gstTotal / 2).toFixed(2);
-    const sgst = (gstTotal / 2).toFixed(2);
-    const taxableAmount = (total - shippingFee - gstTotal).toFixed(2);
+    const shippingFee = taxDetails.shippingFee;
+    const gstTotal = taxDetails.gstTotal;
+    const cgst = taxDetails.cgst;
+    const sgst = taxDetails.sgst;
+    const taxableAmount = taxDetails.taxableAmount;
     const customerName = typeof o.customer === 'object' && o.customer.name ? o.customer.name : (typeof o.customer === 'string' ? safeJSONParse(o.customer, {name: o.customer}).name : "Guest");
     
     const itemsRows = o.items.map((item, idx) => {
