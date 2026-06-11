@@ -1590,11 +1590,57 @@ function navigateAdminTab(tabId) {
     if (tabId === "inventory") renderAdminInventoryList();
     if (tabId === "gst") renderAdminGstPortal();
     if (tabId === "coupons") loadAdminCoupons();
+    if (tabId === "users") loadAdminUsers();
     if (tabId === "settings") {
         const curPass = document.getElementById("admin-current-password");
         const newPass = document.getElementById("admin-new-password");
         if (curPass) curPass.value = "";
         if (newPass) newPass.value = "";
+    }
+}
+
+async function loadAdminUsers() {
+    const tbody = document.getElementById("admin-users-tbody");
+    if (!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px;">Loading users...</td></tr>';
+    
+    try {
+        const { data, error } = await supaClient.from('settings').select('*').like('key', 'user_%');
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px;">No registered users found</td></tr>';
+            return;
+        }
+        
+        // Parse user records and sort them by balance descending
+        const users = data.map(row => {
+            let record = {};
+            try {
+                record = JSON.parse(row.value);
+            } catch (e) {}
+            return {
+                email: record.email || row.key.replace('user_', ''),
+                name: record.name || 'N/A',
+                balance: parseFloat(record.digi_silver_balance) || 0
+            };
+        });
+        
+        users.sort((a, b) => b.balance - a.balance);
+        
+        tbody.innerHTML = users.map(u => `
+            <tr>
+                <td style="font-weight: 600; color: var(--color-primary);">${u.email}</td>
+                <td>${u.name}</td>
+                <td style="font-weight: 700; color: var(--color-accent-pink);">
+                    ${u.balance.toFixed(2)} g
+                </td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        console.error("Error loading admin users:", err);
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 20px; color: red;">Failed to load users: ${err.message}</td></tr>`;
     }
 }
 
