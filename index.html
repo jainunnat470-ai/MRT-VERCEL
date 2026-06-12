@@ -2195,6 +2195,53 @@
         </div>
     </div>
 
+    <!-- Cash Out Payout Details Modal -->
+    <div class="drawer-overlay" id="cashout-modal-overlay" onclick="closeCashOutModal()" style="z-index: 190; display: none; background-color: rgba(18, 18, 20, 0.75);"></div>
+    <div class="custom-form-panel" id="cashout-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 200; width: 90%; max-width: 400px; box-shadow: var(--shadow-lux); border-radius: var(--border-radius-md); padding: 25px; background-color: #FFFFFF;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-silver-mid); padding-bottom: 12px; margin-bottom: 20px;">
+            <h3 style="font-family: var(--font-heading); margin: 0; color: var(--color-primary); font-size: 1.15rem;">Payout Details</h3>
+            <button onclick="closeCashOutModal()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--color-silver-dark); font-weight: 600; line-height: 1;">&times;</button>
+        </div>
+        <div class="custom-form-group" style="margin-bottom: 15px;">
+            <label class="custom-form-label" style="font-weight: 600; margin-bottom: 8px;">Select Payout Method</label>
+            <div style="display: flex; gap: 15px;">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.9rem; cursor: pointer;">
+                    <input type="radio" name="payout-method" value="UPI" checked onchange="togglePayoutFields()"> UPI ID
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.9rem; cursor: pointer;">
+                    <input type="radio" name="payout-method" value="Bank" onchange="togglePayoutFields()"> Bank Account
+                </label>
+            </div>
+        </div>
+        
+        <!-- UPI Fields -->
+        <div id="payout-upi-fields" class="custom-form-group" style="margin-bottom: 15px;">
+            <label class="custom-form-label">UPI ID</label>
+            <input type="text" id="payout-upi-id" class="custom-input" placeholder="e.g. mobile@upi" style="width: 100%;">
+        </div>
+        
+        <!-- Bank Fields -->
+        <div id="payout-bank-fields" style="display: none;">
+            <div class="custom-form-group" style="margin-bottom: 12px;">
+                <label class="custom-form-label">Account Holder Name</label>
+                <input type="text" id="payout-bank-holder" class="custom-input" placeholder="e.g. Unnat Jain" style="width: 100%;">
+            </div>
+            <div class="custom-form-group" style="margin-bottom: 12px;">
+                <label class="custom-form-label">Account Number</label>
+                <input type="text" id="payout-bank-number" class="custom-input" placeholder="Enter bank account number" style="width: 100%;">
+            </div>
+            <div class="custom-form-group" style="margin-bottom: 15px;">
+                <label class="custom-form-label">IFSC Code</label>
+                <input type="text" id="payout-bank-ifsc" class="custom-input" placeholder="e.g. SBIN0001234" style="width: 100%;">
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 12px; margin-top: 25px;">
+            <button class="btn-checkout" id="btn-submit-cashout" style="flex: 1; padding: 12px 0; margin-top: 0; background-color: #EF4444;">Confirm Cash Out</button>
+            <button class="btn-add-cart" style="padding: 12px 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); margin-top: 0;" onclick="closeCashOutModal()">Cancel</button>
+        </div>
+    </div>
+
     <style>
         @keyframes spin {
             0% { transform: rotate(0deg); }
