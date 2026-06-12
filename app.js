@@ -4783,22 +4783,86 @@ function sellDigiSilver() {
         return alert(`Insufficient Digi Silver balance. You need at least ${grams}g to cash out ₹${amount}.`);
     }
 
-    // Deduct grams
-    STATE.profile.digi_silver_balance -= grams;
+    STATE.pendingCashOut = { amount, grams };
+    openCashOutModal();
+}
+
+function openCashOutModal() {
+    const overlay = document.getElementById('cashout-modal-overlay');
+    const modal = document.getElementById('cashout-modal');
+    if (overlay) overlay.style.display = 'block';
+    if (modal) modal.style.display = 'block';
     
-    alert(`Success! You have requested to cash out ₹${amount} (${grams}g). The funds will be transferred to your registered Bank/UPI account in 1-2 working days.`);
+    // Reset input fields
+    const upiId = document.getElementById('payout-upi-id');
+    const holder = document.getElementById('payout-bank-holder');
+    const num = document.getElementById('payout-bank-number');
+    const ifsc = document.getElementById('payout-bank-ifsc');
+    if (upiId) upiId.value = "";
+    if (holder) holder.value = "";
+    if (num) num.value = "";
+    ifsc.value = "";
+}
+
+function closeCashOutModal() {
+    const overlay = document.getElementById('cashout-modal-overlay');
+    const modal = document.getElementById('cashout-modal');
+    if (overlay) overlay.style.display = 'none';
+    if (modal) modal.style.display = 'none';
+    STATE.pendingCashOut = null;
+}
+
+function togglePayoutFields() {
+    const method = document.querySelector('input[name="payout-method"]:checked').value;
+    const upiFields = document.getElementById('payout-upi-fields');
+    const bankFields = document.getElementById('payout-bank-fields');
+    if (method === 'UPI') {
+        if (upiFields) upiFields.style.display = 'block';
+        if (bankFields) bankFields.style.display = 'none';
+    } else {
+        if (upiFields) upiFields.style.display = 'none';
+        if (bankFields) bankFields.style.display = 'block';
+    }
+}
+
+async function submitCashOutRequest() {
+    if (!STATE.pendingCashOut) return;
+    const { amount, grams } = STATE.pendingCashOut;
+    
+    const method = document.querySelector('input[name="payout-method"]:checked').value;
+    let payoutDetails = "";
+    
+    if (method === 'UPI') {
+        const upiId = document.getElementById('payout-upi-id').value.trim();
+        if (!upiId) return alert("Please enter your UPI ID.");
+        payoutDetails = `UPI ID: ${upiId}`;
+    } else {
+        const holder = document.getElementById('payout-bank-holder').value.trim();
+        const number = document.getElementById('payout-bank-number').value.trim();
+        const ifsc = document.getElementById('payout-bank-ifsc').value.trim();
+        if (!holder || !number || !ifsc) {
+            return alert("Please enter all Bank Account details.");
+        }
+        payoutDetails = `Bank Account: ${number} (IFSC: ${ifsc}, Holder: ${holder})`;
+    }
+    
+    // Deduct grams
+    STATE.profile.digi_silver_balance = parseFloat((STATE.profile.digi_silver_balance - grams).toFixed(4));
+    
+    alert(`Success! You have requested to cash out ₹${amount} (${grams}g). The funds will be transferred to your registered ${method} account in 1-2 working days.`);
     
     // Save deduction to Supabase Profile (settings)
     if (STATE.user && STATE.user.email) {
-        supaClient.from('settings').select('value').eq('key', 'user_' + STATE.user.email).single().then(({data}) => {
+        try {
+            const { data } = await supaClient.from('settings').select('value').eq('key', 'user_' + STATE.user.email).single();
             if (data && data.value) {
-                try {
-                    const ud = JSON.parse(data.value);
-                    ud.digi_silver_balance = STATE.profile.digi_silver_balance;
-                    supaClient.from('settings').update({ value: JSON.stringify(ud) }).eq('key', 'user_' + STATE.user.email).then().catch(e=>console.log(e));
-                } catch(e) {}
+                const ud = JSON.parse(data.value);
+                ud.digi_silver_balance = STATE.profile.digi_silver_balance;
+                await supaClient.from('settings').update({ value: JSON.stringify(ud) }).eq('key', 'user_' + STATE.user.email);
             }
-        });
+        } catch(e) {
+            console.error("Error saving profile balance:", e);
+        }
     }
     
     // Save to Order History
@@ -4808,8 +4872,8 @@ function sellDigiSilver() {
         date: new Date().toISOString().split("T")[0],
         customer: JSON.stringify({ name: STATE.user && STATE.user.name ? STATE.user.name : "Digi Seller", email: STATE.user ? STATE.user.email : null, token: STATE.user ? STATE.user.token : null }),
         phone: localStorage.getItem("mrt_checkout_phone") || "",
-        address: "Digi Silver Cash Out to Bank/UPI",
-        paymentMethod: "Bank Transfer",
+        address: `Digi Silver Cash Out to ${method}. Payout details: ${payoutDetails}`,
+        paymentMethod: `${method} Payout`,
         subtotal: amount,
         discount: 0,
         total: amount,
@@ -4838,5 +4902,6 @@ function sellDigiSilver() {
     }).then().catch(e=>console.error(e));
     
     document.getElementById('sell-digi-amount').value = "";
+    closeCashOutModal();
     updateProfileUI();
 }
