@@ -1603,9 +1603,8 @@ async function loadAdminUsers() {
     const tbody = document.getElementById("admin-users-tbody");
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">Loading users...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Loading users...</td></tr>';
     
-    // Clear search input on reload
     const searchInp = document.getElementById("admin-users-search");
     if (searchInp) searchInp.value = "";
     
@@ -1614,11 +1613,10 @@ async function loadAdminUsers() {
         if (error) throw error;
         
         if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No registered users found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">No registered users found</td></tr>';
             return;
         }
         
-        // Parse user records and sort them by balance descending
         const users = data.map(row => {
             let record = {};
             try {
@@ -1627,19 +1625,26 @@ async function loadAdminUsers() {
             return {
                 email: record.email || row.key.replace('user_', ''),
                 name: record.name || 'N/A',
-                balance: parseFloat(record.digi_silver_balance) || 0
+                balance: parseFloat(record.digi_silver_balance) || 0,
+                referral_code: record.referral_code || 'N/A',
+                referred_by: record.referred_by || 'None',
+                referral_commissions: record.referral_commissions || []
             };
+        });
+        
+        users.forEach(u => {
+            u.friends_referred = users.filter(x => x.referred_by === u.referral_code).length;
+            u.total_earned = u.referral_commissions.reduce((sum, c) => sum + c.commission_amount, 0);
         });
         
         users.sort((a, b) => b.balance - a.balance);
         
-        // Cache globally for fast filtering
         STATE.adminUsers = users;
         
         renderUsersTable(users);
     } catch (err) {
         console.error("Error loading admin users:", err);
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: red;">Failed to load users: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px; color: red;">Failed to load users: ${err.message}</td></tr>`;
     }
 }
 
@@ -1654,6 +1659,10 @@ function renderUsersTable(users) {
             <td style="font-weight: 700; color: var(--color-accent-pink);">
                 ${u.balance.toFixed(2)} g
             </td>
+            <td style="font-family: monospace; font-weight: 700;">${u.referral_code}</td>
+            <td style="font-family: monospace; color: var(--color-silver-dark);">${u.referred_by}</td>
+            <td style="font-weight: 700; color: #10B981;">₹${u.total_earned.toFixed(2)}</td>
+            <td style="font-weight: 700; text-align: center;">${u.friends_referred}</td>
             <td style="text-align: center;">
                 <button class="btn-checkout" onclick="downloadUserData('${u.email}')" style="padding: 4px 8px; font-size: 0.68rem; margin-top: 0; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFFFFF; border: none; border-radius: 4px; cursor: pointer;">
                     📥 Download Data
@@ -1674,7 +1683,7 @@ function filterAdminUsers() {
     );
     
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No matching users found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">No matching users found</td></tr>';
         return;
     }
     
@@ -1917,6 +1926,9 @@ function approveOrderPayment(orderId) {
                     // Credit Digi Silver balance
                     await creditDigiSilverForOrder(order);
                     
+                    // Credit referral commission
+                    await creditReferralCommissionForOrder(order);
+                    
                     // Sync lookup portal if open
                     const trackInp = document.getElementById("track-order-id-input");
                     if (trackInp && trackInp.value.trim().toUpperCase() === orderId.toUpperCase()) {
@@ -2001,6 +2013,7 @@ function changeOrderStatus(orderId, newStatus) {
         const nonCreditStatuses = ["awaiting_approval", "processing"];
         if (creditStatuses.includes(newStatus) && (nonCreditStatuses.includes(oldStatus) || !oldStatus)) {
             creditDigiSilverForOrder(order);
+            creditReferralCommissionForOrder(order);
         }
         
         // If lookup order status currently renders this, sync details
@@ -2058,6 +2071,97 @@ async function creditDigiSilverForOrder(order) {
         }
     } catch(e) {
         console.error("Error crediting Digi Silver balance:", e);
+    }
+}
+
+
+async function creditReferralCommissionForOrder(order) {
+    try {
+        const cust = typeof order.customer === 'string' ? safeJSONParse(order.customer, {}) : (order.customer || {});
+        if (!cust.email) return;
+        if (cust.referral_credited) return;
+        
+        const { data: userData } = await supaClient.from('settings').select('value').eq('key', 'user_' + cust.email).single();
+        if (!userData || !userData.value) return;
+        const buyerRec = JSON.parse(userData.value);
+        const referrerCode = buyerRec.referred_by;
+        if (!referrerCode) return;
+        
+        const { data: allSettings } = await supaClient.from('settings').select('*');
+        const users = allSettings ? allSettings.filter(s => s.key.startsWith('user_')).map(s => {
+            try { return JSON.parse(s.value); } catch(e) { return null; }
+        }).filter(Boolean) : [];
+        
+        const referrer = users.find(u => u.referral_code === referrerCode);
+        if (!referrer) return;
+        
+        const itemsArr = typeof order.items === 'string' ? safeJSONParse(order.items, []) : (order.items || []);
+        const discount = parseFloat(order.discount) || 0;
+        const orderSubtotal = itemsArr.reduce((sum, it) => sum + (parseFloat(it.price) * (it.qty || 1)), 0);
+        const discountProportion = orderSubtotal > 0 ? (discount / orderSubtotal) : 0;
+        
+        let totalCommission = 0;
+        let silverBase = 0;
+        let goldBase = 0;
+        
+        itemsArr.forEach(item => {
+            const isDigi = item.isDigiSilver || (item.title && item.title.toLowerCase().includes('digi silver'));
+            const qty = item.qty || 1;
+            const price = parseFloat(item.price);
+            
+            if (isDigi) {
+                const itemTaxableAmount = price * qty;
+                const itemCommission = itemTaxableAmount * 0.05;
+                totalCommission += itemCommission;
+                silverBase += itemTaxableAmount;
+            } else {
+                const itemSubtotal = price * qty;
+                const itemDiscountedSubtotal = itemSubtotal * (1 - discountProportion);
+                const itemTaxableAmount = itemDiscountedSubtotal * 100 / 103;
+                
+                const isGold = item.title && (item.title.toLowerCase().includes('gold') || item.title.toLowerCase().includes('ganesha'));
+                if (isGold) {
+                    const itemCommission = itemTaxableAmount * 0.01;
+                    totalCommission += itemCommission;
+                    goldBase += itemTaxableAmount;
+                } else {
+                    const itemCommission = itemTaxableAmount * 0.05;
+                    totalCommission += itemCommission;
+                    silverBase += itemTaxableAmount;
+                }
+            }
+        });
+        
+        if (totalCommission <= 0) return;
+        
+        if (!referrer.referral_commissions) referrer.referral_commissions = [];
+        if (referrer.referral_commissions.some(c => c.order_id === order.id)) return;
+        
+        referrer.referral_commissions.push({
+            order_id: order.id,
+            buyer_email: cust.email,
+            buyer_name: buyerRec.name || cust.email.split('@')[0],
+            order_date: new Date().toISOString(),
+            commission_amount: parseFloat(totalCommission.toFixed(2)),
+            silver_taxable_base: parseFloat(silverBase.toFixed(2)),
+            gold_taxable_base: parseFloat(goldBase.toFixed(2)),
+            is_redeemed: false
+        });
+        
+        await supaClient.from('settings').update({ value: JSON.stringify(referrer) }).eq('key', 'user_' + referrer.email);
+        
+        cust.referral_credited = true;
+        order.customer = cust;
+        await supaClient.from('orders').update({ customer: JSON.stringify(cust) }).eq('id', order.id);
+        
+        console.log(`Credited referral commission of ₹${totalCommission.toFixed(2)} to ${referrer.email} for order ${order.id}`);
+        
+        if (STATE.user && STATE.user.email === referrer.email) {
+            STATE.user = referrer;
+            updateProfileUI();
+        }
+    } catch (e) {
+        console.error("Error processing referral commission:", e);
     }
 }
 
@@ -2726,6 +2830,23 @@ window.addEventListener("DOMContentLoaded", async () => {
             minNode.textContent = minutes.toString().padStart(2, "0");
             secNode.textContent = seconds.toString().padStart(2, "0");
         }, 1000);
+    }
+    
+    // Handle referral code in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    let refCode = urlParams.get('ref');
+    if (!refCode && window.location.hash.includes('ref=')) {
+        const match = window.location.hash.match(/ref=([^&]+)/);
+        if (match) refCode = match[1];
+    }
+    if (refCode) {
+        const refInp = document.getElementById('auth-referral-code');
+        if (refInp) {
+            refInp.value = refCode.toUpperCase();
+        }
+        isAuthSignupMode = false;
+        toggleAuthMode();
+        openUserProfile();
     }
 });
 
@@ -4567,6 +4688,190 @@ function updateProfileUI() {
             }
         });
     }
+    
+    // Refer & Earn UI Rendering
+    if (STATE.user) {
+        const refCodeEl = document.getElementById('profile-referral-code');
+        if (refCodeEl) refCodeEl.textContent = STATE.user.referral_code || 'N/A';
+        
+        // Fetch referred friends list and count
+        if (STATE.user.referral_code) {
+            supaClient.from('settings').select('*').then(({ data }) => {
+                const users = data ? data.filter(s => s.key.startsWith('user_')).map(s => {
+                    try { return JSON.parse(s.value); } catch(e) { return null; }
+                }).filter(Boolean) : [];
+                
+                const referredFriends = users.filter(u => u.referred_by === STATE.user.referral_code);
+                
+                const refCountEl = document.getElementById('referral-stat-count');
+                if (refCountEl) refCountEl.textContent = referredFriends.length;
+                
+                const refListEl = document.getElementById('profile-referrals-list');
+                if (refListEl) {
+                    if (referredFriends.length === 0) {
+                        refListEl.innerHTML = '<div style="color: var(--color-silver-dark); font-size: 0.85rem; padding: 10px 0;">No friends referred yet.</div>';
+                    } else {
+                        refListEl.innerHTML = referredFriends.map(f => `
+                            <div style="font-size: 0.85rem; padding: 8px; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; background: #fafafa; border-radius: 4px; margin-bottom: 4px;">
+                                <span style="font-weight: 700; color: var(--color-primary);">${f.name || f.email.split('@')[0]}</span>
+                                <span style="color: var(--color-silver-dark); font-size: 0.75rem;">${f.email}</span>
+                            </div>
+                        `).join('');
+                    }
+                }
+            }).catch(e => console.error("Error fetching referred friends:", e));
+        }
+        
+        // Calculate and render commissions stats
+        const commissions = STATE.user.referral_commissions || [];
+        let totalEarned = 0;
+        let pendingEarned = 0;
+        let redeemableEarned = 0;
+        const now = new Date();
+        
+        commissions.forEach(c => {
+            const orderDate = new Date(c.order_date);
+            const hoursPassed = (now - orderDate) / (1000 * 60 * 60);
+            totalEarned += c.commission_amount;
+            if (!c.is_redeemed) {
+                if (hoursPassed < 48) {
+                    pendingEarned += c.commission_amount;
+                } else {
+                    redeemableEarned += c.commission_amount;
+                }
+            }
+        });
+        
+        const totalEl = document.getElementById('referral-stat-total');
+        if (totalEl) totalEl.textContent = `₹${totalEarned.toFixed(2)}`;
+        
+        const pendingEl = document.getElementById('referral-stat-pending');
+        if (pendingEl) pendingEl.textContent = `₹${pendingEarned.toFixed(2)}`;
+        
+        const redeemableEl = document.getElementById('referral-stat-redeemable');
+        if (redeemableEl) redeemableEl.textContent = `₹${redeemableEarned.toFixed(2)}`;
+        
+        const redeemBtn = document.getElementById('referral-redeem-btn');
+        if (redeemBtn) {
+            if (redeemableEarned > 0) {
+                redeemBtn.disabled = false;
+                redeemBtn.style.opacity = '1';
+                redeemBtn.style.cursor = 'pointer';
+                redeemBtn.textContent = `Redeem Matured Commissions (₹${redeemableEarned.toFixed(2)}) to Coupon`;
+            } else {
+                redeemBtn.disabled = true;
+                redeemBtn.style.opacity = '0.5';
+                redeemBtn.style.cursor = 'not-allowed';
+                redeemBtn.textContent = `Redeem Matured Commissions to Coupon`;
+            }
+        }
+        
+        const commListEl = document.getElementById('profile-commissions-list');
+        if (commListEl) {
+            if (commissions.length === 0) {
+                commListEl.innerHTML = '<div style="color: var(--color-silver-dark); font-size: 0.85rem; padding: 10px 0;">No commission history yet.</div>';
+            } else {
+                commListEl.innerHTML = commissions.map(c => {
+                    const orderDate = new Date(c.order_date);
+                    const hoursPassed = (now - orderDate) / (1000 * 60 * 60);
+                    let statusStr = "Redeemed";
+                    let statusColor = "#10B981";
+                    if (!c.is_redeemed) {
+                        if (hoursPassed < 48) {
+                            const hoursLeft = Math.ceil(48 - hoursPassed);
+                            statusStr = `Pending (${hoursLeft}h left)`;
+                            statusColor = "#D97706";
+                        } else {
+                            statusStr = "Ready";
+                            statusColor = "#2563EB";
+                        }
+                    }
+                    return `
+                        <div style="font-size: 0.82rem; padding: 8px; border-bottom: 1px solid #f1f1f1; display: flex; flex-direction: column; gap: 4px; background: #fafafa; border-radius: 4px; margin-bottom: 4px;">
+                            <div style="display: flex; justify-content: space-between; font-weight: 700;">
+                                <span style="color: var(--color-primary);">Order #${c.order_id}</span>
+                                <span style="color: #10B981;">+₹${c.commission_amount.toFixed(2)}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--color-silver-dark);">
+                                <span>From ${c.buyer_name} (${new Date(c.order_date).toLocaleDateString()})</span>
+                                <span style="color: ${statusColor}; font-weight: 800; text-transform: uppercase;">${statusStr}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+    }
+}
+
+function copyReferralCode() {
+    if (STATE.user && STATE.user.referral_code) {
+        navigator.clipboard.writeText(STATE.user.referral_code).then(() => {
+            alert("Referral Code copied to clipboard: " + STATE.user.referral_code);
+        }).catch(e => {
+            console.error(e);
+            alert("Referral Code: " + STATE.user.referral_code);
+        });
+    }
+}
+
+function copyReferralLink() {
+    if (STATE.user && STATE.user.referral_code) {
+        const origin = window.location.origin;
+        const link = `${origin}/?ref=${STATE.user.referral_code}`;
+        navigator.clipboard.writeText(link).then(() => {
+            alert("Referral Link copied: " + link);
+        }).catch(e => {
+            console.error(e);
+            alert("Link: " + link);
+        });
+    }
+}
+
+async function redeemReferralCommissions() {
+    if (!STATE.user) return;
+    const commissions = STATE.user.referral_commissions || [];
+    const now = new Date();
+    
+    const maturedToRedeem = commissions.filter(c => {
+        const orderDate = new Date(c.order_date);
+        const hoursPassed = (now - orderDate) / (1000 * 60 * 60);
+        return !c.is_redeemed && hoursPassed >= 48;
+    });
+    
+    const redeemableAmount = maturedToRedeem.reduce((sum, c) => sum + c.commission_amount, 0);
+    if (redeemableAmount <= 0) {
+        return alert("You have no matured commissions ready to redeem yet. Please wait 48 hours after your referrals' purchase approval.");
+    }
+    
+    if (confirm(`Are you sure you want to redeem ₹${redeemableAmount.toFixed(2)} worth of commissions to a discount coupon?`)) {
+        try {
+            const code = 'MRT-REF-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            
+            await supaClient.from('coupons').insert([{
+                code: code,
+                discount: 0,
+                type: 'amount',
+                value: parseFloat(redeemableAmount.toFixed(2)),
+                is_used: false,
+                single_use: true,
+                owner_email: STATE.user.email
+            }]);
+            
+            maturedToRedeem.forEach(c => {
+                c.is_redeemed = true;
+                c.redeemed_date = now.toISOString();
+            });
+            
+            await supaClient.from('settings').update({ value: JSON.stringify(STATE.user) }).eq('key', 'user_' + STATE.user.email);
+            
+            alert(`🎉 Success! Your referral commission has been redeemed. Coupon Code created: ${code} (Value: ₹${redeemableAmount.toFixed(2)}). Use this at checkout for GST-free discount!`);
+            updateProfileUI();
+        } catch(e) {
+            console.error(e);
+            alert("Failed to redeem commissions. Please try again.");
+        }
+    }
 }
 
 function openUserProfile() {
@@ -4591,6 +4896,8 @@ function toggleAuthMode() {
     document.getElementById('auth-toggle-text').textContent = isAuthSignupMode ? 'Already have an account?' : "Don't have an account?";
     document.getElementById('auth-toggle-link').textContent = isAuthSignupMode ? 'Login' : 'Sign up';
     document.getElementById('auth-error').style.display = 'none';
+    const refGroup = document.getElementById('auth-referral-group');
+    if (refGroup) refGroup.style.display = isAuthSignupMode ? 'block' : 'none';
 }
 
 async function handleAuthSubmit() {
@@ -4612,12 +4919,43 @@ async function handleAuthSubmit() {
             const { data: exist } = await supaClient.from('settings').select('key').eq('key', 'user_' + email).single();
             if (exist) throw new Error("Email already registered. Please login.");
             
+            let referredByVal = null;
+            const refInp = document.getElementById('auth-referral-code');
+            const refCodeEntered = refInp ? refInp.value.trim().toUpperCase() : "";
+            if (refCodeEntered) {
+                const { data: allSettings } = await supaClient.from('settings').select('*');
+                const users = allSettings ? allSettings.filter(s => s.key.startsWith('user_')).map(s => {
+                    try { return JSON.parse(s.value); } catch(e) { return null; }
+                }).filter(Boolean) : [];
+                
+                const referrer = users.find(u => u.referral_code === refCodeEntered);
+                if (!referrer) {
+                    throw new Error("Invalid Referral Code! Please check or leave empty.");
+                }
+                if (referrer.email === email) {
+                    throw new Error("You cannot refer yourself.");
+                }
+                referredByVal = refCodeEntered;
+            }
+            
             const token = 'MRT-USER-' + Math.random().toString(36).substr(2, 9);
-            const newUser = { token, email, password, name: email.split('@')[0], digi_silver_balance: 0 };
+            const referralCode = 'REF' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            
+            const newUser = { 
+                token, 
+                email, 
+                password, 
+                name: email.split('@')[0], 
+                digi_silver_balance: 0,
+                referral_code: referralCode,
+                referred_by: referredByVal,
+                referral_commissions: []
+            };
             
             await supaClient.from('settings').insert([{ key: 'user_' + email, value: JSON.stringify(newUser) }]);
             
-            alert("Signup successful! Please login.");
+            alert(`Signup successful! Your referral code is ${referralCode}. Please login.`);
+            if (refInp) refInp.value = "";
             toggleAuthMode();
         } else {
             const { data, error } = await supaClient.from('settings').select('value').eq('key', 'user_' + email).single();
