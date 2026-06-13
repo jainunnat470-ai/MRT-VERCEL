@@ -2119,7 +2119,8 @@ async function creditReferralCommissionForOrder(order) {
                 const itemDiscountedSubtotal = itemSubtotal * (1 - discountProportion);
                 const itemTaxableAmount = itemDiscountedSubtotal * 100 / 103;
                 
-                const isGold = item.title && (item.title.toLowerCase().includes('gold') || item.title.toLowerCase().includes('ganesha'));
+                const titleLower = (item.title || "").toLowerCase();
+                const isGold = titleLower.includes('gold') || (titleLower.includes('ganesha') && !titleLower.includes('silver'));
                 if (isGold) {
                     const itemCommission = itemTaxableAmount * 0.01;
                     totalCommission += itemCommission;
