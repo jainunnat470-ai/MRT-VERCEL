@@ -2087,7 +2087,7 @@ async function creditReferralCommissionForOrder(order) {
         const referrerCode = buyerRec.referred_by;
         if (!referrerCode) return;
         
-        const { data: allSettings } = await supaClient.from('settings').select('*');
+        const { data: allSettings } = await supaClient.from('settings').select('*').like('key', 'user_%');
         const users = allSettings ? allSettings.filter(s => s.key.startsWith('user_')).map(s => {
             try { return JSON.parse(s.value); } catch(e) { return null; }
         }).filter(Boolean) : [];
@@ -4697,7 +4697,7 @@ function updateProfileUI() {
         
         // Fetch referred friends list and count
         if (STATE.user.referral_code) {
-            supaClient.from('settings').select('*').then(({ data }) => {
+            supaClient.from('settings').select('*').like('key', 'user_%').then(({ data }) => {
                 const users = data ? data.filter(s => s.key.startsWith('user_')).map(s => {
                     try { return JSON.parse(s.value); } catch(e) { return null; }
                 }).filter(Boolean) : [];
@@ -4924,7 +4924,7 @@ async function handleAuthSubmit() {
             const refInp = document.getElementById('auth-referral-code');
             const refCodeEntered = refInp ? refInp.value.trim().toUpperCase() : "";
             if (refCodeEntered) {
-                const { data: allSettings } = await supaClient.from('settings').select('*');
+                const { data: allSettings } = await supaClient.from('settings').select('*').like('key', 'user_%');
                 const users = allSettings ? allSettings.filter(s => s.key.startsWith('user_')).map(s => {
                     try { return JSON.parse(s.value); } catch(e) { return null; }
                 }).filter(Boolean) : [];
