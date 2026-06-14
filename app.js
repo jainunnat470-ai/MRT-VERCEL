@@ -1703,8 +1703,11 @@ async function downloadUserData(email) {
         let userProfile = null;
         if (userDataRow && userDataRow.value) {
             userProfile = JSON.parse(userDataRow.value);
-            // Hide password for security
             if (userProfile.password) userProfile.password = "********";
+        }
+        
+        if (!userProfile) {
+            userProfile = { email: email, name: "N/A", message: "No profile settings row found" };
         }
         
         // Filter all orders placed by this user
@@ -1712,29 +1715,184 @@ async function downloadUserData(email) {
             const custStr = typeof o.customer === 'string' ? o.customer : JSON.stringify(o.customer || {});
             return custStr.toLowerCase().includes(email.toLowerCase());
         });
+
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        });
+
+        // Fonts and colors
+        doc.setFillColor(18, 18, 20); // Dark header block
+        doc.rect(0, 0, 210, 40, 'F');
+
+        // Brand Title
+        doc.setTextColor(218, 165, 32); // Gold color
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(22);
+        doc.text("M R THANGAMAALIGAI", 15, 18);
         
-        const exportData = {
-            exported_at: new Date().toISOString(),
-            user_profile: userProfile || { email: email, name: "N/A", message: "No profile settings row found" },
-            orders_count: userOrders.length,
-            orders: userOrders
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text("CUSTOMER DIGISILVER & REWARDS REPORT", 15, 26);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 15, 32);
+
+        // User Overview Section
+        doc.setTextColor(18, 18, 20);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("Customer Profile Summary", 15, 52);
+        
+        // Draw a dividing line
+        doc.setDrawColor(218, 165, 32);
+        doc.setLineWidth(0.5);
+        doc.line(15, 55, 195, 55);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(80, 80, 80);
+
+        let y = 62;
+        const addRow = (label, val) => {
+            doc.setFont("helvetica", "bold");
+            doc.text(label, 15, y);
+            doc.setFont("helvetica", "normal");
+            doc.text(String(val), 65, y);
+            y += 7;
         };
+
+        addRow("Customer Name:", userProfile.name || "N/A");
+        addRow("Customer Email:", userProfile.email || email);
+        addRow("DigiSilver Balance:", `${(parseFloat(userProfile.digi_silver_balance) || 0).toFixed(4)} Grams`);
+        addRow("Referral Code:", userProfile.referral_code || "N/A");
+        addRow("Referred By:", userProfile.referred_by || "None");
         
-        // Trigger file download
-        const jsonString = JSON.stringify(exportData, null, 2);
-        const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
-        const link = document.createElement("a");
-        const filename = `User_Data_${email.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
-        
-        if (navigator.msSaveBlob) { // IE 10+
-            navigator.msSaveBlob(blob, filename);
-        } else {
-            link.href = URL.createObjectURL(blob);
-            link.setAttribute("download", filename);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        // Aadhar and PAN details
+        addRow("Aadhar Number:", userProfile.aadhar ? `XXXX-XXXX-${userProfile.aadhar.slice(-4)}` : "Not Verified");
+        if (userProfile.aadhar_front) {
+            addRow("Aadhar Front File:", userProfile.aadhar_front);
         }
+        if (userProfile.aadhar_back) {
+            addRow("Aadhar Back File:", userProfile.aadhar_back);
+        }
+        addRow("PAN Number:", userProfile.pan || "Not Verified");
+
+        // Rewards section
+        y += 5;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.setTextColor(18, 18, 20);
+        doc.text("Rewards & Commission Activity", 15, y);
+        y += 3;
+        doc.line(15, y, 195, y);
+        y += 7;
+
+        const commissions = Array.isArray(userProfile.referral_commissions) ? userProfile.referral_commissions : [];
+        const totalEarned = commissions.reduce((sum, c) => sum + (parseFloat(c.commission_amount) || 0), 0);
+        const friendsReferred = STATE.adminUsers ? STATE.adminUsers.filter(x => x.referred_by === userProfile.referral_code).length : 0;
+
+        addRow("Total Referred Friends:", friendsReferred);
+        addRow("Total Earned Commissions:", `INR ${totalEarned.toFixed(2)}`);
+
+        if (commissions.length > 0) {
+            y += 5;
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(11);
+            doc.text("Referral Transactions Log:", 15, y);
+            y += 6;
+
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "bold");
+            doc.text("Date", 15, y);
+            doc.text("Order ID", 45, y);
+            doc.text("Buyer", 80, y);
+            doc.text("Commission", 140, y);
+            doc.text("Status", 170, y);
+            y += 4;
+            doc.line(15, y, 195, y);
+            y += 5;
+
+            doc.setFont("helvetica", "normal");
+            commissions.forEach(c => {
+                if (y > 270) {
+                    doc.addPage();
+                    y = 20;
+                }
+                const dateStr = c.order_date ? new Date(c.order_date).toLocaleDateString() : "N/A";
+                doc.text(dateStr, 15, y);
+                doc.text(String(c.order_id), 45, y);
+                doc.text(String(c.buyer_name || "N/A"), 80, y);
+                doc.text(`INR ${(parseFloat(c.commission_amount) || 0).toFixed(2)}`, 140, y);
+                doc.text(c.is_redeemed ? "Redeemed" : "Matured", 170, y);
+                y += 6;
+            });
+        }
+
+        // Orders section
+        if (userOrders.length > 0) {
+            y += 10;
+            if (y > 250) {
+                doc.addPage();
+                y = 20;
+            }
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.setTextColor(18, 18, 20);
+            doc.text("Recent Store Orders", 15, y);
+            y += 3;
+            doc.line(15, y, 195, y);
+            y += 7;
+
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "bold");
+            doc.text("Date", 15, y);
+            doc.text("Order ID", 45, y);
+            doc.text("Items Detail", 80, y);
+            doc.text("Total Paid", 170, y);
+            y += 4;
+            doc.line(15, y, 195, y);
+            y += 5;
+
+            doc.setFont("helvetica", "normal");
+            userOrders.forEach(o => {
+                if (y > 270) {
+                    doc.addPage();
+                    y = 20;
+                }
+                const itemsArr = Array.isArray(o.items) ? o.items : (typeof o.items === 'string' ? JSON.parse(o.items || "[]") : []);
+                const itemsDesc = itemsArr.map(item => `${item.title} (x${item.qty})`).join(', ');
+
+                doc.text(String(o.date), 15, y);
+                doc.text(String(o.id), 45, y);
+                
+                // Truncate description if too long
+                let desc = itemsDesc;
+                if (desc.length > 45) desc = desc.slice(0, 42) + "...";
+                doc.text(desc, 80, y);
+                
+                doc.text(`INR ${(parseFloat(o.total) || 0).toLocaleString("en-IN")}`, 170, y);
+                y += 6;
+            });
+        }
+
+        // Footer note
+        if (y > 275) {
+            doc.addPage();
+            y = 20;
+        }
+        y += 10;
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text("Thank you for choosing M R Thangamaaligai. All transactions are securely audited.", 15, y);
+
+        // Save PDF
+        const filename = `User_Report_${email.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+        doc.save(filename);
+
     } catch (e) {
         console.error("Error exporting user data:", e);
         alert("Failed to export user data: " + e.message);
