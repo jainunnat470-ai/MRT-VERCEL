@@ -4203,7 +4203,13 @@ async function generateAiTryOn() {
         clearInterval(interval);
         if (loadingOverlay) loadingOverlay.style.display = "none";
         console.error("AI Try-On error:", err);
-        alert("AI Try-On failed: " + err.message);
+        
+        let msg = err.message || "";
+        if (msg.includes("quota") || msg.includes("limit: 0") || msg.includes("billing") || msg.includes("RESOURCE_EXHAUSTED") || msg.includes("free_tier")) {
+            alert("AI Try-On failed: Google AI Studio requires a paid plan (billing enabled) for image generation models. Please upgrade your API key to a pay-as-you-go tier in Google AI Studio or use a paid key.");
+        } else {
+            alert("AI Try-On failed: " + msg);
+        }
     }
 }
 
