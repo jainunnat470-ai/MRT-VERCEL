@@ -5289,6 +5289,17 @@ function openAadharModal(callback) {
     document.getElementById('aadhar-modal').style.display = 'block';
     document.getElementById('kyc-aadhar-input').value = '';
     document.getElementById('aadhar-error-msg').style.display = 'none';
+    
+    // Clear uploads
+    document.getElementById('aadhar-front-file').value = '';
+    document.getElementById('aadhar-back-file').value = '';
+    document.getElementById('aadhar-front-preview').style.display = 'none';
+    document.getElementById('aadhar-back-preview').style.display = 'none';
+    document.getElementById('aadhar-front-label').style.display = 'inline';
+    document.getElementById('aadhar-front-label').textContent = 'Click to Upload';
+    document.getElementById('aadhar-back-label').style.display = 'inline';
+    document.getElementById('aadhar-back-label').textContent = 'Click to Upload';
+    document.getElementById('aadhar-file-error-msg').style.display = 'none';
 }
 
 function closeAadharModal() {
@@ -5311,6 +5322,26 @@ function closePanModal() {
     panCallback = null;
 }
 
+function previewAadharPhoto(input, imgId, labelId) {
+    const file = input.files[0];
+    const preview = document.getElementById(imgId);
+    const label = document.getElementById(labelId);
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            label.style.display = 'none';
+        }
+        reader.readAsDataURL(file);
+    } else {
+        preview.style.display = 'none';
+        label.style.display = 'inline';
+        label.textContent = 'Click to Upload';
+    }
+}
+
 // Format Aadhar input as "xxxx xxxx xxxx"
 document.getElementById('kyc-aadhar-input').addEventListener('input', function(e) {
     let value = e.target.value.replace(/\D/g, '');
@@ -5326,14 +5357,29 @@ document.getElementById('kyc-aadhar-input').addEventListener('input', function(e
 async function verifyAadharKYC() {
     const aadharInput = document.getElementById('kyc-aadhar-input').value.replace(/\s/g, '');
     const errorEl = document.getElementById('aadhar-error-msg');
+    const fileErrorEl = document.getElementById('aadhar-file-error-msg');
+    
+    let hasError = false;
     
     if (aadharInput.length !== 12 || isNaN(aadharInput)) {
         errorEl.textContent = 'Please enter a valid 12-digit Aadhar number.';
         errorEl.style.display = 'block';
-        return;
+        hasError = true;
+    } else {
+        errorEl.style.display = 'none';
     }
     
-    errorEl.style.display = 'none';
+    const frontFile = document.getElementById('aadhar-front-file').files[0];
+    const backFile = document.getElementById('aadhar-back-file').files[0];
+    
+    if (!frontFile || !backFile) {
+        fileErrorEl.style.display = 'block';
+        hasError = true;
+    } else {
+        fileErrorEl.style.display = 'none';
+    }
+    
+    if (hasError) return;
     
     try {
         if (!STATE.user) {
@@ -5344,6 +5390,8 @@ async function verifyAadharKYC() {
         
         // Save to user object
         STATE.user.aadhar = aadharInput;
+        STATE.user.aadhar_front = frontFile.name;
+        STATE.user.aadhar_back = backFile.name;
         
         // Save to Supabase
         await supaClient.from('settings').update({ value: JSON.stringify(STATE.user) }).eq('key', 'user_' + STATE.user.email);
