@@ -1805,7 +1805,7 @@ async function downloadUserData(email) {
             doc.setFont("helvetica", "bold");
             doc.text(label, 15, y);
             doc.setFont("helvetica", "normal");
-            doc.text(String(val), 65, y);
+            doc.text(String(val), 85, y);
             y += 7;
         };
 
