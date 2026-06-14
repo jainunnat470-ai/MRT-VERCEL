@@ -1621,20 +1621,26 @@ async function loadAdminUsers() {
             let record = {};
             try {
                 record = JSON.parse(row.value);
-            } catch (e) {}
+                if (!record || typeof record !== 'object') {
+                    record = {};
+                }
+            } catch (e) {
+                record = {};
+            }
+            const commissions = Array.isArray(record.referral_commissions) ? record.referral_commissions : [];
             return {
                 email: record.email || row.key.replace('user_', ''),
                 name: record.name || 'N/A',
                 balance: parseFloat(record.digi_silver_balance) || 0,
                 referral_code: record.referral_code || 'N/A',
                 referred_by: record.referred_by || 'None',
-                referral_commissions: record.referral_commissions || []
+                referral_commissions: commissions
             };
         });
         
         users.forEach(u => {
             u.friends_referred = users.filter(x => x.referred_by === u.referral_code).length;
-            u.total_earned = u.referral_commissions.reduce((sum, c) => sum + c.commission_amount, 0);
+            u.total_earned = u.referral_commissions.reduce((sum, c) => sum + (parseFloat(c.commission_amount) || 0), 0);
         });
         
         users.sort((a, b) => b.balance - a.balance);
@@ -1664,7 +1670,7 @@ function renderUsersTable(users) {
             <td style="font-weight: 700; color: #10B981;">₹${u.total_earned.toFixed(2)}</td>
             <td style="font-weight: 700; text-align: center;">${u.friends_referred}</td>
             <td style="text-align: center;">
-                <button class="btn-checkout" onclick="downloadUserData('${u.email}')" style="padding: 4px 8px; font-size: 0.68rem; margin-top: 0; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFFFFF; border: none; border-radius: 4px; cursor: pointer;">
+                <button class="btn-checkout" onclick="downloadUserData('${u.email.replace(/'/g, "\\'")}')" style="padding: 4px 8px; font-size: 0.68rem; margin-top: 0; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFFFFF; border: none; border-radius: 4px; cursor: pointer;">
                     📥 Download Data
                 </button>
             </td>
