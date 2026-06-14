@@ -4116,9 +4116,8 @@ async function generateAiTryOn() {
     if (loadingOverlay) loadingOverlay.style.display = "flex";
     
     const statuses = [
-        { title: "Analyzing your photo...", desc: "Gemini is inspecting facial structure, hands, or ears for matching..." },
-        { title: "Composing jewelry overlay...", desc: "Resizing and aligning the jewelry on your photo..." },
-        { title: "Rendering final image...", desc: "Finalizing lighting, shadows, and realistic reflections..." }
+        { title: "Analyzing photo & composing try-on...", desc: "Gemini is describing facial features and synthesizing the jewelry..." },
+        { title: "Generating final rendering...", desc: "Applying lighting, photorealism, and metal reflections..." }
     ];
     
     let statusIdx = 0;
@@ -4133,100 +4132,61 @@ async function generateAiTryOn() {
         } else {
             clearInterval(interval);
         }
-    }, 2500);
+    }, 3000);
     
     try {
         const userBase64Data = STATE_TRYON_BASE64.split(",")[1];
         const userMimeType = STATE_TRYON_BASE64.split(";")[0].split(":")[1] || "image/jpeg";
         
-        // Build the parts array: user photo + jewelry image (if available) + text prompt
-        const parts = [
-            {
-                inlineData: {
-                    mimeType: userMimeType,
-                    data: userBase64Data
-                }
-            }
-        ];
-        
-        // Try to load the product image as base64 to send to Gemini
-        let prodImageLoaded = false;
-        try {
-            const prodImgResponse = await fetch(prod.image);
-            if (prodImgResponse.ok) {
-                const blob = await prodImgResponse.blob();
-                const prodBase64 = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.readAsDataURL(blob);
-                });
-                const prodBase64Data = prodBase64.split(",")[1];
-                const prodMimeType = blob.type || "image/jpeg";
-                parts.push({
-                    inlineData: {
-                        mimeType: prodMimeType,
-                        data: prodBase64Data
-                    }
-                });
-                prodImageLoaded = true;
-            }
-        } catch(e) {
-            console.warn("Could not load product image for AI, using text-only prompt", e);
-        }
-        
         let sizeStr = STATE.selectedSize ? `, size ${STATE.selectedSize}` : "";
-        let promptText = prodImageLoaded
-            ? `Image 1 is a photo of a person. Image 2 is a piece of jewelry called "${prod.title}" (${prod.category}${sizeStr}). Please generate a new realistic HD photo showing the person from Image 1 wearing the exact jewelry from Image 2 in the correct position on their body. Keep the person's face, clothing and background exactly the same. Make it look completely natural and photorealistic.`
-            : `This is a photo of a person. Please generate a new realistic HD photo showing this person wearing a piece of 925 sterling silver jewelry called "${prod.title}" (category: ${prod.category}${sizeStr}). Keep the person's face, clothing and background the same. Make it look completely natural and photorealistic.`;
         
-        parts.push({ text: promptText });
-        
-        // Use Gemini 2.0 Flash with image generation
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
-        
+        // Single call to gemini-2.0-flash with responseModalities TEXT and IMAGE
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
         const response = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                contents: [{ parts: parts }],
+                contents: [{
+                    parts: [
+                        {
+                            inlineData: {
+                                mimeType: userMimeType,
+                                data: userBase64Data
+                            }
+                        },
+                        {
+                            text: `This is a photo of a person. Generate a new, high-quality, photorealistic image of this exact person wearing a beautiful 925 sterling silver jewelry piece called "${prod.title}" (which is a ${prod.category}${sizeStr}) positioned realistically on their body. The jewelry must look shiny, metallic, detailed, and perfectly blended into the person's photo.`
+                        }
+                    ]
+                }],
                 generationConfig: {
                     responseModalities: ["TEXT", "IMAGE"]
                 }
             })
         });
-        
+
         clearInterval(interval);
-        
+
         if (!response.ok) {
             const errData = await response.json().catch(() => ({}));
-            console.error("Gemini API error:", errData);
-            if (loadingOverlay) loadingOverlay.style.display = "none";
-            alert("AI generation failed: " + (errData?.error?.message || `HTTP ${response.status}`));
-            return;
+            throw new Error(errData?.error?.message || `Gemini Try-On failed (HTTP ${response.status})`);
         }
-        
+
         const data = await response.json();
-        const candidateParts = data.candidates?.[0]?.content?.parts || [];
+        const parts = data.candidates?.[0]?.content?.parts || [];
         
-        // Find the generated image part
-        let generatedImageData = null;
-        let generatedMimeType = "image/png";
-        for (const part of candidateParts) {
-            if (part.inlineData) {
-                generatedImageData = part.inlineData.data;
-                generatedMimeType = part.inlineData.mimeType || "image/png";
-                break;
-            }
+        // Find the image part in the response
+        let imagePart = parts.find(p => p.inlineData && p.inlineData.mimeType && p.inlineData.mimeType.startsWith("image/"));
+        
+        if (!imagePart) {
+            // Check if there is any text warning/explanation
+            const textPart = parts.find(p => p.text);
+            const warningMsg = textPart ? textPart.text : "No image returned by Gemini model.";
+            throw new Error(warningMsg);
         }
-        
-        if (!generatedImageData) {
-            if (loadingOverlay) loadingOverlay.style.display = "none";
-            const textResponse = candidateParts.find(p => p.text)?.text || "";
-            alert("AI could not generate the try-on image. " + (textResponse ? "Response: " + textResponse.substring(0, 200) : "Please try a different photo."));
-            return;
-        }
-        
-        const resultDataUrl = `data:${generatedMimeType};base64,${generatedImageData}`;
+
+        const generatedImageB64 = imagePart.inlineData.data;
+        const resultDataUrl = `data:${imagePart.inlineData.mimeType},${generatedImageB64}`;
         
         if (loadingOverlay) loadingOverlay.style.display = "none";
         
@@ -4244,7 +4204,7 @@ async function generateAiTryOn() {
         clearInterval(interval);
         if (loadingOverlay) loadingOverlay.style.display = "none";
         console.error("AI Try-On error:", err);
-        alert("Oops! Failed to render the AI image. Error: " + err.message);
+        alert("AI Try-On failed: " + err.message);
     }
 }
 
