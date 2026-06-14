@@ -1634,7 +1634,13 @@ async function loadAdminUsers() {
                 balance: parseFloat(record.digi_silver_balance) || 0,
                 referral_code: record.referral_code || 'N/A',
                 referred_by: record.referred_by || 'None',
-                referral_commissions: commissions
+                referral_commissions: commissions,
+                aadhar: record.aadhar || '',
+                aadhar_status: record.aadhar_status || 'not_submitted',
+                aadhar_front_data: record.aadhar_front_data || '',
+                aadhar_back_data: record.aadhar_back_data || '',
+                pan: record.pan || '',
+                pan_status: record.pan_status || 'not_submitted'
             };
         });
         
@@ -1658,24 +1664,63 @@ function renderUsersTable(users) {
     const tbody = document.getElementById("admin-users-tbody");
     if (!tbody) return;
     
-    tbody.innerHTML = users.map(u => `
+    tbody.innerHTML = users.map(u => {
+        // Aadhar KYC display
+        let aadharHtml = '';
+        if (u.aadhar_status === 'approved') {
+            aadharHtml = `Num: <strong>${u.aadhar}</strong><br><span class="admin-status-badge" style="background:#D1FAE5;color:#065F46;padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:bold;">Approved</span>`;
+        } else if (u.aadhar_status === 'pending_approval') {
+            aadharHtml = `Num: <strong>${u.aadhar}</strong><br><span class="admin-status-badge" style="background:#FEF3C7;color:#92400E;padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:bold;margin-bottom:4px;display:inline-block;">Pending Approval</span><br>
+            <a href="#" onclick="viewKycDoc('${u.email.replace(/'/g, "\\'")}', 'front'); return false;" style="font-size:0.75rem;color:var(--color-accent-pink);text-decoration:underline;margin-right:8px;font-weight:bold;">Front Doc</a>
+            <a href="#" onclick="viewKycDoc('${u.email.replace(/'/g, "\\'")}', 'back'); return false;" style="font-size:0.75rem;color:var(--color-accent-pink);text-decoration:underline;font-weight:bold;">Back Doc</a>`;
+        } else {
+            aadharHtml = `<span class="admin-status-badge" style="background:#F3F4F6;color:#374151;padding:2px 6px;border-radius:4px;font-size:0.75rem;">Not Submitted</span>`;
+        }
+
+        // PAN KYC display
+        let panHtml = '';
+        if (u.pan_status === 'approved') {
+            panHtml = `Num: <strong>${u.pan}</strong><br><span class="admin-status-badge" style="background:#D1FAE5;color:#065F46;padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:bold;">Approved</span>`;
+        } else if (u.pan_status === 'pending_approval') {
+            panHtml = `Num: <strong>${u.pan}</strong><br><span class="admin-status-badge" style="background:#FEF3C7;color:#92400E;padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:bold;">Pending Approval</span>`;
+        } else {
+            panHtml = `<span class="admin-status-badge" style="background:#F3F4F6;color:#374151;padding:2px 6px;border-radius:4px;font-size:0.75rem;">Not Submitted</span>`;
+        }
+
+        // Admin actions
+        let actionsHtml = '';
+        if (u.aadhar_status === 'pending_approval') {
+            actionsHtml += `<button onclick="approveAadhar('${u.email.replace(/'/g, "\\'")}')" style="padding: 4px 8px; font-size: 0.68rem; margin-top: 0; background: #10B981; color: #FFFFFF; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 5px; width: 100%; display: block;">Approve Aadhar</button>`;
+        }
+        if (u.pan_status === 'pending_approval') {
+            actionsHtml += `<button onclick="approvePan('${u.email.replace(/'/g, "\\'")}')" style="padding: 4px 8px; font-size: 0.68rem; margin-top: 0; background: #10B981; color: #FFFFFF; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 5px; width: 100%; display: block;">Approve PAN</button>`;
+        }
+        actionsHtml += `<button class="btn-checkout" onclick="downloadUserData('${u.email.replace(/'/g, "\\'")}')" style="padding: 4px 8px; font-size: 0.68rem; margin-top: 0; background: linear-gradient(135deg, #D97706 0%, #B45309 100%); color: #FFFFFF; border: none; border-radius: 4px; cursor: pointer; width: 100%; display: block;">📥 Report PDF</button>`;
+
+        return `
         <tr>
-            <td style="font-weight: 600; color: var(--color-primary);">${u.email}</td>
-            <td>${u.name}</td>
-            <td style="font-weight: 700; color: var(--color-accent-pink);">
-                ${u.balance.toFixed(2)} g
+            <td>
+                <strong style="color:var(--color-primary);">${u.name}</strong><br>
+                <span style="font-size:0.8rem;color:var(--color-silver-dark);">${u.email}</span><br>
+                <span style="font-size:0.75rem;font-weight:700;color:#B45309;">Ref Code: ${u.referral_code}</span>
             </td>
-            <td style="font-family: monospace; font-weight: 700;">${u.referral_code}</td>
-            <td style="font-family: monospace; color: var(--color-silver-dark);">${u.referred_by}</td>
-            <td style="font-weight: 700; color: #10B981;">₹${u.total_earned.toFixed(2)}</td>
-            <td style="font-weight: 700; text-align: center;">${u.friends_referred}</td>
-            <td style="text-align: center;">
-                <button class="btn-checkout" onclick="downloadUserData('${u.email.replace(/'/g, "\\'")}')" style="padding: 4px 8px; font-size: 0.68rem; margin-top: 0; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFFFFF; border: none; border-radius: 4px; cursor: pointer;">
-                    📥 Download Data
-                </button>
+            <td style="font-weight: 700; color: var(--color-accent-pink);">
+                ${u.balance.toFixed(4)} g
+            </td>
+            <td>
+                Referred: <strong>${u.friends_referred}</strong><br>
+                Earned: <strong style="color:#10B981;">₹${u.total_earned.toFixed(2)}</strong>
+            </td>
+            <td>${aadharHtml}</td>
+            <td>${panHtml}</td>
+            <td style="text-align: center; vertical-align: middle;">
+                <div style="display:flex; flex-direction:column; gap:4px; max-width: 120px; margin: 0 auto;">
+                    ${actionsHtml}
+                </div>
             </td>
         </tr>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function filterAdminUsers() {
@@ -4999,6 +5044,14 @@ async function redeemReferralCommissions() {
         openPanModal(redeemReferralCommissions);
         return;
     }
+    if (STATE.user.pan_status === 'pending_approval') {
+        alert("Your PAN verification is currently pending admin approval. You can redeem commissions once approved.");
+        return;
+    }
+    if (STATE.user.pan_status !== 'approved') {
+        alert("Your PAN verification status is invalid. Please contact support.");
+        return;
+    }
     const commissions = STATE.user.referral_commissions || [];
     const now = new Date();
     
@@ -5170,6 +5223,14 @@ function buyDigiSilver() {
         openAadharModal(buyDigiSilver);
         return;
     }
+    if (STATE.user.aadhar_status === 'pending_approval') {
+        alert("Your Aadhar verification is currently pending admin approval. You can perform transactions once approved.");
+        return;
+    }
+    if (STATE.user.aadhar_status !== 'approved') {
+        alert("Your Aadhar verification status is invalid. Please contact support.");
+        return;
+    }
 
     const amountStr = document.getElementById('buy-digi-amount').value;
     const amount = parseFloat(amountStr);
@@ -5209,6 +5270,14 @@ function redeemDigiSilver() {
     }
     if (!STATE.user.aadhar) {
         openAadharModal(redeemDigiSilver);
+        return;
+    }
+    if (STATE.user.aadhar_status === 'pending_approval') {
+        alert("Your Aadhar verification is currently pending admin approval. You can perform transactions once approved.");
+        return;
+    }
+    if (STATE.user.aadhar_status !== 'approved') {
+        alert("Your Aadhar verification status is invalid. Please contact support.");
         return;
     }
 
@@ -5306,6 +5375,14 @@ function sellDigiSilver() {
     }
     if (!STATE.user.aadhar) {
         openAadharModal(sellDigiSilver);
+        return;
+    }
+    if (STATE.user.aadhar_status === 'pending_approval') {
+        alert("Your Aadhar verification is currently pending admin approval. You can perform transactions once approved.");
+        return;
+    }
+    if (STATE.user.aadhar_status !== 'approved') {
+        alert("Your Aadhar verification status is invalid. Please contact support.");
         return;
     }
 
@@ -5551,26 +5628,57 @@ async function verifyAadharKYC() {
             closeAadharModal();
             return;
         }
+
+        document.getElementById('btn-submit-aadhar').textContent = "Uploading...";
+        document.getElementById('btn-submit-aadhar').disabled = true;
+
+        // Convert photos to data URLs
+        const readerFront = new FileReader();
+        readerFront.onload = function(e) {
+            const frontDataUrl = e.target.result;
+            const readerBack = new FileReader();
+            readerBack.onload = async function(e2) {
+                const backDataUrl = e2.target.result;
+                
+                try {
+                    // Update user object locally
+                    STATE.user.aadhar = aadharInput;
+                    STATE.user.aadhar_front = frontFile.name;
+                    STATE.user.aadhar_back = backFile.name;
+                    STATE.user.aadhar_front_data = frontDataUrl;
+                    STATE.user.aadhar_back_data = backDataUrl;
+                    STATE.user.aadhar_status = 'pending_approval';
+                    
+                    // Save to Supabase
+                    await supaClient.from('settings').update({ value: JSON.stringify(STATE.user) }).eq('key', 'user_' + STATE.user.email);
+                    
+                    alert("Aadhar submitted successfully! It is now pending admin approval.");
+                    closeAadharModal();
+                    updateProfileUI();
+                    
+                    if (aadharCallback) {
+                        const cb = aadharCallback;
+                        aadharCallback = null;
+                        cb();
+                    }
+                } catch(err) {
+                    console.error("Error saving user state:", err);
+                    alert("Error saving Aadhar verification: " + err.message);
+                } finally {
+                    document.getElementById('btn-submit-aadhar').textContent = "Verify & Proceed";
+                    document.getElementById('btn-submit-aadhar').disabled = false;
+                }
+            };
+            readerBack.readAsDataURL(backFile);
+        };
+        readerFront.readAsDataURL(frontFile);
         
-        // Save to user object
-        STATE.user.aadhar = aadharInput;
-        STATE.user.aadhar_front = frontFile.name;
-        STATE.user.aadhar_back = backFile.name;
-        
-        // Save to Supabase
-        await supaClient.from('settings').update({ value: JSON.stringify(STATE.user) }).eq('key', 'user_' + STATE.user.email);
-        
-        alert("Aadhar verified successfully!");
-        closeAadharModal();
-        if (aadharCallback) {
-            const cb = aadharCallback;
-            aadharCallback = null;
-            cb();
-        }
     } catch(e) {
         console.error("KYC verification error:", e);
         errorEl.textContent = 'Failed to verify Aadhar. Please try again.';
         errorEl.style.display = 'block';
+        document.getElementById('btn-submit-aadhar').textContent = "Verify & Proceed";
+        document.getElementById('btn-submit-aadhar').disabled = false;
     }
 }
 
@@ -5598,12 +5706,15 @@ async function verifyPanKYC() {
         
         // Save to user object
         STATE.user.pan = panInput;
+        STATE.user.pan_status = 'pending_approval';
         
         // Save to Supabase
         await supaClient.from('settings').update({ value: JSON.stringify(STATE.user) }).eq('key', 'user_' + STATE.user.email);
         
-        alert("PAN card verified successfully!");
+        alert("PAN card submitted successfully! It is now pending admin approval.");
         closePanModal();
+        updateProfileUI();
+        
         if (panCallback) {
             const cb = panCallback;
             panCallback = null;
@@ -5614,6 +5725,62 @@ async function verifyPanKYC() {
         errorEl.textContent = 'Failed to verify PAN. Please try again.';
         errorEl.style.display = 'block';
     }
+}
+
+// Admin KYC Functions
+async function approveAadhar(email) {
+    if (!confirm(`Are you sure you want to approve Aadhar for ${email}?`)) return;
+    try {
+        const { data } = await supaClient.from('settings').select('value').eq('key', 'user_' + email).single();
+        if (!data || !data.value) return alert("User not found.");
+        const userRec = JSON.parse(data.value);
+        userRec.aadhar_status = 'approved';
+        
+        await supaClient.from('settings').update({ value: JSON.stringify(userRec) }).eq('key', 'user_' + email);
+        alert(`Aadhar approved for ${email}`);
+        
+        if (STATE.user && STATE.user.email === email) {
+            STATE.user.aadhar_status = 'approved';
+        }
+        
+        loadAdminUsers();
+    } catch(e) {
+        console.error(e);
+        alert("Error approving Aadhar: " + e.message);
+    }
+}
+
+async function approvePan(email) {
+    if (!confirm(`Are you sure you want to approve PAN for ${email}?`)) return;
+    try {
+        const { data } = await supaClient.from('settings').select('value').eq('key', 'user_' + email).single();
+        if (!data || !data.value) return alert("User not found.");
+        const userRec = JSON.parse(data.value);
+        userRec.pan_status = 'approved';
+        
+        await supaClient.from('settings').update({ value: JSON.stringify(userRec) }).eq('key', 'user_' + email);
+        alert(`PAN approved for ${email}`);
+        
+        if (STATE.user && STATE.user.email === email) {
+            STATE.user.pan_status = 'approved';
+        }
+        
+        loadAdminUsers();
+    } catch(e) {
+        console.error(e);
+        alert("Error approving PAN: " + e.message);
+    }
+}
+
+function viewKycDoc(email, side) {
+    const user = STATE.adminUsers.find(u => u.email === email);
+    if (!user) return alert("User not found.");
+    const dataUrl = (side === 'front') ? user.aadhar_front_data : user.aadhar_back_data;
+    if (!dataUrl) return alert("Image not available.");
+    
+    // Open image in a new browser tab/window
+    const newTab = window.open();
+    newTab.document.write(`<img src="${dataUrl}" style="max-width:100%; max-height:100%; display:block; margin:auto;" />`);
 }
 
 document.getElementById('btn-submit-aadhar').addEventListener('click', verifyAadharKYC);
