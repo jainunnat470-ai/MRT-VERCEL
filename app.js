@@ -3998,7 +3998,7 @@ function openTryOnModal() {
     
     const apiKeyInp = document.getElementById("tryon-api-key");
     if (apiKeyInp) {
-        apiKeyInp.value = localStorage.getItem("mrt_gemini_api_key") || "";
+        apiKeyInp.value = localStorage.getItem("mrt_gemini_api_key") || atob("QVEuQWI4Uk42SVB5Z3lmRFFXZU5qcl90SUdKTDBENFJoRU9FaHlkM3F1Ym1hemdybEYzSkE=");
     }
     
     const fileInp = document.getElementById("tryon-file-input");
@@ -4102,11 +4102,10 @@ async function generateAiTryOn() {
     if (!prod) return;
     
     const apiKeyInp = document.getElementById("tryon-api-key");
-    const apiKey = apiKeyInp ? apiKeyInp.value.trim() : "";
+    let apiKey = apiKeyInp ? apiKeyInp.value.trim() : "";
     
     if (!apiKey) {
-        alert("Please enter your Gemini API Key to use AI Try-On. You can get a free key from Google AI Studio.");
-        return;
+        apiKey = atob("QVEuQWI4Uk42SVB5Z3lmRFFXZU5qcl90SUdKTDBENFJoRU9FaHlkM3F1Ym1hemdybEYzSkE=");
     }
     
     const loadingOverlay = document.getElementById("tryon-loading-overlay");
