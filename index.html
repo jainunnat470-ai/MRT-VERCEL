@@ -454,7 +454,15 @@
                             <button onclick="redeemDigiSilver()" class="btn-checkout" style="width: 100%; padding: 10px; margin: 0; background: #10B981;">Redeem Silver with Coupon</button>
                             <div style="font-size: 0.7rem; color: var(--color-silver-dark); margin-top: 6px; text-align: center;">Use discount at checkout.</div>
                         </div>
+                    </div>
 
+                    <div style="margin-top: 20px; border-top: 1px solid var(--color-silver-mid); padding-top: 15px;">
+                        <h4 style="margin: 0 0 8px 0; color: var(--color-primary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Terms & Conditions for DigiSilver Savings</h4>
+                        <ol style="margin: 0; padding-left: 18px; font-size: 0.78rem; color: var(--color-silver-dark); line-height: 1.5;">
+                            <li>Purchase needs to be done within 12 months from the savings time</li>
+                            <li>The amount can be only for purchase of silver articles</li>
+                            <li>No cash refund will be provided</li>
+                        </ol>
                     </div>
                 </div>
             </div>
@@ -471,8 +479,19 @@
         <!-- Refer & Earn Section -->
         <div style="background-color: var(--color-silver-light); border-radius: var(--border-radius-md); padding: 30px; box-shadow: var(--shadow-lux); margin-top: 30px;">
             <h3 style="font-family: var(--font-heading); font-size: 1.5rem; color: var(--color-primary); margin-bottom: 5px; text-transform: uppercase;">✨ Refer & Earn</h3>
-            <p style="color: var(--color-silver-dark); font-size: 0.9rem; margin: 0 0 25px 0;">Share the love and earn **5% commission** on silver purchases and **1% commission** on gold purchases. Redeem your earnings to GST-free shopping coupons after 48 hours!</p>
+            <p style="color: var(--color-silver-dark); font-size: 0.9rem; margin: 0 0 15px 0;">Share the love and earn **5% commission** on silver purchases and **1% commission** on gold purchases. Redeem your earnings to GST-free shopping coupons after 48 hours!</p>
             
+            <div style="margin-bottom: 25px; background: #FFF; padding: 15px; border-radius: var(--border-radius-sm); border: 1px solid var(--color-silver-mid);">
+                <h4 style="margin: 0 0 8px 0; color: var(--color-primary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Terms and condition apply</h4>
+                <ol style="margin: 0; padding-left: 18px; font-size: 0.78rem; color: var(--color-silver-dark); line-height: 1.5;">
+                    <li>Tds will be deducted for the Gift Voucher amount</li>
+                    <li>The earnings can be redeemed only for purchase of gold and silver articles</li>
+                    <li>Voucher will be provided only after verification of purchase by customer</li>
+                    <li>5% on Silver Articles Purchase value</li>
+                    <li>1% on Gold Articles Purchase Value</li>
+                </ol>
+            </div>
+
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 25px;">
                 <!-- Referral Code Display Card -->
                 <div style="background: linear-gradient(135deg, #FFFDF5 0%, #FFF9E6 100%); border: 1.5px dashed #F59E0B; border-radius: var(--border-radius-sm); padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; box-shadow: 0 4px 15px rgba(245,158,11,0.05);">
@@ -2297,6 +2316,44 @@
         <div style="display: flex; gap: 12px; margin-top: 25px;">
             <button class="btn-checkout" id="btn-submit-cashout" style="flex: 1; padding: 12px 0; margin-top: 0; background-color: #EF4444;">Confirm Cash Out</button>
             <button class="btn-add-cart" style="padding: 12px 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); margin-top: 0;" onclick="closeCashOutModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Aadhar Verification Modal -->
+    <div class="drawer-overlay" id="aadhar-modal-overlay" onclick="closeAadharModal()" style="z-index: 190; display: none; background-color: rgba(18, 18, 20, 0.75);"></div>
+    <div class="custom-form-panel" id="aadhar-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 200; width: 90%; max-width: 400px; box-shadow: var(--shadow-lux); border-radius: var(--border-radius-md); padding: 25px; background-color: #FFFFFF;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-silver-mid); padding-bottom: 12px; margin-bottom: 20px;">
+            <h3 style="font-family: var(--font-heading); margin: 0; color: var(--color-primary); font-size: 1.15rem;">Aadhar Verification Required</h3>
+            <button onclick="closeAadharModal()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--color-silver-dark); font-weight: 600; line-height: 1;">&times;</button>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--color-silver-dark); margin-bottom: 15px;">To proceed with DigiSilver transactions, please verify your 12-digit Aadhar number.</p>
+        <div class="custom-form-group" style="margin-bottom: 15px;">
+            <label class="custom-form-label">Aadhar Number</label>
+            <input type="text" id="kyc-aadhar-input" class="custom-input" placeholder="e.g. 1234 5678 9012" maxlength="14" style="width: 100%; letter-spacing: 1px;">
+            <div id="aadhar-error-msg" style="color: red; font-size: 0.75rem; margin-top: 5px; display: none;">Please enter a valid 12-digit Aadhar number.</div>
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 25px;">
+            <button class="btn-checkout" id="btn-submit-aadhar" style="flex: 1; padding: 12px 0; margin-top: 0; background-color: #10B981;">Verify & Proceed</button>
+            <button class="btn-add-cart" style="padding: 12px 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); margin-top: 0;" onclick="closeAadharModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- PAN Verification Modal -->
+    <div class="drawer-overlay" id="pan-modal-overlay" onclick="closePanModal()" style="z-index: 190; display: none; background-color: rgba(18, 18, 20, 0.75);"></div>
+    <div class="custom-form-panel" id="pan-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 200; width: 90%; max-width: 400px; box-shadow: var(--shadow-lux); border-radius: var(--border-radius-md); padding: 25px; background-color: #FFFFFF;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-silver-mid); padding-bottom: 12px; margin-bottom: 20px;">
+            <h3 style="font-family: var(--font-heading); margin: 0; color: var(--color-primary); font-size: 1.15rem;">PAN Verification Required</h3>
+            <button onclick="closePanModal()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--color-silver-dark); font-weight: 600; line-height: 1;">&times;</button>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--color-silver-dark); margin-bottom: 15px;">To redeem your referral commissions, please verify your 10-character PAN number.</p>
+        <div class="custom-form-group" style="margin-bottom: 15px;">
+            <label class="custom-form-label">PAN Number</label>
+            <input type="text" id="kyc-pan-input" class="custom-input" placeholder="e.g. ABCDE1234F" maxlength="10" style="width: 100%; text-transform: uppercase; letter-spacing: 1px;">
+            <div id="pan-error-msg" style="color: red; font-size: 0.75rem; margin-top: 5px; display: none;">Please enter a valid 10-character alphanumeric PAN number.</div>
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 25px;">
+            <button class="btn-checkout" id="btn-submit-pan" style="flex: 1; padding: 12px 0; margin-top: 0; background-color: #10B981;">Verify & Redeem</button>
+            <button class="btn-add-cart" style="padding: 12px 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); margin-top: 0;" onclick="closePanModal()">Cancel</button>
         </div>
     </div>
 
