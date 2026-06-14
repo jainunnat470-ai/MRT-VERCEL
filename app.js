@@ -1769,42 +1769,49 @@ async function downloadUserData(email) {
             format: 'a4'
         });
 
-        // Fonts and colors
-        doc.setFillColor(18, 18, 20); // Dark header block
-        doc.rect(0, 0, 210, 40, 'F');
+        // Creative Black & White Header Style
+        // Top solid black accent stripe (3mm height)
+        doc.setFillColor(0, 0, 0);
+        doc.rect(0, 0, 210, 4, 'F');
 
-        // Brand Title
-        doc.setTextColor(218, 165, 32); // Gold color
+        // Brand Typography
+        doc.setTextColor(0, 0, 0);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(22);
-        doc.text("M R THANGAMAALIGAI", 15, 18);
+        doc.setFontSize(24);
+        doc.text("M R THANGAMAALIGAI", 15, 20);
         
-        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(100, 100, 100);
+        doc.text("CUSTOMER DIGISILVER & REWARDS LEDGER", 15, 27);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 15, 32);
+
+        // Divider Line
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.8);
+        doc.line(15, 36, 195, 36);
+
+        // User Overview Section Title
+        doc.setTextColor(0, 0, 0);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13);
+        doc.text("Customer Profile Summary", 15, 48);
+        
+        doc.setLineWidth(0.2);
+        doc.setDrawColor(180, 180, 180);
+        doc.line(15, 51, 195, 51);
+
         doc.setFont("helvetica", "normal");
         doc.setFontSize(10);
-        doc.text("CUSTOMER DIGISILVER & REWARDS REPORT", 15, 26);
-        doc.text(`Generated on: ${new Date().toLocaleString()}`, 15, 32);
+        doc.setTextColor(50, 50, 50);
 
-        // User Overview Section
-        doc.setTextColor(18, 18, 20);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
-        doc.text("Customer Profile Summary", 15, 52);
-        
-        // Draw a dividing line
-        doc.setDrawColor(218, 165, 32);
-        doc.setLineWidth(0.5);
-        doc.line(15, 55, 195, 55);
-
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.setTextColor(80, 80, 80);
-
-        let y = 62;
+        let y = 58;
         const addRow = (label, val) => {
             doc.setFont("helvetica", "bold");
+            doc.setTextColor(0, 0, 0);
             doc.text(label, 15, y);
             doc.setFont("helvetica", "normal");
+            doc.setTextColor(80, 80, 80);
             doc.text(String(val), 85, y);
             y += 7;
         };
@@ -1826,12 +1833,13 @@ async function downloadUserData(email) {
         addRow("PAN Number:", userProfile.pan || "Not Verified");
 
         // Rewards section
-        y += 5;
+        y += 3;
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
-        doc.setTextColor(18, 18, 20);
+        doc.setFontSize(13);
+        doc.setTextColor(0, 0, 0);
         doc.text("Rewards & Commission Activity", 15, y);
         y += 3;
+        doc.setLineWidth(0.2);
         doc.line(15, y, 195, y);
         y += 7;
 
@@ -1845,94 +1853,111 @@ async function downloadUserData(email) {
         if (commissions.length > 0) {
             y += 5;
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(11);
-            doc.text("Referral Transactions Log:", 15, y);
-            y += 6;
-
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "bold");
-            doc.text("Date", 15, y);
-            doc.text("Order ID", 45, y);
-            doc.text("Buyer", 80, y);
-            doc.text("Commission", 140, y);
-            doc.text("Status", 170, y);
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.text("Referral Transactions Log", 15, y);
             y += 4;
-            doc.line(15, y, 195, y);
-            y += 5;
+
+            // Draw table header block in black
+            doc.setFillColor(0, 0, 0);
+            doc.rect(15, y, 180, 6, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "bold");
+            doc.text("Date", 17, y + 4.5);
+            doc.text("Order ID", 47, y + 4.5);
+            doc.text("Buyer", 82, y + 4.5);
+            doc.text("Commission", 142, y + 4.5);
+            doc.text("Status", 172, y + 4.5);
+            y += 10;
 
             doc.setFont("helvetica", "normal");
+            doc.setTextColor(80, 80, 80);
             commissions.forEach(c => {
-                if (y > 270) {
+                if (y > 275) {
                     doc.addPage();
+                    doc.setFillColor(0, 0, 0);
+                    doc.rect(0, 0, 210, 4, 'F');
                     y = 20;
                 }
                 const dateStr = c.order_date ? new Date(c.order_date).toLocaleDateString() : "N/A";
-                doc.text(dateStr, 15, y);
-                doc.text(String(c.order_id), 45, y);
-                doc.text(String(c.buyer_name || "N/A"), 80, y);
-                doc.text(`INR ${(parseFloat(c.commission_amount) || 0).toFixed(2)}`, 140, y);
-                doc.text(c.is_redeemed ? "Redeemed" : "Matured", 170, y);
+                doc.text(dateStr, 17, y);
+                doc.text(String(c.order_id), 47, y);
+                doc.text(String(c.buyer_name || "N/A"), 82, y);
+                doc.text(`INR ${(parseFloat(c.commission_amount) || 0).toFixed(2)}`, 142, y);
+                doc.text(c.is_redeemed ? "Redeemed" : "Matured", 172, y);
                 y += 6;
             });
         }
 
         // Orders section
         if (userOrders.length > 0) {
-            y += 10;
+            y += 8;
             if (y > 250) {
                 doc.addPage();
+                doc.setFillColor(0, 0, 0);
+                doc.rect(0, 0, 210, 4, 'F');
                 y = 20;
             }
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(14);
-            doc.setTextColor(18, 18, 20);
+            doc.setFontSize(13);
+            doc.setTextColor(0, 0, 0);
             doc.text("Recent Store Orders", 15, y);
             y += 3;
+            doc.setLineWidth(0.2);
             doc.line(15, y, 195, y);
-            y += 7;
+            y += 6;
 
-            doc.setFontSize(9);
+            // Draw table header block in black
+            doc.setFillColor(0, 0, 0);
+            doc.rect(15, y, 180, 6, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(8);
             doc.setFont("helvetica", "bold");
-            doc.text("Date", 15, y);
-            doc.text("Order ID", 45, y);
-            doc.text("Items Detail", 80, y);
-            doc.text("Total Paid", 170, y);
-            y += 4;
-            doc.line(15, y, 195, y);
-            y += 5;
+            doc.text("Date", 17, y + 4.5);
+            doc.text("Order ID", 47, y + 4.5);
+            doc.text("Items Detail", 82, y + 4.5);
+            doc.text("Total Paid", 172, y + 4.5);
+            y += 10;
 
             doc.setFont("helvetica", "normal");
+            doc.setTextColor(80, 80, 80);
             userOrders.forEach(o => {
-                if (y > 270) {
+                if (y > 275) {
                     doc.addPage();
+                    doc.setFillColor(0, 0, 0);
+                    doc.rect(0, 0, 210, 4, 'F');
                     y = 20;
                 }
                 const itemsArr = Array.isArray(o.items) ? o.items : (typeof o.items === 'string' ? JSON.parse(o.items || "[]") : []);
                 const itemsDesc = itemsArr.map(item => `${item.title} (x${item.qty})`).join(', ');
 
-                doc.text(String(o.date), 15, y);
-                doc.text(String(o.id), 45, y);
+                doc.text(String(o.date), 17, y);
+                doc.text(String(o.id), 47, y);
                 
-                // Truncate description if too long
                 let desc = itemsDesc;
                 if (desc.length > 45) desc = desc.slice(0, 42) + "...";
-                doc.text(desc, 80, y);
+                doc.text(desc, 82, y);
                 
-                doc.text(`INR ${(parseFloat(o.total) || 0).toLocaleString("en-IN")}`, 170, y);
+                doc.text(`INR ${(parseFloat(o.total) || 0).toLocaleString("en-IN")}`, 172, y);
                 y += 6;
             });
         }
 
         // Footer note
-        if (y > 275) {
+        if (y > 280) {
             doc.addPage();
+            doc.setFillColor(0, 0, 0);
+            doc.rect(0, 0, 210, 4, 'F');
             y = 20;
         }
-        y += 10;
+        y += 8;
         doc.setFont("helvetica", "italic");
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text("Thank you for choosing M R Thangamaaligai. All transactions are securely audited.", 15, y);
+        doc.text("This is an official audited statement. Generated automatically by M R Thangamaaligai.", 15, y);
 
         // Save PDF
         const filename = `User_Report_${email.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
