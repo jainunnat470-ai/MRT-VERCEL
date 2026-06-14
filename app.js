@@ -4831,6 +4831,10 @@ function copyReferralLink() {
 
 async function redeemReferralCommissions() {
     if (!STATE.user) return;
+    if (!STATE.user.pan) {
+        openPanModal(redeemReferralCommissions);
+        return;
+    }
     const commissions = STATE.user.referral_commissions || [];
     const now = new Date();
     
@@ -4993,6 +4997,16 @@ async function handleLogout() {
 
 // --- DIGI SILVER ---
 function buyDigiSilver() {
+    if (!STATE.user) {
+        alert("Please login or sign up to buy Digi Silver.");
+        openAuthModal();
+        return;
+    }
+    if (!STATE.user.aadhar) {
+        openAadharModal(buyDigiSilver);
+        return;
+    }
+
     const amountStr = document.getElementById('buy-digi-amount').value;
     const amount = parseFloat(amountStr);
     if (!amount || amount < 100) return alert("Minimum investment is ₹100.");
@@ -5024,6 +5038,16 @@ function buyDigiSilver() {
 }
 
 function redeemDigiSilver() {
+    if (!STATE.user) {
+        alert("Please login or sign up to redeem Digi Silver.");
+        openAuthModal();
+        return;
+    }
+    if (!STATE.user.aadhar) {
+        openAadharModal(redeemDigiSilver);
+        return;
+    }
+
     const gramsStr = document.getElementById('redeem-digi-grams').value;
     const grams = parseFloat(gramsStr);
     
@@ -5111,6 +5135,16 @@ function redeemDigiSilver() {
 }
 
 function sellDigiSilver() {
+    if (!STATE.user) {
+        alert("Please login or sign up to cash out Digi Silver.");
+        openAuthModal();
+        return;
+    }
+    if (!STATE.user.aadhar) {
+        openAadharModal(sellDigiSilver);
+        return;
+    }
+
     const amountStr = document.getElementById('sell-digi-amount').value;
     const amount = parseFloat(amountStr);
     
@@ -5244,3 +5278,131 @@ async function submitCashOutRequest() {
     closeCashOutModal();
     updateProfileUI();
 }
+
+// --- KYC (Aadhar & PAN) Logic ---
+let aadharCallback = null;
+let panCallback = null;
+
+function openAadharModal(callback) {
+    aadharCallback = callback;
+    document.getElementById('aadhar-modal-overlay').style.display = 'block';
+    document.getElementById('aadhar-modal').style.display = 'block';
+    document.getElementById('kyc-aadhar-input').value = '';
+    document.getElementById('aadhar-error-msg').style.display = 'none';
+}
+
+function closeAadharModal() {
+    document.getElementById('aadhar-modal-overlay').style.display = 'none';
+    document.getElementById('aadhar-modal').style.display = 'none';
+    aadharCallback = null;
+}
+
+function openPanModal(callback) {
+    panCallback = callback;
+    document.getElementById('pan-modal-overlay').style.display = 'block';
+    document.getElementById('pan-modal').style.display = 'block';
+    document.getElementById('kyc-pan-input').value = '';
+    document.getElementById('pan-error-msg').style.display = 'none';
+}
+
+function closePanModal() {
+    document.getElementById('pan-modal-overlay').style.display = 'none';
+    document.getElementById('pan-modal').style.display = 'none';
+    panCallback = null;
+}
+
+// Format Aadhar input as "xxxx xxxx xxxx"
+document.getElementById('kyc-aadhar-input').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    let formatted = '';
+    for (let i = 0; i < value.length && i < 12; i++) {
+        if (i > 0 && i % 4 === 0) formatted += ' ';
+        formatted += value[i];
+    }
+    e.target.value = formatted;
+});
+
+// Aadhar Validation
+async function verifyAadharKYC() {
+    const aadharInput = document.getElementById('kyc-aadhar-input').value.replace(/\s/g, '');
+    const errorEl = document.getElementById('aadhar-error-msg');
+    
+    if (aadharInput.length !== 12 || isNaN(aadharInput)) {
+        errorEl.textContent = 'Please enter a valid 12-digit Aadhar number.';
+        errorEl.style.display = 'block';
+        return;
+    }
+    
+    errorEl.style.display = 'none';
+    
+    try {
+        if (!STATE.user) {
+            alert("Please login first.");
+            closeAadharModal();
+            return;
+        }
+        
+        // Save to user object
+        STATE.user.aadhar = aadharInput;
+        
+        // Save to Supabase
+        await supaClient.from('settings').update({ value: JSON.stringify(STATE.user) }).eq('key', 'user_' + STATE.user.email);
+        
+        alert("Aadhar verified successfully!");
+        closeAadharModal();
+        if (aadharCallback) {
+            const cb = aadharCallback;
+            aadharCallback = null;
+            cb();
+        }
+    } catch(e) {
+        console.error("KYC verification error:", e);
+        errorEl.textContent = 'Failed to verify Aadhar. Please try again.';
+        errorEl.style.display = 'block';
+    }
+}
+
+// PAN Validation
+async function verifyPanKYC() {
+    const panInput = document.getElementById('kyc-pan-input').value.trim().toUpperCase();
+    const errorEl = document.getElementById('pan-error-msg');
+    
+    // PAN regex: 5 letters, 4 digits, 1 letter
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    if (!panRegex.test(panInput)) {
+        errorEl.textContent = 'Please enter a valid 10-character alphanumeric PAN number (e.g. ABCDE1234F).';
+        errorEl.style.display = 'block';
+        return;
+    }
+    
+    errorEl.style.display = 'none';
+    
+    try {
+        if (!STATE.user) {
+            alert("Please login first.");
+            closePanModal();
+            return;
+        }
+        
+        // Save to user object
+        STATE.user.pan = panInput;
+        
+        // Save to Supabase
+        await supaClient.from('settings').update({ value: JSON.stringify(STATE.user) }).eq('key', 'user_' + STATE.user.email);
+        
+        alert("PAN card verified successfully!");
+        closePanModal();
+        if (panCallback) {
+            const cb = panCallback;
+            panCallback = null;
+            cb();
+        }
+    } catch(e) {
+        console.error("KYC verification error:", e);
+        errorEl.textContent = 'Failed to verify PAN. Please try again.';
+        errorEl.style.display = 'block';
+    }
+}
+
+document.getElementById('btn-submit-aadhar').addEventListener('click', verifyAadharKYC);
+document.getElementById('btn-submit-pan').addEventListener('click', verifyPanKYC);
