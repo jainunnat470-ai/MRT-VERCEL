@@ -5279,7 +5279,7 @@ function redeemDigiSilver() {
     }
     if (!grams || grams <= 0) return alert("Enter valid grams.");
 
-    const value = Math.round(grams * STATE.rates.fine);
+    const value = Math.round(grams * STATE.rates.fine * 1.03);
     
     // Simulate redeeming logic
     // Generate a unique local coupon and apply it to cart.
