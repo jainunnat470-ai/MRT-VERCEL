@@ -1591,6 +1591,7 @@ function navigateAdminTab(tabId) {
     if (tabId === "gst") renderAdminGstPortal();
     if (tabId === "coupons") loadAdminCoupons();
     if (tabId === "users") loadAdminUsers();
+    if (tabId === "tds") renderAdminTdsReport();
     if (tabId === "settings") {
         const curPass = document.getElementById("admin-current-password");
         const newPass = document.getElementById("admin-new-password");
@@ -4951,6 +4952,16 @@ function updateProfileUI() {
         const redeemableEl = document.getElementById('referral-stat-redeemable');
         if (redeemableEl) redeemableEl.textContent = `₹${redeemableEarned.toFixed(2)}`;
         
+        const tdsRedemptions = STATE.user.tds_redemptions || [];
+        const totalTdsDeducted = tdsRedemptions.reduce((sum, r) => sum + (parseFloat(r.tds_amount) || 0), 0);
+        const totalNetRedeemed = tdsRedemptions.reduce((sum, r) => sum + (parseFloat(r.net_amount) || 0), 0);
+        
+        const tdsEl = document.getElementById('referral-stat-tds');
+        if (tdsEl) tdsEl.textContent = `₹${totalTdsDeducted.toFixed(2)}`;
+        
+        const netEl = document.getElementById('referral-stat-net');
+        if (netEl) netEl.textContent = `₹${totalNetRedeemed.toFixed(2)}`;
+        
         const redeemBtn = document.getElementById('referral-redeem-btn');
         if (redeemBtn) {
             if (redeemableEarned > 0) {
@@ -5056,7 +5067,10 @@ async function redeemReferralCommissions() {
         return alert("You have no matured commissions ready to redeem yet. Please wait 48 hours after your referrals' purchase approval.");
     }
     
-    if (confirm(`Are you sure you want to redeem ₹${redeemableAmount.toFixed(2)} worth of commissions to a discount coupon?`)) {
+    const tdsAmount = parseFloat((redeemableAmount * 0.10).toFixed(2));
+    const netAmount = parseFloat((redeemableAmount * 0.90).toFixed(2));
+    
+    if (confirm(`Are you sure you want to redeem ₹${redeemableAmount.toFixed(2)} worth of commissions?\n\n- 10% TDS Deducted: ₹${tdsAmount.toFixed(2)}\n- Net Voucher Coupon Generated: ₹${netAmount.toFixed(2)}`)) {
         try {
             const code = 'MRT-REF-' + Math.random().toString(36).substr(2, 6).toUpperCase();
             
@@ -5064,7 +5078,7 @@ async function redeemReferralCommissions() {
                 code: code,
                 discount: 0,
                 type: 'amount',
-                value: parseFloat(redeemableAmount.toFixed(2)),
+                value: netAmount,
                 is_used: false,
                 single_use: true,
                 owner_email: STATE.user.email
@@ -5075,9 +5089,20 @@ async function redeemReferralCommissions() {
                 c.redeemed_date = now.toISOString();
             });
             
+            if (!STATE.user.tds_redemptions) {
+                STATE.user.tds_redemptions = [];
+            }
+            STATE.user.tds_redemptions.push({
+                redemption_date: now.toISOString(),
+                gross_amount: parseFloat(redeemableAmount.toFixed(2)),
+                tds_amount: tdsAmount,
+                net_amount: netAmount,
+                coupon_code: code
+            });
+            
             await supaClient.from('settings').update({ value: JSON.stringify(STATE.user) }).eq('key', 'user_' + STATE.user.email);
             
-            alert(`🎉 Success! Your referral commission has been redeemed. Coupon Code created: ${code} (Value: ₹${redeemableAmount.toFixed(2)}). Use this at checkout for GST-free discount!`);
+            alert(`🎉 Success! Your referral commission has been redeemed.\n- Gross Amount: ₹${redeemableAmount.toFixed(2)}\n- 10% TDS Deducted: ₹${tdsAmount.toFixed(2)}\n- Coupon Code Created: ${code} (Value: ₹${netAmount.toFixed(2)}).\nUse this coupon code at checkout for GST-free discount!`);
             updateProfileUI();
         } catch(e) {
             console.error(e);
@@ -5775,3 +5800,188 @@ function viewKycDoc(email, side) {
 
 document.getElementById('btn-submit-aadhar').addEventListener('click', verifyAadharKYC);
 document.getElementById('btn-submit-pan').addEventListener('click', verifyPanKYC);
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+async function renderAdminTdsReport() {
+    const tbody = document.getElementById("admin-tds-tbody");
+    if (!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Loading TDS records...</td></tr>';
+    
+    try {
+        const { data, error } = await supaClient.from('settings').select('*').like('key', 'user_%');
+        if (error) throw error;
+        
+        const tdsRecords = [];
+        
+        if (data) {
+            data.forEach(row => {
+                let record = {};
+                try {
+                    record = JSON.parse(row.value);
+                } catch(e) {
+                    record = {};
+                }
+                
+                if (record && record.tds_redemptions && Array.isArray(record.tds_redemptions)) {
+                    record.tds_redemptions.forEach(r => {
+                        tdsRecords.push({
+                            date: r.redemption_date || 'N/A',
+                            name: record.name || 'N/A',
+                            email: record.email || row.key.replace('user_', ''),
+                            pan: record.pan || 'N/A',
+                            gross: parseFloat(r.gross_amount) || 0,
+                            tds: parseFloat(r.tds_amount) || 0,
+                            net: parseFloat(r.net_amount) || 0,
+                            code: r.coupon_code || 'N/A'
+                        });
+                    });
+                }
+            });
+        }
+        
+        tdsRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+        STATE.adminTdsRecords = tdsRecords;
+        
+        if (tdsRecords.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">No TDS records found.</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = tdsRecords.map(r => `
+            <tr>
+                <td>${r.date !== 'N/A' ? new Date(r.date).toLocaleString() : 'N/A'}</td>
+                <td><strong>${escapeHtml(r.name)}</strong></td>
+                <td>${escapeHtml(r.email)}</td>
+                <td><span style="font-family: monospace; font-weight: bold; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">${escapeHtml(r.pan)}</span></td>
+                <td>₹${r.gross.toFixed(2)}</td>
+                <td style="color: #EF4444; font-weight: 700;">₹${r.tds.toFixed(2)}</td>
+                <td style="color: #10B981; font-weight: 700;">₹${r.net.toFixed(2)}</td>
+                <td><span style="font-family: monospace; font-weight: bold; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px;">${escapeHtml(r.code)}</span></td>
+            </tr>
+        `).join('');
+    } catch(err) {
+        console.error("Error rendering TDS report:", err);
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px; color: red;">Failed to load TDS records: ${err.message}</td></tr>`;
+    }
+}
+
+function downloadTdsReportPdf() {
+    const records = STATE.adminTdsRecords || [];
+    if (records.length === 0) {
+        alert("No TDS records available to download.");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Top Accent line (Premium solid black)
+    doc.setFillColor(0, 0, 0);
+    doc.rect(0, 0, 210, 5, 'F');
+
+    // Title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.text("M R THANGAMAALIGAI", 15, 20);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.text("TDS Ledger - Refer & Earn Program", 15, 26);
+
+    // Metadata
+    const now = new Date();
+    doc.setFontSize(9);
+    doc.text(`Report Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 130, 20);
+    doc.text("Tax Deduction: 10% TDS on Redemptions", 130, 25);
+
+    let y = 35;
+    doc.setLineWidth(0.3);
+    doc.line(15, y, 195, y);
+    y += 8;
+
+    // Totals Calculation
+    const totalGross = records.reduce((sum, r) => sum + r.gross, 0);
+    const totalTds = records.reduce((sum, r) => sum + r.tds, 0);
+    const totalNet = records.reduce((sum, r) => sum + r.net, 0);
+
+    // Summary Cards
+    doc.setFillColor(248, 250, 252);
+    doc.rect(15, y, 180, 20, 'F');
+    doc.setDrawColor(226, 232, 240);
+    doc.rect(15, y, 180, 20, 'S');
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(100, 116, 139);
+    doc.text("TOTAL GROSS REDEEMED", 20, y + 6);
+    doc.text("TOTAL 10% TDS COLLECTED", 80, y + 6);
+    doc.text("TOTAL NET VOUCHERS", 145, y + 6);
+
+    doc.setFontSize(12);
+    doc.setTextColor(15, 23, 42);
+    doc.text(`INR ${totalGross.toFixed(2)}`, 20, y + 14);
+    doc.setTextColor(239, 68, 68);
+    doc.text(`INR ${totalTds.toFixed(2)}`, 80, y + 14);
+    doc.setTextColor(16, 185, 129);
+    doc.text(`INR ${totalNet.toFixed(2)}`, 145, y + 14);
+
+    y += 28;
+
+    // Table Header
+    doc.setFillColor(0, 0, 0);
+    doc.rect(15, y, 180, 7, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text("Date", 17, y + 5);
+    doc.text("Customer / Email", 47, y + 5);
+    doc.text("PAN", 97, y + 5);
+    doc.text("Gross (INR)", 122, y + 5);
+    doc.text("TDS (INR)", 147, y + 5);
+    doc.text("Net Coupon", 172, y + 5);
+    y += 12;
+
+    // Table Body
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(50, 50, 50);
+    records.forEach(r => {
+        if (y > 275) {
+            doc.addPage();
+            doc.setFillColor(0, 0, 0);
+            doc.rect(0, 0, 210, 4, 'F');
+            y = 20;
+        }
+        
+        const dateStr = r.date !== 'N/A' ? new Date(r.date).toLocaleDateString() : 'N/A';
+        doc.text(dateStr, 17, y);
+        
+        const emailTrunc = r.email.length > 20 ? r.email.substring(0, 18) + ".." : r.email;
+        doc.text(`${r.name}\n(${emailTrunc})`, 47, y - 1);
+        
+        doc.text(r.pan, 97, y);
+        doc.text(r.gross.toFixed(2), 122, y);
+        
+        doc.setTextColor(200, 30, 30);
+        doc.text(r.tds.toFixed(2), 147, y);
+        
+        doc.setTextColor(30, 150, 30);
+        doc.text(`${r.net.toFixed(2)}\n[${r.code}]`, 172, y - 1);
+        
+        doc.setTextColor(50, 50, 50);
+        y += 11;
+    });
+
+    doc.save(`TDS_Report_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}.pdf`);
+}
