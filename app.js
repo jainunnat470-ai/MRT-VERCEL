@@ -40,6 +40,21 @@ function safeJSONParse(str, fallback) {
     }
 }
 
+function getCustomerName(customer) {
+    if (!customer) return "Guest";
+    if (typeof customer === 'object') {
+        return customer.name || "Guest";
+    }
+    if (typeof customer === 'string') {
+        const parsed = safeJSONParse(customer, null);
+        if (parsed && typeof parsed === 'object') {
+            return parsed.name || customer;
+        }
+        return customer;
+    }
+    return "Guest";
+}
+
 // --- INITIALIZE APPLICATION STATE ---
 async function initState() {
     initAuthListener();
@@ -3878,7 +3893,7 @@ function renderAdminGstPortal() {
         grossSum += (o.total - gst);
         taxSum += gst;
         
-        const customerName = typeof o.customer === 'object' && o.customer.name ? o.customer.name : (typeof o.customer === 'string' ? safeJSONParse(o.customer, {name: o.customer}).name : o.customer || "Guest");
+        const customerName = getCustomerName(o.customer);
         
         return `
             <tr>
@@ -3937,7 +3952,7 @@ function downloadGstReportCsv() {
         const taxDetails = calculateOrderGstAndShipping(o);
         const gst = taxDetails.gstTotal;
         const taxable = o.total - gst;
-        const customerName = typeof o.customer === 'object' && o.customer.name ? o.customer.name : (typeof o.customer === 'string' ? safeJSONParse(o.customer, {name: o.customer}).name : o.customer || "Guest");
+        const customerName = getCustomerName(o.customer);
         const cleanCustomer = String(customerName).replace(/"/g, '""');
         csvContent += `"${o.id}","${o.date}","${cleanCustomer}","${o.phone}","${o.paymentMethod || o.payment_method || 'COD'}",${o.total},${gst},${taxable}\r\n`;
         totalSales += o.total;
@@ -4254,7 +4269,7 @@ function downloadOrderInvoicePdf(orderId) {
     const cgst = taxDetails.cgst;
     const sgst = taxDetails.sgst;
     const taxableAmount = taxDetails.taxableAmount;
-    const customerName = typeof o.customer === 'object' && o.customer.name ? o.customer.name : (typeof o.customer === 'string' ? safeJSONParse(o.customer, {name: o.customer}).name : "Guest");
+    const customerName = getCustomerName(o.customer);
     
     const itemsRows = o.items.map((item, idx) => {
         let displayTitle = item.title;
@@ -5885,14 +5900,14 @@ async function renderAdminTdsReport() {
                     record = {};
                 }
                 
-                if (record) {
-                    const commissions = record.referral_commissions || [];
-                    const tdsRedemptions = record.tds_redemptions || [];
+                if (record && typeof record === 'object') {
+                    const commissions = Array.isArray(record.referral_commissions) ? record.referral_commissions : [];
+                    const tdsRedemptions = Array.isArray(record.tds_redemptions) ? record.tds_redemptions : [];
                     
-                    const redeemedCommissions = commissions.filter(c => c.is_redeemed);
-                    const accountedTds = [...tdsRedemptions];
+                    const redeemedCommissions = commissions.filter(c => c && c.is_redeemed);
+                    const accountedTds = [...tdsRedemptions].filter(r => r && typeof r === 'object');
                     
-                    const totalRedeemedGross = redeemedCommissions.reduce((sum, c) => sum + c.commission_amount, 0);
+                    const totalRedeemedGross = redeemedCommissions.reduce((sum, c) => sum + (c.commission_amount || 0), 0);
                     const totalTdsGross = accountedTds.reduce((sum, r) => sum + (parseFloat(r.gross_amount) || 0), 0);
                     const diff = totalRedeemedGross - totalTdsGross;
                     
@@ -5902,7 +5917,7 @@ async function renderAdminTdsReport() {
                         let latestRedeemedDate = new Date().toISOString();
                         let hasValidDate = false;
                         redeemedCommissions.forEach(c => {
-                            if (c.redeemed_date) {
+                            if (c && c.redeemed_date) {
                                 if (!hasValidDate || new Date(c.redeemed_date) > new Date(latestRedeemedDate)) {
                                     latestRedeemedDate = c.redeemed_date;
                                     hasValidDate = true;
