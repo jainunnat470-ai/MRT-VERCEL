@@ -113,11 +113,11 @@ async function initState() {
 
     // Cart Load
     const localCart = localStorage.getItem("mrt_cart");
-    if (localCart) STATE.cart = JSON.parse(localCart);
+    if (localCart) STATE.cart = safeJSONParse(localCart, []);
 
     // Wishlist Load
     const localWishlist = localStorage.getItem("mrt_wishlist");
-    if (localWishlist) STATE.wishlist = JSON.parse(localWishlist);
+    if (localWishlist) STATE.wishlist = safeJSONParse(localWishlist, []);
 
     // Coupons Load from Supabase
     try {
@@ -4749,6 +4749,50 @@ function closeQrZoom() {
 // --- AUTHENTICATION & USER PROFILES ---
 let isAuthSignupMode = false;
 
+function migrateTdsForUser(user) {
+    if (!user || !user.referral_commissions) return false;
+    
+    const commissions = user.referral_commissions || [];
+    const tdsRedemptions = user.tds_redemptions || [];
+    
+    const redeemedCommissions = commissions.filter(c => c.is_redeemed);
+    if (redeemedCommissions.length === 0) return false;
+    
+    const totalRedeemedGross = redeemedCommissions.reduce((sum, c) => sum + c.commission_amount, 0);
+    const totalTdsGross = tdsRedemptions.reduce((sum, r) => sum + (parseFloat(r.gross_amount) || 0), 0);
+    
+    const diff = totalRedeemedGross - totalTdsGross;
+    if (diff > 0.01) {
+        const legacyTds = parseFloat((diff * 0.10).toFixed(2));
+        const legacyNet = parseFloat((diff * 0.90).toFixed(2));
+        
+        let latestRedeemedDate = new Date().toISOString();
+        let hasValidDate = false;
+        redeemedCommissions.forEach(c => {
+            if (c.redeemed_date) {
+                if (!hasValidDate || new Date(c.redeemed_date) > new Date(latestRedeemedDate)) {
+                    latestRedeemedDate = c.redeemed_date;
+                    hasValidDate = true;
+                }
+            }
+        });
+        
+        if (!user.tds_redemptions) {
+            user.tds_redemptions = [];
+        }
+        
+        user.tds_redemptions.push({
+            redemption_date: latestRedeemedDate,
+            gross_amount: parseFloat(diff.toFixed(2)),
+            tds_amount: legacyTds,
+            net_amount: legacyNet,
+            coupon_code: 'LEGACY-REF-MIGRATE'
+        });
+        return true;
+    }
+    return false;
+}
+
 function initAuthListener() {
     const savedToken = localStorage.getItem('mrt_user_token');
     const savedEmail = localStorage.getItem('mrt_user_email');
@@ -4766,8 +4810,16 @@ async function fetchUserProfile(email, token) {
         try {
             const userData = JSON.parse(data.value);
             if (userData.token === token) {
+                const didMigrate = migrateTdsForUser(userData);
                 STATE.user = userData;
                 STATE.profile = { digi_silver_balance: userData.digi_silver_balance || 0 };
+                
+                if (didMigrate) {
+                    supaClient.from('settings').update({ value: JSON.stringify(userData) }).eq('key', 'user_' + email).then(({error}) => {
+                        if (error) console.error("Error saving migrated user:", error);
+                    });
+                }
+                
                 updateProfileUI();
                 return;
             }
@@ -4935,7 +4987,7 @@ function updateProfileUI() {
             const hoursPassed = (now - orderDate) / (1000 * 60 * 60);
             totalEarned += c.commission_amount;
             if (!c.is_redeemed) {
-                if (hoursPassed < 48) {
+                if (hoursPassed < 24) {
                     pendingEarned += c.commission_amount;
                 } else {
                     redeemableEarned += c.commission_amount;
@@ -4988,8 +5040,8 @@ function updateProfileUI() {
                     let statusStr = "Redeemed";
                     let statusColor = "#10B981";
                     if (!c.is_redeemed) {
-                        if (hoursPassed < 48) {
-                            const hoursLeft = Math.ceil(48 - hoursPassed);
+                        if (hoursPassed < 24) {
+                            const hoursLeft = Math.ceil(24 - hoursPassed);
                             statusStr = `Pending (${hoursLeft}h left)`;
                             statusColor = "#D97706";
                         } else {
@@ -5059,12 +5111,12 @@ async function redeemReferralCommissions() {
     const maturedToRedeem = commissions.filter(c => {
         const orderDate = new Date(c.order_date);
         const hoursPassed = (now - orderDate) / (1000 * 60 * 60);
-        return !c.is_redeemed && hoursPassed >= 48;
+        return !c.is_redeemed && hoursPassed >= 24;
     });
     
     const redeemableAmount = maturedToRedeem.reduce((sum, c) => sum + c.commission_amount, 0);
     if (redeemableAmount <= 0) {
-        return alert("You have no matured commissions ready to redeem yet. Please wait 48 hours after your referrals' purchase approval.");
+        return alert("You have no matured commissions ready to redeem yet. Please wait 24 hours after your referrals' purchase approval.");
     }
     
     const tdsAmount = parseFloat((redeemableAmount * 0.10).toFixed(2));
@@ -5194,12 +5246,13 @@ async function handleAuthSubmit() {
             alert(`Signup successful! Your referral code is ${referralCode}. Please login.`);
             if (refInp) refInp.value = "";
             toggleAuthMode();
-        } else {
-            const { data, error } = await supaClient.from('settings').select('value').eq('key', 'user_' + email).single();
-            if (!data || !data.value) throw new Error("Invalid login credentials.");
-            
             const userRecord = JSON.parse(data.value);
             if (userRecord.password !== password) throw new Error("Invalid login credentials.");
+            
+            const didMigrate = migrateTdsForUser(userRecord);
+            if (didMigrate) {
+                await supaClient.from('settings').update({ value: JSON.stringify(userRecord) }).eq('key', 'user_' + email);
+            }
             
             localStorage.setItem('mrt_user_token', userRecord.token);
             localStorage.setItem('mrt_user_email', userRecord.email);
@@ -5832,8 +5885,41 @@ async function renderAdminTdsReport() {
                     record = {};
                 }
                 
-                if (record && record.tds_redemptions && Array.isArray(record.tds_redemptions)) {
-                    record.tds_redemptions.forEach(r => {
+                if (record) {
+                    const commissions = record.referral_commissions || [];
+                    const tdsRedemptions = record.tds_redemptions || [];
+                    
+                    const redeemedCommissions = commissions.filter(c => c.is_redeemed);
+                    const accountedTds = [...tdsRedemptions];
+                    
+                    const totalRedeemedGross = redeemedCommissions.reduce((sum, c) => sum + c.commission_amount, 0);
+                    const totalTdsGross = accountedTds.reduce((sum, r) => sum + (parseFloat(r.gross_amount) || 0), 0);
+                    const diff = totalRedeemedGross - totalTdsGross;
+                    
+                    if (diff > 0.01) {
+                        const legacyTds = parseFloat((diff * 0.10).toFixed(2));
+                        const legacyNet = parseFloat((diff * 0.90).toFixed(2));
+                        let latestRedeemedDate = new Date().toISOString();
+                        let hasValidDate = false;
+                        redeemedCommissions.forEach(c => {
+                            if (c.redeemed_date) {
+                                if (!hasValidDate || new Date(c.redeemed_date) > new Date(latestRedeemedDate)) {
+                                    latestRedeemedDate = c.redeemed_date;
+                                    hasValidDate = true;
+                                }
+                            }
+                        });
+                        
+                        accountedTds.push({
+                            redemption_date: latestRedeemedDate,
+                            gross_amount: diff,
+                            tds_amount: legacyTds,
+                            net_amount: legacyNet,
+                            coupon_code: 'LEGACY-REF-MIGRATE'
+                        });
+                    }
+                    
+                    accountedTds.forEach(r => {
                         tdsRecords.push({
                             date: r.redemption_date || 'N/A',
                             name: record.name || 'N/A',
