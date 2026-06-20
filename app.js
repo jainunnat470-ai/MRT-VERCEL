@@ -5169,7 +5169,7 @@ async function redeemReferralCommissions() {
             
             await supaClient.from('settings').update({ value: JSON.stringify(STATE.user) }).eq('key', 'user_' + STATE.user.email);
             
-            alert(`🎉 Success! Your referral commission has been redeemed.\n- Gross Amount: ₹${redeemableAmount.toFixed(2)}\n- 10% TDS Deducted: ₹${tdsAmount.toFixed(2)}\n- Coupon Code Created: ${code} (Value: ₹${netAmount.toFixed(2)}).\nUse this coupon code at checkout for GST-free discount!`);
+            alert(`🎉 Success! Your referral commission has been redeemed.\n- Gross Amount: ₹${redeemableAmount.toFixed(2)}\n- 10% TDS Deducted: ₹${tdsAmount.toFixed(2)}\n- Coupon Code Created: ${code} (Value: ₹${netAmount.toFixed(2)}).\nUse this coupon code at checkout for your discount!`);
             updateProfileUI();
         } catch(e) {
             console.error(e);
