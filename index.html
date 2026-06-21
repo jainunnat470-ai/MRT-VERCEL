@@ -1214,10 +1214,14 @@
                         </div>
                         <div class="custom-form-group">
                             <label class="custom-form-label">Stock Status</label>
-                            <select id="new-prod-stock" class="custom-input">
+                            <select id="new-prod-stock" class="custom-input" onchange="handleStockStatusChange()">
                                 <option value="true">In Stock</option>
                                 <option value="false">Out of Stock</option>
                             </select>
+                        </div>
+                        <div class="custom-form-group">
+                            <label class="custom-form-label">Pieces Available</label>
+                            <input type="number" id="new-prod-qty" class="custom-input" placeholder="e.g. 10" min="0" value="10" oninput="handleStockQtyChange()">
                         </div>
                     </div>
                     <div class="custom-form-group" style="margin-top:20px;">
