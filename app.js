@@ -1431,6 +1431,49 @@ function finalizeOrderPlacement(newOrder, orderId) {
     STATE.orders.push(mappedOrder);
     saveOrders(newOrder);
     
+    // Decrement stock for purchased items
+    if (Array.isArray(mappedOrder.items)) {
+        mappedOrder.items.forEach(async (cartItem) => {
+            if (!cartItem || !cartItem.id) return;
+            const pIdx = STATE.products.findIndex(p => p.id === cartItem.id);
+            if (pIdx !== -1) {
+                const prod = STATE.products[pIdx];
+                let currentQty = (prod.specs && prod.specs.stock_qty !== undefined) ? prod.specs.stock_qty : 10;
+                let newQty = Math.max(0, currentQty - (cartItem.qty || 1));
+                
+                prod.specs = {
+                    ...(prod.specs || {}),
+                    stock_qty: newQty
+                };
+                if (newQty <= 0) {
+                    prod.inStock = false;
+                }
+                
+                // Save to database
+                const dbProduct = {
+                    id: prod.id,
+                    title: prod.title,
+                    category: prod.category,
+                    price: prod.price,
+                    original_price: prod.originalPrice,
+                    rating: prod.rating,
+                    reviews_count: prod.reviewsCount,
+                    plating: prod.plating,
+                    in_stock: prod.inStock,
+                    image: prod.image,
+                    description: prod.description,
+                    specs: prod.specs
+                };
+                
+                try {
+                    await supaClient.from('products').upsert([dbProduct]);
+                } catch (dbErr) {
+                    console.error("Failed to update product stock in DB:", dbErr);
+                }
+            }
+        });
+    }
+    
     // Mark coupon as used if single use
     if (STATE.activeCoupon) {
         const couponCode = STATE.activeCoupon;
@@ -2506,7 +2549,7 @@ function renderAdminInventoryList() {
             <td>₹${p.price.toLocaleString("en-IN")}</td>
             <td>
                 <span class="admin-status-badge" style="background-color:${p.inStock ? '#D1FAE5;color:#047857;' : '#FEE2E2;color:#991B1B;'}">
-                    ${p.inStock ? 'IN STOCK' : 'OUT OF STOCK'}
+                    ${p.inStock ? `IN STOCK (${(p.specs && p.specs.stock_qty !== undefined) ? p.specs.stock_qty : 10} pcs)` : 'OUT OF STOCK'}
                 </span>
             </td>
             <td>
@@ -2515,6 +2558,31 @@ function renderAdminInventoryList() {
             </td>
         </tr>
     `).join("");
+}
+
+function handleStockStatusChange() {
+    const stockStatus = document.getElementById("new-prod-stock").value;
+    const qtyInput = document.getElementById("new-prod-qty");
+    if (qtyInput) {
+        if (stockStatus === "false") {
+            qtyInput.value = "0";
+        } else if (stockStatus === "true" && (parseInt(qtyInput.value) || 0) <= 0) {
+            qtyInput.value = "10";
+        }
+    }
+}
+
+function handleStockQtyChange() {
+    const qtyInput = document.getElementById("new-prod-qty");
+    const stockSelect = document.getElementById("new-prod-stock");
+    if (qtyInput && stockSelect) {
+        const val = parseInt(qtyInput.value) || 0;
+        if (val <= 0) {
+            stockSelect.value = "false";
+        } else {
+            stockSelect.value = "true";
+        }
+    }
 }
 
 async function addNewProduct() {
@@ -2533,7 +2601,8 @@ async function addNewProduct() {
     const desc = document.getElementById("new-prod-desc").value.trim() || "Genuine 925 sterling silver exquisite ornament piece.";
     const weight = document.getElementById("new-prod-weight").value.trim() || "2.5 grams";
     const width = document.getElementById("new-prod-width").value.trim() || "N/A";
-    const inStock = document.getElementById("new-prod-stock").value === "true";
+    const stockQty = parseInt(document.getElementById("new-prod-qty").value) || 0;
+    const inStock = stockQty > 0 && document.getElementById("new-prod-stock").value === "true";
     
     if (!title || isNaN(price) || price <= 0) {
         alert("Please enter a valid Product Title and Base Price.");
@@ -2591,7 +2660,8 @@ async function addNewProduct() {
             calc_making_type: document.getElementById("new-prod-calc-making-type").value,
             calc_gst: parseFloat(document.getElementById("new-prod-calc-gst").value) || 3,
             market_base: document.getElementById("new-prod-market-base").value,
-            disable_auto_rate: document.getElementById("new-prod-disable-autorate").checked
+            disable_auto_rate: document.getElementById("new-prod-disable-autorate").checked,
+            stock_qty: stockQty
         }
     };
     
@@ -2624,6 +2694,7 @@ async function addNewProduct() {
     document.getElementById("new-prod-img-base64").value = "";
     document.getElementById("new-prod-finish").value = "silver";
     document.getElementById("new-prod-stock").value = "true";
+    document.getElementById("new-prod-qty").value = "10";
     const previewWrap = document.getElementById("new-prod-img-preview-wrap");
     if (previewWrap) previewWrap.style.display = "none";
     const previewImg = document.getElementById("new-prod-img-preview");
@@ -3412,6 +3483,7 @@ function editProduct(prodId) {
     document.getElementById("new-prod-price").value = p.price || "";
     document.getElementById("new-prod-orig").value = p.originalPrice || "";
     document.getElementById("new-prod-stock").value = p.inStock ? "true" : "false";
+    document.getElementById("new-prod-qty").value = (p.specs && p.specs.stock_qty !== undefined) ? p.specs.stock_qty : (p.inStock ? 10 : 0);
     
     // Update heading and submit button text
     const titleHeader = document.getElementById("admin-add-tab-title");
@@ -3463,7 +3535,8 @@ async function updateExistingProduct() {
     
     const weight = document.getElementById("new-prod-weight").value.trim() || "2.5 grams";
     const width = document.getElementById("new-prod-width").value.trim() || "N/A";
-    const inStock = document.getElementById("new-prod-stock").value === "true";
+    const stockQty = parseInt(document.getElementById("new-prod-qty").value) || 0;
+    const inStock = stockQty > 0 && document.getElementById("new-prod-stock").value === "true";
     
     if (!title || isNaN(price) || price <= 0) {
         alert("Please enter a valid Product Title and Base Price.");
@@ -3530,7 +3603,8 @@ async function updateExistingProduct() {
             calc_making_type: document.getElementById("new-prod-calc-making-type").value,
             calc_gst: parseFloat(document.getElementById("new-prod-calc-gst").value) || 3,
             market_base: document.getElementById("new-prod-market-base").value,
-            disable_auto_rate: document.getElementById("new-prod-disable-autorate").checked
+            disable_auto_rate: document.getElementById("new-prod-disable-autorate").checked,
+            stock_qty: stockQty
         }
     };
     
@@ -3582,6 +3656,7 @@ function cancelEditProduct() {
     document.getElementById("new-prod-img-base64").value = "";
     document.getElementById("new-prod-finish").value = "silver";
     document.getElementById("new-prod-stock").value = "true";
+    document.getElementById("new-prod-qty").value = "10";
     
     const previewWrap = document.getElementById("new-prod-img-preview-wrap");
     if (previewWrap) previewWrap.style.display = "none";
