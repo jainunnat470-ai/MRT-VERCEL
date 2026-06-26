@@ -5253,13 +5253,17 @@ async function redeemReferralCommissions() {
     }
 }
 
+function openAuthModal() {
+    document.getElementById('auth-overlay').style.display = 'block';
+    document.getElementById('auth-modal').style.display = 'block';
+}
+
 function openUserProfile() {
     if (STATE.user) {
         navigateTo('profile');
         updateProfileUI();
     } else {
-        document.getElementById('auth-overlay').style.display = 'block';
-        document.getElementById('auth-modal').style.display = 'block';
+        openAuthModal();
     }
 }
 
