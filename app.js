@@ -2593,8 +2593,17 @@ async function addNewProduct() {
     const title = document.getElementById("new-prod-title").value.trim();
     const category = document.getElementById("new-prod-cat").value;
     const gender = document.getElementById("new-prod-gender") ? document.getElementById("new-prod-gender").value : "both";
-    const price = parseFloat(document.getElementById("new-prod-price").value);
-    const origPrice = parseFloat(document.getElementById("new-prod-orig").value) || price;
+    const basePrice = parseFloat(document.getElementById("new-prod-price").value);
+    const isManual = document.getElementById("new-prod-disable-autorate").checked;
+    const gstVal = parseFloat(document.getElementById("new-prod-calc-gst").value) || 3;
+    
+    let price = basePrice;
+    let manualBasePrice = undefined;
+    if (isManual) {
+        manualBasePrice = basePrice;
+        price = Math.round(basePrice * (1 + gstVal / 100));
+    }
+    const origPrice = parseFloat(document.getElementById("new-prod-orig").value) || price * 2;
     let image = "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80"; // default
     
     const plating = document.getElementById("new-prod-finish").value;
@@ -2604,7 +2613,7 @@ async function addNewProduct() {
     const stockQty = parseInt(document.getElementById("new-prod-qty").value) || 0;
     const inStock = stockQty > 0 && document.getElementById("new-prod-stock").value === "true";
     
-    if (!title || isNaN(price) || price <= 0) {
+    if (!title || isNaN(basePrice) || basePrice <= 0) {
         alert("Please enter a valid Product Title and Base Price.");
         if (btn) btn.innerHTML = "Add Item to Catalog";
         if (btn) btn.disabled = false;
@@ -2658,9 +2667,10 @@ async function addNewProduct() {
             calc_weight: parseFloat(document.getElementById("new-prod-calc-weight").value),
             calc_making: parseFloat(document.getElementById("new-prod-calc-making").value) || 0,
             calc_making_type: document.getElementById("new-prod-calc-making-type").value,
-            calc_gst: parseFloat(document.getElementById("new-prod-calc-gst").value) || 3,
+            calc_gst: gstVal,
             market_base: document.getElementById("new-prod-market-base").value,
-            disable_auto_rate: document.getElementById("new-prod-disable-autorate").checked,
+            disable_auto_rate: isManual,
+            manual_base_price: manualBasePrice,
             stock_qty: stockQty
         }
     };
@@ -3345,7 +3355,6 @@ function toggleAutoRateFields() {
         "new-prod-calc-weight",
         "new-prod-calc-making",
         "new-prod-calc-making-type",
-        "new-prod-calc-gst",
         "new-prod-market-base"
     ];
     
@@ -3356,6 +3365,13 @@ function toggleAutoRateFields() {
             el.style.opacity = isChecked ? "0.5" : "1";
         }
     });
+
+    // Make sure GST field stays enabled for manual GST calculation
+    const gstEl = document.getElementById("new-prod-calc-gst");
+    if (gstEl) {
+        gstEl.disabled = false;
+        gstEl.style.opacity = "1";
+    }
 
     const manualFields = [
         "new-prod-weight",
@@ -3371,11 +3387,70 @@ function toggleAutoRateFields() {
         }
     });
     
-    const breakdown = document.getElementById("rate-calculation-breakdown");
-    if (isChecked && breakdown) {
-        breakdown.style.display = "none";
-    } else if (!isChecked) {
+    const priceInput = document.getElementById("new-prod-price");
+    const labelPrice = document.querySelector('label[for="new-prod-price"]') || (priceInput ? priceInput.previousElementSibling : null);
+    
+    if (isChecked) {
+        if (labelPrice) labelPrice.textContent = "Manual Base Price (before GST) ₹ INR";
+        if (priceInput) {
+            priceInput.placeholder = "Enter manual base price (before GST)";
+            priceInput.addEventListener('input', runManualGstCalculation);
+        }
+        const gstInput = document.getElementById("new-prod-calc-gst");
+        if (gstInput) {
+            gstInput.addEventListener('input', runManualGstCalculation);
+        }
+        runManualGstCalculation();
+    } else {
+        if (labelPrice) labelPrice.textContent = "Price (₹ INR)";
+        if (priceInput) {
+            priceInput.placeholder = "Price (calculated or manual)";
+            priceInput.removeEventListener('input', runManualGstCalculation);
+        }
+        const gstInput = document.getElementById("new-prod-calc-gst");
+        if (gstInput) {
+            gstInput.removeEventListener('input', runManualGstCalculation);
+            gstInput.addEventListener('input', autoCalculateJewelRate);
+        }
+        const breakdown = document.getElementById("rate-calculation-breakdown");
+        if (breakdown) breakdown.style.display = "none";
         autoCalculateJewelRate();
+    }
+}
+
+function runManualGstCalculation() {
+    const isChecked = document.getElementById("new-prod-disable-autorate").checked;
+    if (!isChecked) return;
+    
+    const basePrice = parseFloat(document.getElementById("new-prod-price").value);
+    const gstVal = parseFloat(document.getElementById("new-prod-calc-gst").value) || 3;
+    const breakdownDiv = document.getElementById("rate-calculation-breakdown");
+    
+    if (isNaN(basePrice) || basePrice <= 0) {
+        if (breakdownDiv) breakdownDiv.style.display = "none";
+        return;
+    }
+    
+    const gstCost = basePrice * (gstVal / 100);
+    const finalPrice = Math.round(basePrice + gstCost);
+    
+    // Auto update the original price preview to finalPrice * 2
+    const origPriceInput = document.getElementById("new-prod-orig");
+    if (origPriceInput) origPriceInput.value = finalPrice * 2;
+    
+    if (breakdownDiv) {
+        breakdownDiv.style.display = "block";
+        // Premium beige warning/breakdown card style
+        breakdownDiv.style.backgroundColor = "var(--color-accent-pink-light)";
+        breakdownDiv.style.borderLeft = "4px solid var(--color-accent-pink)";
+        breakdownDiv.style.color = "var(--color-primary)";
+        breakdownDiv.innerHTML = `
+            <strong>Manual Price + GST Breakdown:</strong><br>
+            • Manual Base Price (Before GST): ₹${basePrice.toLocaleString("en-IN")}<br>
+            • GST (${gstVal}%): ₹${gstCost.toFixed(2)}<br>
+            • <strong>Final Stored Price (including GST): ₹${finalPrice.toLocaleString("en-IN")}</strong><br>
+            • Original Price (Crossed Price): ₹${(finalPrice * 2).toLocaleString("en-IN")}
+        `;
     }
 }
 
@@ -3480,8 +3555,19 @@ function editProduct(prodId) {
     }
     
     // Prices
-    document.getElementById("new-prod-price").value = p.price || "";
-    document.getElementById("new-prod-orig").value = p.originalPrice || "";
+    if (p.specs && p.specs.disable_auto_rate) {
+        let basePrice = p.specs.manual_base_price;
+        if (basePrice === undefined) {
+            const gstVal = parseFloat(p.specs.calc_gst) || 3;
+            basePrice = Math.round(p.price / (1 + gstVal / 100));
+        }
+        document.getElementById("new-prod-price").value = basePrice || "";
+        document.getElementById("new-prod-orig").value = p.originalPrice || "";
+        runManualGstCalculation();
+    } else {
+        document.getElementById("new-prod-price").value = p.price || "";
+        document.getElementById("new-prod-orig").value = p.originalPrice || "";
+    }
     document.getElementById("new-prod-stock").value = p.inStock ? "true" : "false";
     document.getElementById("new-prod-qty").value = (p.specs && p.specs.stock_qty !== undefined) ? p.specs.stock_qty : (p.inStock ? 10 : 0);
     
@@ -3524,11 +3610,17 @@ async function updateExistingProduct() {
     if (submitBtn) submitBtn.innerHTML = "Uploading & Saving...";
     if (submitBtn) submitBtn.disabled = true;
     
-    const title = document.getElementById("new-prod-title").value.trim();
-    const category = document.getElementById("new-prod-cat").value;
-    const gender = document.getElementById("new-prod-gender") ? document.getElementById("new-prod-gender").value : "both";
-    const price = parseFloat(document.getElementById("new-prod-price").value);
-    const origPrice = parseFloat(document.getElementById("new-prod-orig").value) || price;
+    const basePrice = parseFloat(document.getElementById("new-prod-price").value);
+    const isManual = document.getElementById("new-prod-disable-autorate").checked;
+    const gstVal = parseFloat(document.getElementById("new-prod-calc-gst").value) || 3;
+    
+    let price = basePrice;
+    let manualBasePrice = undefined;
+    if (isManual) {
+        manualBasePrice = basePrice;
+        price = Math.round(basePrice * (1 + gstVal / 100));
+    }
+    const origPrice = parseFloat(document.getElementById("new-prod-orig").value) || price * 2;
     let image = document.getElementById("new-prod-img-base64").value || "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80";
     const plating = document.getElementById("new-prod-finish").value;
     const desc = document.getElementById("new-prod-desc").value.trim() || "Genuine 925 sterling silver exquisite ornament piece.";
@@ -3538,7 +3630,7 @@ async function updateExistingProduct() {
     const stockQty = parseInt(document.getElementById("new-prod-qty").value) || 0;
     const inStock = stockQty > 0 && document.getElementById("new-prod-stock").value === "true";
     
-    if (!title || isNaN(price) || price <= 0) {
+    if (!title || isNaN(basePrice) || basePrice <= 0) {
         alert("Please enter a valid Product Title and Base Price.");
         if (submitBtn) submitBtn.innerHTML = "Save Changes";
         if (submitBtn) submitBtn.disabled = false;
@@ -3601,9 +3693,10 @@ async function updateExistingProduct() {
             calc_weight: parseFloat(document.getElementById("new-prod-calc-weight").value),
             calc_making: parseFloat(document.getElementById("new-prod-calc-making").value) || 0,
             calc_making_type: document.getElementById("new-prod-calc-making-type").value,
-            calc_gst: parseFloat(document.getElementById("new-prod-calc-gst").value) || 3,
+            calc_gst: gstVal,
             market_base: document.getElementById("new-prod-market-base").value,
-            disable_auto_rate: document.getElementById("new-prod-disable-autorate").checked,
+            disable_auto_rate: isManual,
+            manual_base_price: manualBasePrice,
             stock_qty: stockQty
         }
     };
