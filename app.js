@@ -5336,6 +5336,10 @@ async function handleAuthSubmit() {
             alert(`Signup successful! Your referral code is ${referralCode}. Please login.`);
             if (refInp) refInp.value = "";
             toggleAuthMode();
+        } else {
+            const { data, error } = await supaClient.from('settings').select('value').eq('key', 'user_' + email).single();
+            if (error || !data) throw new Error("Email not registered. Please sign up.");
+            
             const userRecord = JSON.parse(data.value);
             if (userRecord.password !== password) throw new Error("Invalid login credentials.");
             
