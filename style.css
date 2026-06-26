@@ -7,18 +7,22 @@
 
 :root {
     /* Luxury Palette */
-    --color-primary: #121214;       /* Deep Obsidian */
-    --color-secondary: #4A4A4F;     /* Muted Charcoal */
-    --color-bg-main: #FCFBF9;       /* Creamy Pearl White */
+    --color-primary: #2C1E1A;       /* Deep Chocolate */
+    --color-secondary: #5C4C46;     /* Warm Umber */
+    --color-bg-main: #F7F4F0;       /* Creamy Beige */
     --color-card-bg: #FFFFFF;       /* Pure White */
-    --color-accent-pink: #E35275;   /* GIVA Rose Accent */
-    --color-accent-pink-light: #FFF0F2; /* Soft Accent Background */
-    --color-silver-light: #F1F5F9;  /* Soft Silver */
-    --color-silver-mid: #CBD5E1;    /* Polished Silver Medium */
-    --color-silver-dark: #64748B;   /* Slate/Platinum Silver */
+    --color-accent-pink: #8D5B4C;   /* Terracotta Brown Brand Accent */
+    --color-accent-pink-light: #F4EAE6; /* Soft Sand Background */
+    --color-silver-light: #FDFCFB;  /* Soft Warm Linen (Light) */
+    --color-silver-mid: #DDD1C6;    /* Premium Luxury Border Accent */
+    --color-silver-dark: #A2947F;   /* Luxury Muted Gold (Dark) */
     
-    /* Silver Gradient */
-    --grad-silver: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 40%, #CBD5E1 60%, #94A3B8 100%);
+    /* Gold Accents */
+    --color-gold: #C9A36A;          /* Antique Gold */
+    --color-gold-soft: #E7D7BF;     /* Soft Gold */
+    
+    /* Gradients */
+    --grad-silver: linear-gradient(135deg, #FDFCFB 0%, #E9DFD3 50%, #A2947F 100%);
     
     /* Typography */
     --font-heading: 'Cinzel', serif;
@@ -30,9 +34,9 @@
     --border-radius-sm: 6px;
     --border-radius-md: 12px;
     --border-radius-lg: 24px;
-    --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.03);
-    --shadow-medium: 0 10px 30px rgba(18, 18, 20, 0.06);
-    --shadow-lux: 0 20px 45px rgba(0, 0, 0, 0.08);
+    --shadow-subtle: 0 4px 20px rgba(44, 30, 26, 0.03);
+    --shadow-medium: 0 10px 30px rgba(44, 30, 26, 0.08);
+    --shadow-lux: 0 20px 45px rgba(44, 30, 26, 0.12);
     
     /* Transitions */
     --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -729,20 +733,20 @@ header {
 }
 
 .price-tier-card:nth-child(1) {
-    background: linear-gradient(135deg, #FFF0F2 0%, #FFE4E6 100%);
-    border: 1px solid #FECDD3;
-    color: #9F1239;
+    background: linear-gradient(135deg, #F9F6F0 0%, #F0E6D8 100%);
+    border: 1px solid #E3DEC5;
+    color: #5E4D1A;
 }
 
 .price-tier-card:nth-child(2) {
-    background: linear-gradient(135deg, #FFF0F5 0%, #FCE7F3 100%);
-    border: 1px solid #FBCFE8;
-    color: #9D174D;
+    background: linear-gradient(135deg, #F5EAE1 0%, #E6CBB5 100%);
+    border: 1px solid #D1BAA9;
+    color: #5C3E31;
 }
 
 .price-tier-card:nth-child(3) {
-    background: linear-gradient(135deg, #FFFDF0 0%, #FEF3C7 100%);
-    border: 1px solid #FDE68A;
+    background: linear-gradient(135deg, #FAF1DF 0%, #EDD8B6 100%);
+    border: 1px solid #E2C49D;
     color: #92400E;
 }
 
@@ -3065,7 +3069,7 @@ footer {
     }
     
     .detail-buttons-row .btn-checkout {
-        background: linear-gradient(135deg, #E35275 0%, #F472B6 100%) !important;
+        background: linear-gradient(135deg, var(--color-accent-pink) 0%, #B88568 100%) !important;
         color: #FFFFFF !important;
         border: none !important;
         font-weight: 700 !important;
