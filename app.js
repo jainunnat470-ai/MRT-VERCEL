@@ -2633,8 +2633,8 @@ async function addNewProduct() {
     let price = basePrice;
     let manualBasePrice = undefined;
     if (isManual) {
-        manualBasePrice = basePrice;
-        price = Math.round(basePrice * (1 + gstVal / 100));
+        manualBasePrice = Math.round(basePrice * 100 / (100 + gstVal));
+        price = basePrice;
     }
     const origPrice = parseFloat(document.getElementById("new-prod-orig").value) || price * 2;
     let image = "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80"; // default
@@ -3464,8 +3464,9 @@ function runManualGstCalculation() {
         return;
     }
     
-    const gstCost = basePrice * (gstVal / 100);
-    const finalPrice = Math.round(basePrice + gstCost);
+    const finalPrice = basePrice;
+    const gstCost = finalPrice * (gstVal / (100 + gstVal));
+    const baseBeforeGst = finalPrice - gstCost;
     
     // Auto update the original price preview to finalPrice * 2
     const origPriceInput = document.getElementById("new-prod-orig");
@@ -3473,15 +3474,14 @@ function runManualGstCalculation() {
     
     if (breakdownDiv) {
         breakdownDiv.style.display = "block";
-        // Premium beige warning/breakdown card style
         breakdownDiv.style.backgroundColor = "var(--color-accent-pink-light)";
         breakdownDiv.style.borderLeft = "4px solid var(--color-accent-pink)";
         breakdownDiv.style.color = "var(--color-primary)";
         breakdownDiv.innerHTML = `
-            <strong>Manual Price + GST Breakdown:</strong><br>
-            • Manual Base Price (Before GST): ₹${basePrice.toLocaleString("en-IN")}<br>
+            <strong>Manual Price (GST Included) Breakdown:</strong><br>
+            • <strong>Final Stored Price (GST Inclusive): ₹${finalPrice.toLocaleString("en-IN")}</strong><br>
+            • Taxable Base Price (Before GST): ₹${Math.round(baseBeforeGst).toLocaleString("en-IN")}<br>
             • GST (${gstVal}%): ₹${gstCost.toFixed(2)}<br>
-            • <strong>Final Stored Price (including GST): ₹${finalPrice.toLocaleString("en-IN")}</strong><br>
             • Original Price (Crossed Price): ₹${(finalPrice * 2).toLocaleString("en-IN")}
         `;
     }
@@ -3650,8 +3650,8 @@ async function updateExistingProduct() {
     let price = basePrice;
     let manualBasePrice = undefined;
     if (isManual) {
-        manualBasePrice = basePrice;
-        price = Math.round(basePrice * (1 + gstVal / 100));
+        manualBasePrice = Math.round(basePrice * 100 / (100 + gstVal));
+        price = basePrice;
     }
     const origPrice = parseFloat(document.getElementById("new-prod-orig").value) || price * 2;
     let image = document.getElementById("new-prod-img-base64").value || "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80";
