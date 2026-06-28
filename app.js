@@ -231,10 +231,12 @@ function renderRatesTicker() {
     const trendIcon = STATE.rates.trend === "up" ? "▲" : "▼";
     const trendClass = STATE.rates.trend === "up" ? "rate-up" : "rate-down";
     
+    const totalOrders = STATE.orders ? STATE.orders.length : 0;
     const singleSet = `
         <div class="ticker-item">✨ GET EXTRA 10% OFF ON YOUR FIRST SILVER ORDER! USE CODE: <strong style="color:var(--color-accent-pink);">SILVER10</strong> ✨</div>
         <div class="ticker-item">🔴 LIVE METAL RATES: 925 Sterling Silver: <span class="ticker-rate">₹${sterlingStr}/g</span> <span class="${trendClass}">${trendIcon}</span> | 625 Silver: <span class="ticker-rate">₹${fineStr}/g</span> | 24K Gold: <span class="ticker-rate">₹${goldStr}/g</span></div>
         <div class="ticker-item">💍 100% NICKEL-FREE & LEAD-FREE HYPOALLERGENIC SILVER PIECES</div>
+        <div class="ticker-item">🛍️ OVER ${totalOrders.toLocaleString('en-IN')} HAPPY ORDERS DELIVERED TILL DATE! 🛍️</div>
         <div class="ticker-item">⭐ FAST SECURE SHIPPING PAN INDIA ON ALL ORDERS!</div>
     `;
     
@@ -328,6 +330,11 @@ function updateHeaderCounters() {
         wishlistCount.textContent = totalWished;
         wishlistCount.style.display = totalWished > 0 ? "flex" : "none";
     }
+    
+    const userOrderCountEl = document.getElementById("user-total-orders-count");
+    if (userOrderCountEl && STATE.orders) {
+        userOrderCountEl.textContent = `${STATE.orders.length.toLocaleString('en-IN')}+ Orders`;
+    }
 }
 
 // --- SHOP PRE-FILTER LOGIC (Under 999, etc.) ---
@@ -355,11 +362,15 @@ function applyQuickFilter(filterType) {
         document.getElementById("filter-type-gold").checked = false;
         document.getElementById("filter-type-kids").checked = false;
         document.getElementById("filter-type-customised").checked = false;
+        const kadaInp = document.getElementById("filter-type-kada");
+        if (kadaInp) kadaInp.checked = false;
+        const braceletInp = document.getElementById("filter-type-bracelet");
+        if (braceletInp) braceletInp.checked = false;
     }
     const priceMaxSlider = document.getElementById("filter-price-max");
     const priceDisplay = document.getElementById("filter-price-val");
     
-    const categoriesList = ["rings", "earrings", "pendants", "anklets", "chains", "chain_pendant", "coins", "gold", "gold_coins", "kids", "customised"];
+    const categoriesList = ["rings", "earrings", "pendants", "anklets", "chains", "chain_pendant", "coins", "gold", "gold_coins", "kids", "customised", "kada", "bracelet"];
     
     if (filterType === "under-999") {
         priceMaxSlider.value = 999;
@@ -446,6 +457,10 @@ function renderShopCatalog() {
     if (kidsCheck && kidsCheck.checked) categories.push("kids");
     const customisedCheck = document.getElementById("filter-type-customised");
     if (customisedCheck && customisedCheck.checked) categories.push("customised");
+    const kadaCheck = document.getElementById("filter-type-kada");
+    if (kadaCheck && kadaCheck.checked) categories.push("kada");
+    const braceletCheck = document.getElementById("filter-type-bracelet");
+    if (braceletCheck && braceletCheck.checked) categories.push("bracelet");
     
     const searchQuery = document.getElementById("search-main") ? document.getElementById("search-main").value.toLowerCase().trim() : "";
     const sortBy = document.getElementById("shop-sort") ? document.getElementById("shop-sort").value : "popularity";
@@ -559,6 +574,8 @@ function addToCart(prodId, count = 1) {
     const isEarring = (prod.category || "").toLowerCase() === "earrings" || prod.title.toLowerCase().includes("earring");
     const isRing = ((prod.category || "").toLowerCase() === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing && !isEarring;
     const isChain = (prod.category || "").toLowerCase().includes("chain");
+    const isKada = (prod.category || "").toLowerCase() === "kada" || prod.title.toLowerCase().includes("kada");
+    const isBracelet = (prod.category || "").toLowerCase() === "bracelet" || prod.title.toLowerCase().includes("bracelet");
     
     if (STATE.selectedProduct && STATE.selectedProduct.id === prod.id && STATE.selectedSize) {
         // If we are adding the product that is currently viewed in detail, use the selected size!
@@ -571,6 +588,10 @@ function addToCart(prodId, count = 1) {
             size = "13"; // Default Indian Ring Size
         } else if (isChain) {
             size = "18 Inches"; // Default Chain length
+        } else if (isKada) {
+            size = "2.4";
+        } else if (isBracelet) {
+            size = "7 Inches";
         }
     }
     
@@ -661,12 +682,14 @@ function viewProductDetail(prodId) {
     const isEarring = (prod.category || "").toLowerCase() === "earrings" || prod.title.toLowerCase().includes("earring");
     const isRing = ((prod.category || "").toLowerCase() === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing && !isEarring;
     const isChain = (prod.category || "").toLowerCase().includes("chain");
+    const isKada = (prod.category || "").toLowerCase() === "kada" || prod.title.toLowerCase().includes("kada");
+    const isBracelet = (prod.category || "").toLowerCase() === "bracelet" || prod.title.toLowerCase().includes("bracelet");
     
     const sizeSection = document.getElementById("detail-size-section");
     const sizeLabel = sizeSection ? sizeSection.querySelector(".custom-form-label") : null;
     
     if (sizeSection) {
-        if (isRing || isToeRing || isChain) {
+        if (isRing || isToeRing || isChain || isKada || isBracelet) {
             sizeSection.style.display = "block";
             let sizes = [];
             let labelText = "Select Size";
@@ -679,6 +702,12 @@ function viewProductDetail(prodId) {
                 labelText = "SELECT SIZE / VARIANT";
             } else if (isChain) {
                 sizes = ["16 Inches", "18 Inches", "20 Inches"];
+                labelText = "SELECT SIZE / VARIANT";
+            } else if (isKada) {
+                sizes = ["2.4", "2.6", "2.8", "Adjustable"];
+                labelText = "SELECT SIZE / VARIANT";
+            } else if (isBracelet) {
+                sizes = ["6.5 Inches", "7 Inches", "7.5 Inches", "Adjustable"];
                 labelText = "SELECT SIZE / VARIANT";
             }
             
@@ -864,12 +893,16 @@ function triggerBuyNow() {
         const isEarring = (prod.category || "").toLowerCase() === "earrings" || prod.title.toLowerCase().includes("earring");
         const isRing = ((prod.category || "").toLowerCase() === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing && !isEarring;
         const isChain = (prod.category || "").toLowerCase().includes("chain");
+        const isKada = (prod.category || "").toLowerCase() === "kada" || prod.title.toLowerCase().includes("kada");
+        const isBracelet = (prod.category || "").toLowerCase() === "bracelet" || prod.title.toLowerCase().includes("bracelet");
         
         let size = STATE.selectedSize;
         if (!size) {
             if (isToeRing) size = "Adjustable";
             else if (isRing) size = "13";
             else if (isChain) size = "18 Inches";
+            else if (isKada) size = "2.4";
+            else if (isBracelet) size = "7 Inches";
         }
         
         const sizeSuffix = size ? ` (Size: ${size})` : "";
