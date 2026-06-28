@@ -2212,9 +2212,9 @@ header {
 
 /* Gold Accent Top Bar */
 .footer-accent-bar {
-    background: linear-gradient(90deg, #1a0a2e, #2d1260, #1a0a2e);
-    border-top: 1px solid rgba(124,58,237,0.4);
-    border-bottom: 1px solid rgba(124,58,237,0.2);
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary), var(--color-primary));
+    border-top: 1px solid rgba(201, 163, 106, 0.4);
+    border-bottom: 1px solid rgba(201, 163, 106, 0.2);
     padding: 12px 0;
     overflow: hidden;
 }
@@ -2262,7 +2262,7 @@ header {
 }
 
 footer {
-    background-color: #0d0d0f;
+    background-color: var(--color-primary);
     color: #FFFFFF;
     padding: 60px 0 0;
     margin-top: 80px;
