@@ -581,17 +581,25 @@ function addToCart(prodId, count = 1) {
         // If we are adding the product that is currently viewed in detail, use the selected size!
         size = STATE.selectedSize;
     } else {
-        // Otherwise, use the category default size
-        if (isToeRing) {
-            size = "Adjustable";
-        } else if (isRing) {
-            size = "13"; // Default Indian Ring Size
-        } else if (isChain) {
-            size = "18 Inches"; // Default Chain length
-        } else if (isKada) {
-            size = "2.4";
-        } else if (isBracelet) {
-            size = "7 Inches";
+        if (prod.specs && prod.specs.available_sizes) {
+            const parts = prod.specs.available_sizes.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            if (parts.length > 0) {
+                size = parts[0];
+            }
+        }
+        if (!size) {
+            // Otherwise, use the category default size
+            if (isToeRing) {
+                size = "Adjustable";
+            } else if (isRing) {
+                size = "13"; // Default Indian Ring Size
+            } else if (isChain) {
+                size = "18 Inches"; // Default Chain length
+            } else if (isKada) {
+                size = "2.4";
+            } else if (isBracelet) {
+                size = "7 Inches";
+            }
         }
     }
     
@@ -693,22 +701,34 @@ function viewProductDetail(prodId) {
             sizeSection.style.display = "block";
             let sizes = [];
             let labelText = "Select Size";
+            let hasCustomSizes = false;
             
-            if (isToeRing) {
-                sizes = ["Adjustable"];
-                labelText = "SELECT SIZE / VARIANT";
-            } else if (isRing) {
-                sizes = Array.from({ length: 19 }, (_, i) => (10 + i).toString());
-                labelText = "SELECT SIZE / VARIANT";
-            } else if (isChain) {
-                sizes = ["16 Inches", "18 Inches", "20 Inches"];
-                labelText = "SELECT SIZE / VARIANT";
-            } else if (isKada) {
-                sizes = ["2.4", "2.6", "2.8", "Adjustable"];
-                labelText = "SELECT SIZE / VARIANT";
-            } else if (isBracelet) {
-                sizes = ["6.5 Inches", "7 Inches", "7.5 Inches", "Adjustable"];
-                labelText = "SELECT SIZE / VARIANT";
+            if (prod.specs && prod.specs.available_sizes) {
+                const parts = prod.specs.available_sizes.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                if (parts.length > 0) {
+                    sizes = parts;
+                    labelText = "SELECT SIZE / VARIANT";
+                    hasCustomSizes = true;
+                }
+            }
+            
+            if (!hasCustomSizes) {
+                if (isToeRing) {
+                    sizes = ["Adjustable"];
+                    labelText = "SELECT SIZE / VARIANT";
+                } else if (isRing) {
+                    sizes = Array.from({ length: 19 }, (_, i) => (10 + i).toString());
+                    labelText = "SELECT SIZE / VARIANT";
+                } else if (isChain) {
+                    sizes = ["16 Inches", "18 Inches", "20 Inches"];
+                    labelText = "SELECT SIZE / VARIANT";
+                } else if (isKada) {
+                    sizes = ["2.4", "2.6", "2.8", "Adjustable"];
+                    labelText = "SELECT SIZE / VARIANT";
+                } else if (isBracelet) {
+                    sizes = ["6.5 Inches", "7 Inches", "7.5 Inches", "Adjustable"];
+                    labelText = "SELECT SIZE / VARIANT";
+                }
             }
             
             if (sizeLabel) {
@@ -898,11 +918,19 @@ function triggerBuyNow() {
         
         let size = STATE.selectedSize;
         if (!size) {
-            if (isToeRing) size = "Adjustable";
-            else if (isRing) size = "13";
-            else if (isChain) size = "18 Inches";
-            else if (isKada) size = "2.4";
-            else if (isBracelet) size = "7 Inches";
+            if (prod.specs && prod.specs.available_sizes) {
+                const parts = prod.specs.available_sizes.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                if (parts.length > 0) {
+                    size = parts[0];
+                }
+            }
+            if (!size) {
+                if (isToeRing) size = "Adjustable";
+                else if (isRing) size = "13";
+                else if (isChain) size = "18 Inches";
+                else if (isKada) size = "2.4";
+                else if (isBracelet) size = "7 Inches";
+            }
         }
         
         const sizeSuffix = size ? ` (Size: ${size})` : "";
@@ -2704,7 +2732,8 @@ async function addNewProduct() {
             market_base: document.getElementById("new-prod-market-base").value,
             disable_auto_rate: isManual,
             manual_base_price: manualBasePrice,
-            stock_qty: stockQty
+            stock_qty: stockQty,
+            available_sizes: document.getElementById("new-prod-available-sizes") ? document.getElementById("new-prod-available-sizes").value.trim() : ""
         }
     };
     
@@ -3538,6 +3567,9 @@ function editProduct(prodId) {
     }
     
     document.getElementById("new-prod-width").value = (p.specs && p.specs.width) ? p.specs.width : "";
+    if (document.getElementById("new-prod-available-sizes")) {
+        document.getElementById("new-prod-available-sizes").value = (p.specs && p.specs.available_sizes) ? p.specs.available_sizes : "";
+    }
     document.getElementById("new-prod-desc").value = p.description || "";
     
     // Image base64 and preview
@@ -3730,7 +3762,8 @@ async function updateExistingProduct() {
             market_base: document.getElementById("new-prod-market-base").value,
             disable_auto_rate: isManual,
             manual_base_price: manualBasePrice,
-            stock_qty: stockQty
+            stock_qty: stockQty,
+            available_sizes: document.getElementById("new-prod-available-sizes") ? document.getElementById("new-prod-available-sizes").value.trim() : ""
         }
     };
     
