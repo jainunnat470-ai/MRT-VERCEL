@@ -4215,6 +4215,50 @@ function downloadGstReportCsv() {
     }
 }
 
+function exportProductsToCSV() {
+    if (!STATE.products || STATE.products.length === 0) {
+        alert("No product data available to export.");
+        return;
+    }
+    
+    // Create CSV header
+    let csvContent = "Product ID,Title,Category,Gender,Price (INR),Original Price (INR),In Stock,Plating,Weight,Width,Available Sizes,Description,Image URL\r\n";
+    
+    STATE.products.forEach(p => {
+        const id = p.id || "";
+        const title = String(p.title || "").replace(/"/g, '""');
+        const category = String(p.category || "").replace(/"/g, '""');
+        const gender = String(p.gender || "").replace(/"/g, '""');
+        const price = p.price || 0;
+        const originalPrice = p.originalPrice || 0;
+        const inStock = p.inStock ? "Yes" : "No";
+        const plating = String(p.plating || "").replace(/"/g, '""');
+        
+        const weight = (p.specs && p.specs.weight) ? String(p.specs.weight).replace(/"/g, '""') : "";
+        const width = (p.specs && p.specs.width) ? String(p.specs.width).replace(/"/g, '""') : "";
+        const availableSizes = (p.specs && p.specs.available_sizes) ? String(p.specs.available_sizes).replace(/"/g, '""') : "";
+        const description = String(p.description || "").replace(/"/g, '""').replace(/\r?\n|\r/g, " ");
+        const imageUrl = p.image || "";
+        
+        csvContent += `"${id}","${title}","${category}","${gender}",${price},${originalPrice},"${inStock}","${plating}","${weight}","${width}","${availableSizes}","${description}","${imageUrl}"\r\n`;
+    });
+    
+    // Trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const filename = "MRTHANGAMAALIGAI_Inventory_Export.csv";
+    
+    if (navigator.msSaveBlob) { // IE 10+
+        navigator.msSaveBlob(blob, filename);
+    } else {
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}
+
 // --- AI VIRTUAL TRY-ON FUNCTIONS ---
 
 let STATE_TRYON_BASE64 = "";
