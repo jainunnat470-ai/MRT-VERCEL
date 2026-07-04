@@ -3315,18 +3315,29 @@ function recalculateAllProductPrices() {
         const metalCost = weightVal * liveRate;
 
         let makingVal = parseFloat(specs.calc_making);
-        let makingType = specs.calc_making_type || "per-gram";
+        let makingType = specs.calc_making_type;
         let gstVal = parseFloat(specs.calc_gst) || 3.0;
 
         if (isNaN(makingVal)) {
+            makingType = "percentage";
             const cat = (p.category || "").toLowerCase();
-            if (cat === "gold" || cat === "gold_coins") {
+            const title = (p.title || "").toLowerCase();
+            const metalSpec = (specs.metal || "").toLowerCase();
+            
+            if (cat === "gold" || cat === "gold_coins" || title.includes("gold")) {
                 makingVal = 160.0;
-            } else if (cat === "coins") {
-                makingVal = 8.0;
+                makingType = "per-gram";
+            } else if (cat === "coins" || title.includes("coin")) {
+                makingVal = (8.0 / 245) * 100;
+            } else if (marketBase === "fine" || metalSpec.includes("625")) {
+                makingVal = (80.0 / 245) * 100;
+            } else if (cat === "chains" || cat === "bracelets" || cat === "kada" || title.includes("chain") || title.includes("bracelet") || title.includes("kada")) {
+                makingVal = (155.0 / 245) * 100;
             } else {
-                makingVal = 350.0; 
+                makingVal = (405.0 / 245) * 100;
             }
+        } else if (!makingType) {
+            makingType = "per-gram";
         }
 
         let makingCost = 0;
@@ -3375,10 +3386,32 @@ function autoCalculateJewelRate() {
         return;
     }
     const weightVal = parseFloat(document.getElementById("new-prod-calc-weight").value);
-    const makingVal = parseFloat(document.getElementById("new-prod-calc-making").value) || 0;
-    const makingType = document.getElementById("new-prod-calc-making-type").value;
-    const gstVal = parseFloat(document.getElementById("new-prod-calc-gst").value) || 0;
+    const makingInputVal = document.getElementById("new-prod-calc-making").value.trim();
+    let makingVal = parseFloat(makingInputVal);
+    let makingType = document.getElementById("new-prod-calc-making-type").value;
     const marketBase = document.getElementById("new-prod-market-base").value;
+    
+    let isAutoDefault = false;
+    if (makingInputVal === "" || isNaN(makingVal)) {
+        isAutoDefault = true;
+        makingType = "percentage";
+        const cat = document.getElementById("new-prod-cat").value.toLowerCase();
+        const title = document.getElementById("new-prod-title").value.toLowerCase();
+        
+        if (marketBase === "gold") {
+            makingVal = 160.0;
+            makingType = "per-gram";
+        } else if (cat === "coins" || title.includes("coin")) {
+            makingVal = (8.0 / 245) * 100;
+        } else if (marketBase === "fine") {
+            makingVal = (80.0 / 245) * 100;
+        } else if (cat === "chains" || cat === "bracelets" || cat === "kada" || title.includes("chain") || title.includes("bracelet") || title.includes("kada")) {
+            makingVal = (155.0 / 245) * 100;
+        } else {
+            makingVal = (405.0 / 245) * 100;
+        }
+    }
+    const gstVal = parseFloat(document.getElementById("new-prod-calc-gst").value) || 0;
     
     const priceInput = document.getElementById("new-prod-price");
     const origPriceInput = document.getElementById("new-prod-orig");
