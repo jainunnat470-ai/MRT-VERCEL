@@ -3127,6 +3127,17 @@ function showToast(msg, duration = 3000) {
     setTimeout(() => t.remove(), duration);
 }
 
+function copyProductShareLink() {
+    if (!STATE.selectedProduct) return;
+    const url = `${window.location.origin}${window.location.pathname}?product=${STATE.selectedProduct.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+        showToast("🔗 Product link copied to clipboard!");
+    }).catch(err => {
+        console.error("Failed to copy link:", err);
+        showToast("❌ Failed to copy link.");
+    });
+}
+
 // --- LIVE STATS FROM SUPABASE ---
 async function loadLiveStats() {
     try {
@@ -3241,6 +3252,15 @@ window.addEventListener("DOMContentLoaded", async () => {
         isAuthSignupMode = false;
         toggleAuthMode();
         openUserProfile();
+    }
+
+    // Handle product details deep link
+    const prodIdParam = urlParams.get('product') || (window.location.hash.match(/product=([^&]+)/) || [])[1];
+    if (prodIdParam) {
+        const prod = STATE.products.find(p => p.id === prodIdParam);
+        if (prod) {
+            viewProductDetail(prod.id);
+        }
     }
 });
 
