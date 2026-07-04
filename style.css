@@ -767,11 +767,13 @@ header {
 }
 
 .flash-sale-left {
-    flex: 1.2;
-    padding: 48px;
+    flex: 1;
+    padding: 60px 48px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
+    text-align: center;
 }
 
 .flash-sale-tag {
@@ -783,7 +785,7 @@ header {
     text-transform: uppercase;
     letter-spacing: 2px;
     border-radius: var(--border-radius-sm);
-    align-self: flex-start;
+    align-self: center;
     margin-bottom: 16px;
     animation: pulse 1.5s infinite;
 }
@@ -2783,9 +2785,8 @@ footer {
     
     .flash-sale-banner {
         position: relative;
-        background-image: linear-gradient(180deg, rgba(18, 18, 20, 0.78) 0%, rgba(18, 18, 20, 0.92) 100%), url('https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80');
-        background-size: cover;
-        background-position: center;
+        background-color: var(--color-primary);
+        background-image: none;
         flex-direction: column;
         border: 2px solid #FFFFFF;
         border-radius: 24px;
