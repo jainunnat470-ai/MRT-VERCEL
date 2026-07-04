@@ -3732,6 +3732,10 @@ async function updateExistingProduct() {
     const submitBtn = document.querySelector('button[onclick="updateExistingProduct()"]');
     if (submitBtn) submitBtn.innerHTML = "Uploading & Saving...";
     if (submitBtn) submitBtn.disabled = true;
+
+    const title = document.getElementById("new-prod-title").value.trim();
+    const category = document.getElementById("new-prod-cat").value;
+    const gender = document.getElementById("new-prod-gender") ? document.getElementById("new-prod-gender").value : "both";
     
     const basePrice = parseFloat(document.getElementById("new-prod-price").value);
     const isManual = document.getElementById("new-prod-disable-autorate").checked;
