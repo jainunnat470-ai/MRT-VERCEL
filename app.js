@@ -3332,6 +3332,8 @@ function recalculateAllProductPrices() {
         let makingCost = 0;
         if (makingType === "percentage") {
             makingCost = metalCost * (makingVal / 100);
+        } else if (makingType === "flat") {
+            makingCost = makingVal;
         } else {
             makingCost = weightVal * makingVal;
         }
@@ -3404,6 +3406,9 @@ function autoCalculateJewelRate() {
     if (makingType === "percentage") {
         makingCost = metalCost * (makingVal / 100);
         makingText = `Making Charges (${makingVal}% of Metal Cost): ₹${makingCost.toFixed(2)}`;
+    } else if (makingType === "flat") {
+        makingCost = makingVal;
+        makingText = `Making Charges (Flat Rate): ₹${makingCost.toFixed(2)}`;
     } else {
         makingCost = weightVal * makingVal;
         makingText = `Making Charges (${weightVal}g @ ₹${makingVal.toFixed(2)}/g): ₹${makingCost.toFixed(2)}`;
