@@ -528,8 +528,8 @@ header {
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background-color: #F8F4EE;
-    border: 1px solid #EAE3DA;
+    background-color: var(--color-primary);
+    border: 1px solid var(--color-silver-mid);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -538,9 +538,17 @@ header {
     transition: var(--transition-smooth);
 }
 
+.cat-circle-letter {
+    font-size: 2rem;
+    font-weight: 600;
+    font-family: var(--font-heading);
+    color: #FFFFFF;
+}
+
 .cat-circle-item:hover .cat-circle-img-wrap {
-    border-color: var(--color-accent-pink);
-    box-shadow: 0 4px 15px rgba(227, 82, 117, 0.15);
+    border-color: var(--color-gold);
+    background-color: var(--color-secondary);
+    box-shadow: 0 4px 15px rgba(201, 163, 106, 0.25);
     transform: scale(1.05);
 }
 
