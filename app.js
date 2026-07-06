@@ -370,7 +370,7 @@ function applyQuickFilter(filterType) {
     const priceMaxSlider = document.getElementById("filter-price-max");
     const priceDisplay = document.getElementById("filter-price-val");
     
-    const categoriesList = ["rings", "earrings", "pendants", "anklets", "chains", "chain_pendant", "coins", "gold", "gold_coins", "kids", "customised", "kada", "bracelet"];
+    const categoriesList = ["rings", "earrings", "pendants", "anklets", "chains", "chain_pendant", "coins", "gold", "gold_coins", "kids", "customised", "kada", "bracelet", "bracelets"];
     
     if (filterType === "under-999") {
         priceMaxSlider.value = 999;
@@ -393,7 +393,8 @@ function applyQuickFilter(filterType) {
     } else if (categoriesList.includes(filterType)) {
         priceMaxSlider.value = 10000;
         priceDisplay.textContent = "₹10,000+";
-        const catCheckbox = document.getElementById(`filter-type-${filterType}`);
+        const cat = filterType === "bracelets" ? "bracelet" : filterType;
+        const catCheckbox = document.getElementById(`filter-type-${cat}`);
         if (catCheckbox) catCheckbox.checked = true;
     } else if (filterType.startsWith("cat-")) {
         const cat = filterType.replace("cat-", "");
@@ -445,16 +446,7 @@ function renderShopCatalog() {
     if (ankletsCheck && ankletsCheck.checked) categories.push("anklets");
     const chainsCheck = document.getElementById("filter-type-chains");
     if (chainsCheck && chainsCheck.checked) categories.push("chains");
-    const chainPendantCheck = document.getElementById("filter-type-chain_pendant");
-    if (chainPendantCheck && chainPendantCheck.checked) categories.push("chain_pendant");
-    const coinsCheck = document.getElementById("filter-type-coins");
-    if (coinsCheck && coinsCheck.checked) categories.push("coins");
-    const gcCheck = document.getElementById("filter-type-gold_coins");
-    if (gcCheck && gcCheck.checked) categories.push("gold_coins");
-    const goldCheck = document.getElementById("filter-type-gold");
-    if (goldCheck && goldCheck.checked) categories.push("gold");
-    const kidsCheck = document.getElementById("filter-type-kids");
-    if (kidsCheck && kidsCheck.checked) categories.push("kids");
+
     const customisedCheck = document.getElementById("filter-type-customised");
     if (customisedCheck && customisedCheck.checked) categories.push("customised");
     const kadaCheck = document.getElementById("filter-type-kada");
@@ -2686,7 +2678,7 @@ async function addNewProduct() {
     if (fileInput && fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${Date.now()}-${Math.floor(Math.random() * 1000)}.${fileExt}`;
         
         const { data: uploadData, error: uploadError } = await supaClient.storage
             .from('product-images')
@@ -3778,7 +3770,7 @@ async function updateExistingProduct() {
     if (fileInput && fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${Date.now()}-${Math.floor(Math.random() * 1000)}.${fileExt}`;
         
         const { data: uploadData, error: uploadError } = await supaClient.storage
             .from('product-images')
