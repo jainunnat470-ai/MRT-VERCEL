@@ -382,30 +382,30 @@ function applyQuickFilter(filterType) {
         priceMaxSlider.value = 4999;
         priceDisplay.textContent = "₹4,999";
     } else if (filterType === "him") {
-        priceMaxSlider.value = 10000;
-        priceDisplay.textContent = "₹10,000+";
+        priceMaxSlider.value = 50000;
+        priceDisplay.textContent = "₹50,000+";
         // Tag search query / category matches
         document.getElementById("search-main").value = "men";
     } else if (filterType === "her") {
-        priceMaxSlider.value = 10000;
-        priceDisplay.textContent = "₹10,000+";
+        priceMaxSlider.value = 50000;
+        priceDisplay.textContent = "₹50,000+";
         document.getElementById("search-main").value = "stud";
     } else if (categoriesList.includes(filterType)) {
-        priceMaxSlider.value = 10000;
-        priceDisplay.textContent = "₹10,000+";
+        priceMaxSlider.value = 50000;
+        priceDisplay.textContent = "₹50,000+";
         const cat = filterType === "bracelets" ? "bracelet" : filterType;
         const catCheckbox = document.getElementById(`filter-type-${cat}`);
         if (catCheckbox) catCheckbox.checked = true;
     } else if (filterType.startsWith("cat-")) {
         const cat = filterType.replace("cat-", "");
-        priceMaxSlider.value = 10000;
-        priceDisplay.textContent = "₹10,000+";
+        priceMaxSlider.value = 50000;
+        priceDisplay.textContent = "₹50,000+";
         // Pre-select sidebar categorization if matched (or let search handle it)
         document.getElementById("search-main").value = cat;
     } else {
         // Reset price slider and text display when clearing all filters
-        priceMaxSlider.value = 10000;
-        priceDisplay.textContent = "₹10,000+";
+        priceMaxSlider.value = 50000;
+        priceDisplay.textContent = "₹50,000+";
     }
     
     renderShopCatalog();
@@ -433,7 +433,7 @@ function renderShopCatalog() {
     
     // Collect Filter Values
     const inStockOnly = document.getElementById("filter-in-stock") ? document.getElementById("filter-in-stock").checked : false;
-    const maxPrice = document.getElementById("filter-price-max") ? parseFloat(document.getElementById("filter-price-max").value) : 10000;
+    const maxPrice = document.getElementById("filter-price-max") ? parseFloat(document.getElementById("filter-price-max").value) : 50000;
     
     const categories = [];
     const ringsCheck = document.getElementById("filter-type-rings");
