@@ -344,10 +344,10 @@
                 
                 <div class="filter-widget">
                     <h3 class="filter-title">Maximum Price</h3>
-                    <input type="range" id="filter-price-max" min="500" max="10000" step="100" value="10000" style="width:100%; accent-color:var(--color-accent-pink);" oninput="document.getElementById('filter-price-val').textContent = '₹' + parseInt(this.value).toLocaleString('en-IN'); renderShopCatalog();">
+                    <input type="range" id="filter-price-max" min="500" max="50000" step="500" value="50000" style="width:100%; accent-color:var(--color-accent-pink);" oninput="document.getElementById('filter-price-val').textContent = parseInt(this.value) === 50000 ? '₹50,000+' : '₹' + parseInt(this.value).toLocaleString('en-IN'); renderShopCatalog();">
                     <div class="price-range-inputs">
                         <span style="font-size:0.8rem;color:var(--color-silver-dark);">Range: Up to</span>
-                        <strong id="filter-price-val" style="font-size:0.9rem;margin-left:auto;">₹10,000+</strong>
+                        <strong id="filter-price-val" style="font-size:0.9rem;margin-left:auto;">₹50,000+</strong>
                     </div>
                 </div>
 
