@@ -58,11 +58,17 @@ function getCustomerName(customer) {
 // --- INITIALIZE APPLICATION STATE ---
 async function initState() {
     initAuthListener();
-    // Products Load from Supabase
-    try {
-        const { data, error } = await supaClient.from('products').select('*');
-        if (error) throw error;
-        
+
+    // Run all essential fetches in parallel for maximum speed
+    const [productsResult, couponsResult, ratesResult] = await Promise.allSettled([
+        supaClient.from('products').select('id,title,category,price,original_price,rating,reviews_count,plating,in_stock,image,description,specs'),
+        supaClient.from('coupons').select('*'),
+        supaClient.from('rates').select('*').limit(1)
+    ]);
+
+    // Products
+    if (productsResult.status === 'fulfilled' && !productsResult.value.error) {
+        const data = productsResult.value.data || [];
         STATE.products = data.map(p => ({
             id: p.id,
             title: p.title,
@@ -75,17 +81,54 @@ async function initState() {
             inStock: p.in_stock,
             image: p.image,
             description: p.description,
+            gender: (p.specs && p.specs.gender) ? p.specs.gender : "both",
             specs: p.specs
         }));
-        
-    } catch (err) {
-        console.error("Error loading products from Supabase:", err);
+    } else {
+        console.error("Error loading products:", productsResult.reason || productsResult.value?.error);
         STATE.products = [];
     }
 
-    // Orders Load from Supabase
-    try {
-        const { data, error } = await supaClient.from('orders').select('*');
+    // Coupons
+    if (couponsResult.status === 'fulfilled' && !couponsResult.value.error) {
+        const data = couponsResult.value.data || [];
+        STATE.coupons = {};
+        data.forEach(c => {
+            STATE.coupons[c.code] = {
+                code: c.code,
+                type: c.type || 'percentage',
+                value: c.value !== null && c.value !== undefined ? parseFloat(c.value) : (parseFloat(c.discount) || 0),
+                is_used: !!c.is_used,
+                single_use: !!c.single_use
+            };
+        });
+    } else {
+        console.error("Error loading coupons:", couponsResult.reason);
+    }
+
+    // Rates
+    if (ratesResult.status === 'fulfilled' && !ratesResult.value.error) {
+        const data = ratesResult.value.data || [];
+        if (data.length > 0) {
+            STATE.rates.sterling = parseFloat(data[0].sterling);
+            STATE.rates.fine = parseFloat(data[0].fine);
+            STATE.rates.gold = parseFloat(data[0].gold) || 7500.00;
+            STATE.rates.trend = data[0].trend;
+        }
+    } else {
+        console.error("Error loading rates:", ratesResult.reason);
+    }
+
+    recalculateAllProductPrices();
+
+    // Cart & Wishlist from localStorage (instant)
+    const localCart = localStorage.getItem("mrt_cart");
+    if (localCart) STATE.cart = safeJSONParse(localCart, []);
+    const localWishlist = localStorage.getItem("mrt_wishlist");
+    if (localWishlist) STATE.wishlist = safeJSONParse(localWishlist, []);
+
+    // Orders: load lazily in background — not needed for regular visitors
+    supaClient.from('orders').select('*').then(({ data, error }) => {
         if (!error && data) {
             STATE.orders = data.map(o => ({
                 id: o.id,
@@ -101,72 +144,11 @@ async function initState() {
                 items: typeof o.items === 'string' ? safeJSONParse(o.items, []) : (o.items || []),
                 payment_screenshot: o.payment_screenshot
             }));
+            updateHeaderCounters();
         }
-    } catch (err) {
-        console.error("Error loading orders from Supabase:", err);
-    }
+    }).catch(err => console.error("Error loading orders:", err));
 
-    // Ensure mock fallback order if no orders in Supabase
-    if (STATE.orders.length === 0) {
-        const mockOrder = {
-            id: "MRT-SLV-7483",
-            date: "2026-05-30",
-            customer: "Suresh Kumar",
-            phone: "+91 98765 43210",
-            address: "12, Park Avenue, Chennai - 600001",
-            paymentMethod: "UPI Payment",
-            items: [
-                { id: "prod-1", title: "Adira Sterling Silver Ring", price: 1299, qty: 1 }
-            ],
-            subtotal: 1299,
-            discount: 130,
-            total: 1169,
-            status: "processing"
-        };
-        STATE.orders = [mockOrder];
-    }
-
-    // Cart Load
-    const localCart = localStorage.getItem("mrt_cart");
-    if (localCart) STATE.cart = safeJSONParse(localCart, []);
-
-    // Wishlist Load
-    const localWishlist = localStorage.getItem("mrt_wishlist");
-    if (localWishlist) STATE.wishlist = safeJSONParse(localWishlist, []);
-
-    // Coupons Load from Supabase
-    try {
-        const { data, error } = await supaClient.from('coupons').select('*');
-        if (!error && data) {
-            STATE.coupons = {};
-            data.forEach(c => {
-                STATE.coupons[c.code] = {
-                    code: c.code,
-                    type: c.type || 'percentage',
-                    value: c.value !== null && c.value !== undefined ? parseFloat(c.value) : (parseFloat(c.discount) || 0),
-                    is_used: !!c.is_used,
-                    single_use: !!c.single_use
-                };
-            });
-        }
-    } catch(err) { console.error("Error loading coupons", err); }
-
-    // Rates Load from Supabase
-    try {
-        const { data, error } = await supaClient.from('rates').select('*').limit(1);
-        if (!error && data && data.length > 0) {
-            STATE.rates.sterling = parseFloat(data[0].sterling);
-            STATE.rates.fine = parseFloat(data[0].fine);
-            STATE.rates.gold = parseFloat(data[0].gold) || 7500.00;
-            STATE.rates.trend = data[0].trend;
-        }
-    } catch(err) { console.error("Error loading rates", err); }
-
-    recalculateAllProductPrices();
-
-    // Rates loaded strictly from Supabase - no local storage fallback
-    
-    // Admin Password Load
+    // Admin Password default
     if (!localStorage.getItem("mrt_admin_password")) {
         localStorage.setItem("mrt_admin_password", "mrt925");
     }
@@ -231,9 +213,11 @@ function renderRatesTicker() {
     const trendIcon = STATE.rates.trend === "up" ? "▲" : "▼";
     const trendClass = STATE.rates.trend === "up" ? "rate-up" : "rate-down";
     
-    const totalOrders = STATE.orders ? STATE.orders.length : 0;
+    const totalOrders = 840 + (STATE.orders ? STATE.orders.length : 0);
+    const announcementText = STATE.tickerCustomMessage || `✨ GET EXTRA 10% OFF ON YOUR FIRST SILVER ORDER! USE CODE: <strong style="color:var(--color-accent-pink);">SILVER10</strong> ✨`;
+
     const singleSet = `
-        <div class="ticker-item">✨ GET EXTRA 10% OFF ON YOUR FIRST SILVER ORDER! USE CODE: <strong style="color:var(--color-accent-pink);">SILVER10</strong> ✨</div>
+        <div class="ticker-item">${announcementText}</div>
         <div class="ticker-item">🔴 LIVE METAL RATES: 925 Sterling Silver: <span class="ticker-rate">₹${sterlingStr}/g</span> <span class="${trendClass}">${trendIcon}</span> | 625 Silver: <span class="ticker-rate">₹${fineStr}/g</span> | 24K Gold: <span class="ticker-rate">₹${goldStr}/g</span></div>
         <div class="ticker-item">💍 100% NICKEL-FREE & LEAD-FREE HYPOALLERGENIC SILVER PIECES</div>
         <div class="ticker-item">🛍️ OVER ${totalOrders.toLocaleString('en-IN')} HAPPY ORDERS DELIVERED TILL DATE! 🛍️</div>
@@ -252,7 +236,15 @@ function toggleMobileNav() {
 }
 
 // --- SINGLE PAGE ROUTER ---
-function navigateTo(viewId, preFilter = null) {
+window.goBackFromDetail = function(e) {
+    if (e) e.preventDefault();
+    if (STATE.hasNavigated) {
+        window.history.back();
+    } else {
+        navigateTo('shop');
+    }
+};
+function navigateTo(viewId, preFilter = null, isPopstate = false) {
     // Close mobile nav if open
     const navMenu = document.querySelector(".nav-menu");
     if (navMenu && navMenu.classList.contains("mobile-open")) {
@@ -269,6 +261,15 @@ function navigateTo(viewId, preFilter = null) {
         sessionStorage.removeItem("mrt_admin_authenticated");
         const btn = document.getElementById("admin-toggle");
         if (btn) btn.textContent = "Admin Panel";
+    }
+
+    if (!isPopstate) {
+        STATE.hasNavigated = true;
+        if (viewId === "detail" && STATE.selectedProduct) {
+            history.pushState({ viewId, preFilter, selectedProductId: STATE.selectedProduct.id }, "", "#detail_" + STATE.selectedProduct.id);
+        } else {
+            history.pushState({ viewId, preFilter, selectedProductId: null }, "", "#" + viewId);
+        }
     }
     
     STATE.currentView = viewId;
@@ -305,7 +306,13 @@ function navigateTo(viewId, preFilter = null) {
         if (preFilter) {
             applyQuickFilter(preFilter);
         } else {
-            applyQuickFilter('all');
+            if (!isPopstate) {
+                applyQuickFilter('all');
+            } else {
+                // If it's a back navigation and no preFilter was enforced, 
+                // just re-render to retain whatever DOM checkboxes the user manually clicked.
+                renderShopCatalog();
+            }
         }
     } else if (viewId === "customisation") {
         renderCustomisationPage();
@@ -337,42 +344,49 @@ function updateHeaderCounters() {
     }
 }
 
+function handleSearchInput(event) {
+    if (STATE.currentView !== 'shop') {
+        navigateTo('shop', 'search');
+    } else {
+        renderShopCatalog();
+    }
+}
+
 // --- SHOP PRE-FILTER LOGIC (Under 999, etc.) ---
 function applyQuickFilter(filterType) {
     // Reset inputs
     const inStockInput = document.getElementById("filter-in-stock");
     if (inStockInput) inStockInput.checked = false;
     
+    const genderAllRadio = document.getElementById("filter-gender-all");
+    if (genderAllRadio) genderAllRadio.checked = true;
+    
     const searchMainInput = document.getElementById("search-main");
-    if (searchMainInput) searchMainInput.value = "";
+    if (searchMainInput && filterType !== 'search') {
+        searchMainInput.value = "";
+    }
     
     // Reset category inputs
     const ringsInput = document.getElementById("filter-type-rings");
-    if (ringsInput) {
-        ringsInput.checked = false;
-        document.getElementById("filter-type-earrings").checked = false;
-        document.getElementById("filter-type-pendants").checked = false;
-        document.getElementById("filter-type-anklets").checked = false;
-        document.getElementById("filter-type-chains").checked = false;
-        const chainPendantInput = document.getElementById("filter-type-chain_pendant");
-        if (chainPendantInput) chainPendantInput.checked = false;
-        document.getElementById("filter-type-coins").checked = false;
-        const gcInput = document.getElementById("filter-type-gold_coins");
-        if (gcInput) gcInput.checked = false;
-        document.getElementById("filter-type-gold").checked = false;
-        document.getElementById("filter-type-kids").checked = false;
-        document.getElementById("filter-type-customised").checked = false;
-        const kadaInp = document.getElementById("filter-type-kada");
-        if (kadaInp) kadaInp.checked = false;
-        const braceletInp = document.getElementById("filter-type-bracelet");
-        if (braceletInp) braceletInp.checked = false;
+    if (ringsInput && filterType !== 'search') {
+        const ids = [
+            "filter-type-rings", "filter-type-earrings", "filter-type-pendants", 
+            "filter-type-anklets", "filter-type-chains", "filter-type-chain_pendant",
+            "filter-type-customised", "filter-type-kada", "filter-type-bracelet"
+        ];
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.checked = false;
+        });
     }
     const priceMaxSlider = document.getElementById("filter-price-max");
     const priceDisplay = document.getElementById("filter-price-val");
     
     const categoriesList = ["rings", "earrings", "pendants", "anklets", "chains", "chain_pendant", "coins", "gold", "gold_coins", "kids", "customised", "kada", "bracelet", "bracelets"];
     
-    if (filterType === "under-999") {
+    if (filterType === "search") {
+        // Keep current filters, just perform search
+    } else if (filterType === "under-999") {
         priceMaxSlider.value = 999;
         priceDisplay.textContent = "₹999";
     } else if (filterType === "under-1999") {
@@ -384,12 +398,13 @@ function applyQuickFilter(filterType) {
     } else if (filterType === "him") {
         priceMaxSlider.value = 50000;
         priceDisplay.textContent = "₹50,000+";
-        // Tag search query / category matches
-        document.getElementById("search-main").value = "men";
+        const genderHimRadio = document.getElementById("filter-gender-him");
+        if (genderHimRadio) genderHimRadio.checked = true;
     } else if (filterType === "her") {
         priceMaxSlider.value = 50000;
         priceDisplay.textContent = "₹50,000+";
-        document.getElementById("search-main").value = "stud";
+        const genderHerRadio = document.getElementById("filter-gender-her");
+        if (genderHerRadio) genderHerRadio.checked = true;
     } else if (categoriesList.includes(filterType)) {
         priceMaxSlider.value = 50000;
         priceDisplay.textContent = "₹50,000+";
@@ -446,6 +461,8 @@ function renderShopCatalog() {
     if (ankletsCheck && ankletsCheck.checked) categories.push("anklets");
     const chainsCheck = document.getElementById("filter-type-chains");
     if (chainsCheck && chainsCheck.checked) categories.push("chains");
+    const chainPendantCheck = document.getElementById("filter-type-chain_pendant");
+    if (chainPendantCheck && chainPendantCheck.checked) categories.push("chain_pendant");
 
     const customisedCheck = document.getElementById("filter-type-customised");
     if (customisedCheck && customisedCheck.checked) categories.push("customised");
@@ -457,6 +474,10 @@ function renderShopCatalog() {
     const searchQuery = document.getElementById("search-main") ? document.getElementById("search-main").value.toLowerCase().trim() : "";
     const sortBy = document.getElementById("shop-sort") ? document.getElementById("shop-sort").value : "popularity";
     
+    let genderFilter = "all";
+    const checkedGender = document.querySelector('input[name="filter-gender"]:checked');
+    if (checkedGender) genderFilter = checkedGender.value;
+
     // Filter Pipeline
     let filtered = STATE.products.filter(p => {
         // Price Filter
@@ -464,6 +485,12 @@ function renderShopCatalog() {
         
         // Stock Filter
         if (inStockOnly && !p.inStock) return false;
+        
+        // Gender Filter
+        if (genderFilter !== "all") {
+            const prodGender = (p.gender || (p.specs && p.specs.gender) || "both").toLowerCase();
+            if (prodGender !== genderFilter) return false;
+        }
         
         // Category Filter
         if (categories.length > 0 && !categories.includes(p.category)) return false;
@@ -473,7 +500,7 @@ function renderShopCatalog() {
             const matchTitle = p.title ? p.title.toLowerCase().includes(searchQuery) : false;
             const matchDesc = p.description ? p.description.toLowerCase().includes(searchQuery) : false;
             const matchCat = p.category ? p.category.toLowerCase().includes(searchQuery) : false;
-            const matchSpecs = p.specs ? Object.values(p.specs).some(val => val.toLowerCase().includes(searchQuery)) : false;
+            const matchSpecs = p.specs ? Object.values(p.specs).some(val => val !== null && val !== undefined && String(val).toLowerCase().includes(searchQuery)) : false;
             if (!matchTitle && !matchDesc && !matchCat && !matchSpecs) return false;
         }
         
@@ -527,6 +554,11 @@ function createProductCardHtml(p, idx = 0) {
             <div class="product-info">
 
                 <h3 class="product-title" onclick="viewProductDetail('${p.id}')">${p.title}</h3>
+                <div class="product-metadata-row" style="display: flex; gap: 8px; font-size: 0.75rem; color: var(--color-silver-dark); margin-top: 4px; margin-bottom: 8px; align-items: center;">
+                    <span style="display: flex; align-items: center; gap: 2px;">⚖️ ${p.specs && p.specs.weight ? p.specs.weight : 'N/A'}</span>
+                    <span>•</span>
+                    <span style="display: flex; align-items: center; gap: 2px;">👥 ${p.gender === 'him' ? 'Men' : (p.gender === 'her' ? 'Women' : (p.gender === 'kids' ? 'Kids' : 'Unisex'))}</span>
+                </div>
                 <div class="product-price-row">
                     <span class="product-price">₹${p.price.toLocaleString("en-IN")}</span>
                     ${p.originalPrice ? `<span class="product-original-price">₹${p.originalPrice.toLocaleString("en-IN")}</span>` : ""}
@@ -641,13 +673,29 @@ function updateCartQty(cartTitle, change) {
     }
 }
 
+// Helper to format category names for UI display
+function formatCategoryName(cat) {
+    if (!cat) return "";
+    const lower = cat.toLowerCase();
+    if (lower === "chains") return "Chains";
+    if (lower === "chain_pendant") return "Chain with Pendant";
+    if (lower === "rings") return "Rings";
+    if (lower === "earrings") return "Earrings";
+    if (lower === "pendants") return "Pendants";
+    if (lower === "anklets") return "Anklets & Toe Rings";
+    if (lower === "customised") return "Customised";
+    if (lower === "kada") return "Kadas";
+    if (lower === "bracelet") return "Bracelets";
+    return cat.charAt(0).toUpperCase() + cat.slice(1);
+}
+
 // --- DETAIL VIEW ENGINE ---
-function viewProductDetail(prodId) {
+function viewProductDetail(prodId, isPopstate = false) {
     const prod = STATE.products.find(p => p.id === prodId);
     if (!prod) return;
     
     STATE.selectedProduct = prod;
-    navigateTo("detail");
+    navigateTo("detail", null, isPopstate);
     
     const mainImg = document.getElementById("detail-main-img");
     const category = document.getElementById("detail-category");
@@ -664,6 +712,7 @@ function viewProductDetail(prodId) {
     const specWeight = document.getElementById("spec-weight");
     const specPlating = document.getElementById("spec-plating");
     const specAuth = document.getElementById("spec-auth");
+    const specGender = document.getElementById("spec-gender");
     
     const quantityVal = document.getElementById("qty-val");
     const addCartBtn = document.getElementById("detail-add-cart-btn");
@@ -689,7 +738,7 @@ function viewProductDetail(prodId) {
     const sizeLabel = sizeSection ? sizeSection.querySelector(".custom-form-label") : null;
     
     if (sizeSection) {
-        if (isRing || isToeRing || isChain || isKada || isBracelet) {
+        if (isRing || isToeRing || isChain || isKada) {
             sizeSection.style.display = "block";
             let sizes = [];
             let labelText = "Select Size";
@@ -751,7 +800,7 @@ function viewProductDetail(prodId) {
     
     // Bind Details
     if (mainImg) mainImg.src = prod.image;
-    if (category) category.textContent = prod.category;
+    if (category) category.textContent = formatCategoryName(prod.category).toUpperCase();
     if (title) title.textContent = prod.title;
     if (stars) stars.textContent = prod.rating.toFixed(1);
     // Reviews removed per client request
@@ -782,6 +831,7 @@ function viewProductDetail(prodId) {
     if (specMetal) specMetal.textContent = prod.specs.metal || "925 Sterling Silver";
     if (specWeight) specWeight.textContent = prod.specs.weight || "N/A";
     if (specAuth) specAuth.textContent = prod.specs.authenticity || "92.5 Hallmark Certificate Included";
+    if (specGender) specGender.textContent = prod.gender === "him" ? "Men" : (prod.gender === "her" ? "Women" : (prod.gender === "kids" ? "Kids" : "Unisex"));
     
     // Thumbnail strip
     if (thumbs) {
@@ -2594,11 +2644,19 @@ function renderAdminInventoryList() {
     const inventoryTbody = document.getElementById("admin-inventory-tbody");
     if (!inventoryTbody) return;
     
-    inventoryTbody.innerHTML = STATE.products.map(p => `
+    const filterSelect = document.getElementById("admin-inventory-filter-category");
+    const selectedCategory = filterSelect ? filterSelect.value : "all";
+    
+    const filtered = STATE.products.filter(p => {
+        if (selectedCategory !== "all" && p.category !== selectedCategory) return false;
+        return true;
+    });
+    
+    inventoryTbody.innerHTML = filtered.map(p => `
         <tr>
             <td><img src="${p.image}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;" alt=""></td>
             <td style="font-weight:600;">${p.title}</td>
-            <td style="text-transform:uppercase;font-size:0.75rem;">${p.category}</td>
+            <td style="text-transform:uppercase;font-size:0.75rem;">${formatCategoryName(p.category)}</td>
             <td>₹${p.price.toLocaleString("en-IN")}</td>
             <td>
                 <span class="admin-status-badge" style="background-color:${p.inStock ? '#D1FAE5;color:#047857;' : '#FEE2E2;color:#991B1B;'}">
@@ -2682,7 +2740,7 @@ async function addNewProduct() {
         
         const { data: uploadData, error: uploadError } = await supaClient.storage
             .from('product-images')
-            .upload(fileName, file);
+            .upload(fileName, file, { contentType: file.type });
             
         if (uploadError) {
             console.error("Storage upload error", uploadError);
@@ -2725,7 +2783,8 @@ async function addNewProduct() {
             disable_auto_rate: isManual,
             manual_base_price: manualBasePrice,
             stock_qty: stockQty,
-            available_sizes: document.getElementById("new-prod-available-sizes") ? document.getElementById("new-prod-available-sizes").value.trim() : ""
+            available_sizes: document.getElementById("new-prod-available-sizes") ? document.getElementById("new-prod-available-sizes").value.trim() : "",
+            gender: gender
         }
     };
     
@@ -2803,7 +2862,7 @@ function deleteProduct(prodId) {
     }
 }
 
-function changeAdminPassword() {
+async function changeAdminPassword() {
     const currentInp = document.getElementById("admin-current-password");
     const newInp = document.getElementById("admin-new-password");
     if (!currentInp || !newInp) return;
@@ -2816,7 +2875,7 @@ function changeAdminPassword() {
         return;
     }
     
-    const savedPassword = localStorage.getItem("mrt_admin_password") || "mrt925";
+    const savedPassword = STATE.adminPassword || localStorage.getItem("mrt_admin_password") || "mrt925";
     if (currentVal !== savedPassword) {
         alert("Incorrect current password. Password change denied.");
         return;
@@ -2827,8 +2886,16 @@ function changeAdminPassword() {
         return;
     }
     
-    localStorage.setItem("mrt_admin_password", newVal);
-    alert("Admin password updated successfully!");
+    try {
+        await supaClient.from('settings').upsert({ key: 'admin_password', value: newVal }, { onConflict: 'key' });
+        STATE.adminPassword = newVal;
+        localStorage.setItem("mrt_admin_password", newVal);
+        alert("Admin password updated successfully and saved to Supabase!");
+    } catch (err) {
+        console.error("Failed to save admin password to Supabase:", err);
+        localStorage.setItem("mrt_admin_password", newVal);
+        alert("Admin password updated locally, but failed to save to Supabase: " + err.message);
+    }
     
     currentInp.value = "";
     newInp.value = "";
@@ -2865,7 +2932,7 @@ function submitAdminAuth() {
     if (!input) return;
     
     const password = input.value;
-    const savedPassword = localStorage.getItem("mrt_admin_password") || "mrt925";
+    const savedPassword = STATE.adminPassword || localStorage.getItem("mrt_admin_password") || "mrt925";
     
     if (password === savedPassword) {
         sessionStorage.setItem("mrt_admin_authenticated", "true");
@@ -3058,20 +3125,22 @@ function applyBannerSlot(slot, url) {
 }
 
 // Load all saved banner images from Supabase on page load
+// Load all saved banner images from Supabase on page load
 async function applyBannerImages() {
     try {
         const { data, error } = await supaClient
             .from('settings')
-            .select('key, value')
-            .like('key', 'banner_%');
+            .select('key, value');
 
         if (error || !data) return;
         data.forEach(row => {
-            const slot = row.key.replace('banner_', '');
-            if (row.value) applyBannerSlot(slot, row.value);
-            // Also update admin previews if visible
-            const preview = document.getElementById(`banner-preview-${slot}`);
-            if (preview && row.value) preview.src = row.value;
+            if (row.key.startsWith('banner_')) {
+                const slot = row.key.replace('banner_', '');
+                if (row.value) applyBannerSlot(slot, row.value);
+                // Also update admin previews if visible
+                const preview = document.getElementById(`banner-preview-${slot}`);
+                if (preview && row.value) preview.src = row.value;
+            }
             
             // Handle UPI ID setting specifically
             if (row.key === 'admin_upi_id') {
@@ -3080,9 +3149,86 @@ async function applyBannerImages() {
                 const upiInput = document.getElementById('admin-upi-id-input');
                 if (upiInput) upiInput.value = row.value;
             }
+
+            // Custom ticker announcement message
+            if (row.key === 'ticker_custom_message') {
+                STATE.tickerCustomMessage = row.value;
+                const tickerInput = document.getElementById('admin-ticker-msg-input');
+                if (tickerInput) tickerInput.value = row.value;
+            }
+
+            // Admin password setting specifically
+            if (row.key === 'admin_password') {
+                STATE.adminPassword = row.value;
+            }
+
+            // Hero banner title overlay
+            if (row.key === 'hero_title') {
+                STATE.heroTitle = row.value;
+                const titleInput = document.getElementById('admin-hero-title-input');
+                if (titleInput) titleInput.value = row.value;
+            }
+
+            // Hero banner subtitle overlay
+            if (row.key === 'hero_subtitle') {
+                STATE.heroSubtitle = row.value;
+                const subtitleInput = document.getElementById('admin-hero-subtitle-input');
+                if (subtitleInput) subtitleInput.value = row.value;
+            }
         });
+        
+        // Re-render ticker with custom announcement text
+        renderRatesTicker();
+        // Render hero text overlay
+        renderHeroTextOverlay();
     } catch (e) {
-        console.warn('Banner load failed:', e);
+        console.warn('Banner/Settings load failed:', e);
+    }
+}
+
+// Render the hero text overlay on the hero banner
+function renderHeroTextOverlay() {
+    const overlay = document.getElementById("hero-banner-overlay");
+    const titleEl = document.getElementById("hero-overlay-title");
+    const subtitleEl = document.getElementById("hero-overlay-subtitle");
+    
+    if (!overlay) return;
+    
+    const titleVal = STATE.heroTitle || "";
+    const subtitleVal = STATE.heroSubtitle || "";
+    
+    if (titleVal.trim() === "" && subtitleVal.trim() === "") {
+        overlay.style.display = "none";
+    } else {
+        overlay.style.display = "flex";
+        if (titleEl) titleEl.textContent = titleVal;
+        if (subtitleEl) subtitleEl.textContent = subtitleVal;
+    }
+}
+
+// Save the banner and ticker announcement texts to Supabase settings
+async function saveBannerTexts() {
+    const tickerVal = document.getElementById('admin-ticker-msg-input').value.trim();
+    const heroTitleVal = document.getElementById('admin-hero-title-input').value.trim();
+    const heroSubtitleVal = document.getElementById('admin-hero-subtitle-input').value.trim();
+    
+    try {
+        await supaClient.from('settings').upsert({ key: 'ticker_custom_message', value: tickerVal }, { onConflict: 'key' });
+        STATE.tickerCustomMessage = tickerVal;
+        
+        await supaClient.from('settings').upsert({ key: 'hero_title', value: heroTitleVal }, { onConflict: 'key' });
+        STATE.heroTitle = heroTitleVal;
+        
+        await supaClient.from('settings').upsert({ key: 'hero_subtitle', value: heroSubtitleVal }, { onConflict: 'key' });
+        STATE.heroSubtitle = heroSubtitleVal;
+        
+        renderRatesTicker();
+        renderHeroTextOverlay();
+        
+        alert("Banner and ticker announcement texts saved successfully!");
+    } catch(err) {
+        console.error("Error saving banner texts:", err);
+        alert("Failed to save banner texts: " + err.message);
     }
 }
 
@@ -3188,16 +3334,12 @@ async function loadLiveStats() {
 
 // --- WINDOW LOAD INITIALIZER ---
 window.addEventListener("DOMContentLoaded", async () => {
-    await initState();
-    renderRatesTicker();
+    // Show home view IMMEDIATELY — don't wait for network
+    const homeView = document.getElementById("home-view");
+    if (homeView) homeView.classList.add("active-view");
     initTryOnDragAndDrop();
-    
-    // Render default Home grid
-    renderHomeProducts();
-    updateHeaderCounters();
-    loadLiveStats(); // Load real delivered orders & products count
-    applyBannerImages(); // Apply admin-uploaded banner images
-    
+    renderRatesTicker();
+
     // Clear admin authentication state on fresh load / reload to enforce login prompt
     sessionStorage.removeItem("mrt_admin_authenticated");
     const btn = document.getElementById("admin-toggle");
@@ -3228,7 +3370,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             secNode.textContent = seconds.toString().padStart(2, "0");
         }, 1000);
     }
-    
+
     // Handle referral code in URL
     const urlParams = new URLSearchParams(window.location.search);
     let refCode = urlParams.get('ref');
@@ -3246,12 +3388,54 @@ window.addEventListener("DOMContentLoaded", async () => {
         openUserProfile();
     }
 
-    // Handle product details deep link
-    const prodIdParam = urlParams.get('product') || (window.location.hash.match(/product=([^&]+)/) || [])[1];
-    if (prodIdParam) {
-        const prod = STATE.products.find(p => p.id === prodIdParam);
-        if (prod) {
-            viewProductDetail(prod.id);
+    // Load all data in background — re-render once ready
+    initState().then(() => {
+        renderHomeProducts();
+        updateHeaderCounters();
+        renderRatesTicker();
+
+        const prodIdParam = urlParams.get('product') || (window.location.hash.match(/product=([^&]+)/) || [])[1];
+        const hash = window.location.hash.replace("#", "");
+        if (hash.startsWith("detail_")) {
+            const prodId = hash.replace("detail_", "");
+            const prod = STATE.products.find(p => p.id === prodId);
+            if (prod) viewProductDetail(prod.id, true);
+        } else if (prodIdParam) {
+            const prod = STATE.products.find(p => p.id === prodIdParam);
+            if (prod) viewProductDetail(prod.id, true);
+        } else {
+            const validViews = ["home", "shop", "customisation", "track", "shipping", "admin"];
+            const hashView = window.location.hash.replace("#", "");
+            if (validViews.includes(hashView)) {
+                navigateTo(hashView, null, true);
+            }
+        }
+
+        loadLiveStats();
+        applyBannerImages();
+    });
+});
+
+// Window popstate event listener for browser Back/Forward navigation
+window.addEventListener("popstate", (event) => {
+    if (event.state && event.state.viewId) {
+        if (event.state.viewId === "detail" && event.state.selectedProductId) {
+            viewProductDetail(event.state.selectedProductId, true);
+        } else {
+            navigateTo(event.state.viewId, event.state.preFilter, true);
+        }
+    } else {
+        const hash = window.location.hash.replace("#", "");
+        if (hash.startsWith("detail_")) {
+            const prodId = hash.replace("detail_", "");
+            viewProductDetail(prodId, true);
+        } else {
+            const validViews = ["home", "shop", "customisation", "track", "shipping", "admin"];
+            if (validViews.includes(hash)) {
+                navigateTo(hash, null, true);
+            } else {
+                navigateTo("home", null, true);
+            }
         }
     }
 });
@@ -3278,7 +3462,7 @@ function recalculateAllProductPrices() {
             else if (cat === "earrings") weightVal = 2.5;
             else if (cat === "pendants") weightVal = 3.5;
             else if (cat === "anklets") weightVal = 4.0;
-            else if (cat === "chains") weightVal = 6.0;
+            else if (cat === "chains" || cat === "chain_pendant") weightVal = 6.0;
             else if (cat === "coins") weightVal = 10.0;
             else if (cat === "gold_coins") weightVal = 5.0;
             else weightVal = 3.0;
@@ -3323,7 +3507,7 @@ function recalculateAllProductPrices() {
                 makingVal = (8.0 / 245) * 100;
             } else if (marketBase === "fine" || metalSpec.includes("625")) {
                 makingVal = (80.0 / 245) * 100;
-            } else if (cat === "chains" || cat === "bracelets" || cat === "kada" || title.includes("chain") || title.includes("bracelet") || title.includes("kada")) {
+            } else if (cat === "chains" || cat === "chain_pendant" || cat === "bracelets" || cat === "kada" || title.includes("chain") || title.includes("bracelet") || title.includes("kada")) {
                 makingVal = (155.0 / 245) * 100;
             } else {
                 makingVal = (405.0 / 245) * 100;
@@ -3397,7 +3581,7 @@ function autoCalculateJewelRate() {
             makingVal = (8.0 / 245) * 100;
         } else if (marketBase === "fine") {
             makingVal = (80.0 / 245) * 100;
-        } else if (cat === "chains" || cat === "bracelets" || cat === "kada" || title.includes("chain") || title.includes("bracelet") || title.includes("kada")) {
+        } else if (cat === "chains" || cat === "chain_pendant" || cat === "bracelets" || cat === "kada" || title.includes("chain") || title.includes("bracelet") || title.includes("kada")) {
             makingVal = (155.0 / 245) * 100;
         } else {
             makingVal = (405.0 / 245) * 100;
@@ -3774,7 +3958,7 @@ async function updateExistingProduct() {
         
         const { data: uploadData, error: uploadError } = await supaClient.storage
             .from('product-images')
-            .upload(fileName, file);
+            .upload(fileName, file, { contentType: file.type });
             
         if (uploadError) {
             console.error("Storage upload error", uploadError);
@@ -3817,7 +4001,8 @@ async function updateExistingProduct() {
             disable_auto_rate: isManual,
             manual_base_price: manualBasePrice,
             stock_qty: stockQty,
-            available_sizes: document.getElementById("new-prod-available-sizes") ? document.getElementById("new-prod-available-sizes").value.trim() : ""
+            available_sizes: document.getElementById("new-prod-available-sizes") ? document.getElementById("new-prod-available-sizes").value.trim() : "",
+            gender: gender
         }
     };
     
