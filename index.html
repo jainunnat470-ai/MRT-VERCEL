@@ -42,7 +42,7 @@
                 </button>
 
                 <div class="search-box">
-                    <input type="text" id="search-main" class="search-input" placeholder="Search 925 silver..." onkeyup="if(event.key === 'Enter') navigateTo('shop')">
+                    <input type="text" id="search-main" class="search-input" placeholder="Search 925 silver..." oninput="handleSearchInput(event)">
                     <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
@@ -71,8 +71,6 @@
                     </svg>
                 </button>
 
-                <!-- Admin Dash Toggle -->
-                <button class="admin-toggle-btn" id="admin-toggle" onclick="toggleAdminMode()">Admin Panel</button>
             </div>
         </div>
     </header>
@@ -93,7 +91,11 @@
                     <img class="hero-slide-bg" id="banner-home-fallback-desktop" src="hero_banner.png" style="width: 100%; height: auto; display: block;" alt="Hero Banner">
                 </picture>
             </div>
-            <!-- The hero image already contains text, so we remove the HTML text overlay -->
+            <!-- Hero text overlay (editable by admin) -->
+            <div id="hero-banner-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; text-align: center; background: rgba(0,0,0,0.15); color: #FFFFFF; font-family: var(--font-heading); text-shadow: 0 2px 8px rgba(0,0,0,0.6); pointer-events: none;">
+                <h1 id="hero-overlay-title" style="font-size: 2.2rem; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px;"></h1>
+                <p id="hero-overlay-subtitle" style="font-size: 1.1rem; font-weight: 500; font-family: var(--font-body); opacity: 0.95;"></p>
+            </div>
         </section>
 
         <!-- Digi Silver Banner -->
@@ -145,6 +147,12 @@
                         <span class="cat-circle-letter">C</span>
                     </div>
                     <span class="cat-circle-title">Chains</span>
+                </div>
+                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'chain_pendant')" style="animation-delay: 0.33s;">
+                    <div class="cat-circle-img-wrap">
+                        <span class="cat-circle-letter">CP</span>
+                    </div>
+                    <span class="cat-circle-title">Chain with Pendant</span>
                 </div>
 
                 <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop')" style="animation-delay: 0.35s;">
@@ -321,13 +329,16 @@
                     </label>
                     <label class="filter-checkbox-label">
                         <input type="checkbox" id="filter-type-anklets" onchange="renderShopCatalog()">
-                        <span>Anklets & Toe Rings</span>
+                        <span>Anklets &amp; Toe Rings</span>
                     </label>
                     <label class="filter-checkbox-label">
                         <input type="checkbox" id="filter-type-chains" onchange="renderShopCatalog()">
                         <span>Chains</span>
                     </label>
-
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" id="filter-type-chain_pendant" onchange="renderShopCatalog()">
+                        <span>Chain with Pendant</span>
+                    </label>
                     <label class="filter-checkbox-label">
                         <input type="checkbox" id="filter-type-customised" onchange="renderShopCatalog()">
                         <span>Customised</span>
@@ -341,7 +352,31 @@
                         <span>Bracelets</span>
                     </label>
                 </div>
-                
+
+                <div class="filter-widget">
+                    <h3 class="filter-title">Gender</h3>
+                    <label class="filter-checkbox-label" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="radio" name="filter-gender" id="filter-gender-all" value="all" checked onchange="renderShopCatalog()" style="margin: 0;">
+                        <span>Show All</span>
+                    </label>
+                    <label class="filter-checkbox-label" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="radio" name="filter-gender" id="filter-gender-him" value="him" onchange="renderShopCatalog()" style="margin: 0;">
+                        <span>For Him</span>
+                    </label>
+                    <label class="filter-checkbox-label" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="radio" name="filter-gender" id="filter-gender-her" value="her" onchange="renderShopCatalog()" style="margin: 0;">
+                        <span>For Her</span>
+                    </label>
+                    <label class="filter-checkbox-label" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="radio" name="filter-gender" id="filter-gender-both" value="both" onchange="renderShopCatalog()" style="margin: 0;">
+                        <span>Unisex (Both)</span>
+                    </label>
+                    <label class="filter-checkbox-label" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="radio" name="filter-gender" id="filter-gender-kids" value="kids" onchange="renderShopCatalog()" style="margin: 0;">
+                        <span>Kids</span>
+                    </label>
+                </div>
+
                 <div class="filter-widget">
                     <h3 class="filter-title">Maximum Price</h3>
                     <input type="range" id="filter-price-max" min="500" max="50000" step="500" value="50000" style="width:100%; accent-color:var(--color-accent-pink);" oninput="document.getElementById('filter-price-val').textContent = parseInt(this.value) === 50000 ? '₹50,000+' : '₹' + parseInt(this.value).toLocaleString('en-IN'); renderShopCatalog();">
@@ -351,7 +386,6 @@
                     </div>
                 </div>
 
-                
                 <button class="product-btn-add" style="font-size:0.75rem;padding:8px 0;" onclick="applyQuickFilter('all')">Clear All Filters</button>
             </aside>
             
@@ -539,9 +573,9 @@
     <!-- --- C. PRODUCT DETAIL VIEW PANEL --- -->
     <div id="detail-view" class="app-view container section-padding">
         <!-- Back navigation link -->
-        <a href="#" onclick="navigateTo('shop')" style="display:inline-flex;align-items:center;gap:6px;font-size:0.9rem;font-weight:600;margin-bottom:20px;color:var(--color-accent-pink);">
+        <a href="#" onclick="goBackFromDetail(event)" style="display:inline-flex;align-items:center;gap:6px;font-size:0.9rem;font-weight:600;margin-bottom:20px;color:var(--color-accent-pink);">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
-            Back to Collections
+            Back to Collection
         </a>
         
         <div class="detail-layout">
@@ -570,14 +604,22 @@
                 
                 <p class="detail-desc" id="detail-desc">Beautiful pure rhodium sterling silver master ring handcrafted using best-in-market diamonds-equivalent cubic zirconia jewels. Hypoallergenic design ensuring all-day safety.</p>
                 
-                <div class="detail-spec-grid">
-                    <div class="detail-spec-item">
-                        <span class="detail-spec-label">Metal Purity</span>
-                        <span class="detail-spec-val" id="spec-metal">Solid 92.5% Sterling Silver</span>
+                <div class="detail-spec-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; margin-bottom: 15px;">
+                    <div class="detail-spec-item" style="border: 1px solid var(--color-silver-mid); padding: 10px; border-radius: var(--border-radius-sm);">
+                        <span class="detail-spec-label" style="font-size: 0.75rem; color: var(--color-silver-dark); display: block; text-transform: uppercase;">Metal Purity</span>
+                        <span class="detail-spec-val" id="spec-metal" style="font-size: 0.88rem; font-weight: 600; color: var(--color-primary);">Solid 92.5% Sterling Silver</span>
                     </div>
-                    <div class="detail-spec-item">
-                        <span class="detail-spec-label">Authenticity Badge</span>
-                        <span class="detail-spec-val" id="spec-auth">92.5 Hallmarked Stamp</span>
+                    <div class="detail-spec-item" style="border: 1px solid var(--color-silver-mid); padding: 10px; border-radius: var(--border-radius-sm);">
+                        <span class="detail-spec-label" style="font-size: 0.75rem; color: var(--color-silver-dark); display: block; text-transform: uppercase;">Weight</span>
+                        <span class="detail-spec-val" id="spec-weight" style="font-size: 0.88rem; font-weight: 600; color: var(--color-primary);">N/A</span>
+                    </div>
+                    <div class="detail-spec-item" style="border: 1px solid var(--color-silver-mid); padding: 10px; border-radius: var(--border-radius-sm);">
+                        <span class="detail-spec-label" style="font-size: 0.75rem; color: var(--color-silver-dark); display: block; text-transform: uppercase;">Gender</span>
+                        <span class="detail-spec-val" id="spec-gender" style="font-size: 0.88rem; font-weight: 600; color: var(--color-primary);">Unisex</span>
+                    </div>
+                    <div class="detail-spec-item" style="border: 1px solid var(--color-silver-mid); padding: 10px; border-radius: var(--border-radius-sm);">
+                        <span class="detail-spec-label" style="font-size: 0.75rem; color: var(--color-silver-dark); display: block; text-transform: uppercase;">Authenticity Badge</span>
+                        <span class="detail-spec-val" id="spec-auth" style="font-size: 0.88rem; font-weight: 600; color: var(--color-primary);">92.5 Hallmarked Stamp</span>
                     </div>
                 </div>
                 <!-- Dynamic Size Selector (Visible for Rings/Toe Rings only) -->
@@ -1062,7 +1104,24 @@
                 <!-- 4. Product Catalog List -->
                 <div class="admin-tab-view" id="admin-tab-inventory">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-                        <h3 class="admin-tab-title" style="margin-bottom: 0;">Active Store Inventory</h3>
+                        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                            <h3 class="admin-tab-title" style="margin-bottom: 0;">Active Store Inventory</h3>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <label style="font-size: 0.82rem; font-weight: 600; color: var(--color-silver-dark); margin: 0;">Filter Category:</label>
+                                <select id="admin-inventory-filter-category" onchange="renderAdminInventoryList()" style="padding: 6px 12px; border: 1px solid var(--color-silver-mid); border-radius: var(--border-radius-sm); font-size: 0.82rem; outline: none; background: #FFFFFF; font-weight: 500; cursor: pointer; color: var(--color-primary);">
+                                    <option value="all">All Categories</option>
+                                    <option value="rings">Rings</option>
+                                    <option value="earrings">Earrings</option>
+                                    <option value="pendants">Pendants</option>
+                                    <option value="anklets">Anklets & Toe Rings</option>
+                                    <option value="chains">Chains</option>
+                                    <option value="chain_pendant">Chain with Pendant</option>
+                                    <option value="customised">Customised</option>
+                                    <option value="kada">Kadas</option>
+                                    <option value="bracelet">Bracelets</option>
+                                </select>
+                            </div>
+                        </div>
                         <button class="admin-btn-submit" onclick="exportProductsToCSV()" style="margin: 0; width: auto; padding: 10px 20px; display: flex; align-items: center; gap: 8px;">
                             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline-block;"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                             Download Products Excel (CSV)
@@ -1103,6 +1162,7 @@
                                 <option value="pendants">Pendants</option>
                                 <option value="anklets">Anklets & Toe Rings</option>
                                 <option value="chains">Chains</option>
+                                <option value="chain_pendant">Chain with Pendant</option>
 
                                 <option value="customised">Customised</option>
                                 <option value="kada">Kadas</option>
@@ -1115,6 +1175,7 @@
                                 <option value="both">Both (Him & Her)</option>
                                 <option value="him">For Him</option>
                                 <option value="her">For Her</option>
+                                <option value="kids">Kids</option>
                             </select>
                         </div>
                         <input type="hidden" id="new-prod-finish" value="silver">
@@ -1406,6 +1467,28 @@
                     <h3 class="admin-tab-title">🖼️ Banner & Category Image Manager</h3>
                     <p style="color: var(--color-silver-dark); margin-bottom: 24px; font-size: 0.9rem;">Upload images from your device. Changes apply instantly to all visitors on the live website.</p>
 
+                    <!-- Banner Texts Edit Card -->
+                    <div style="background: var(--color-silver-light); border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid var(--color-silver-mid);">
+                        <h4 style="color: var(--color-primary); margin-bottom: 16px; font-size: 1rem; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 700;">✍️ Promotional Banner & Announcement Texts</h4>
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <div class="custom-form-group">
+                                <label class="custom-form-label">Scrolling Announcement Bar Text (HTML Allowed)</label>
+                                <input type="text" id="admin-ticker-msg-input" class="custom-input" placeholder="e.g. GET EXTRA 10% OFF ON YOUR FIRST ORDER! USE CODE: SILVER10">
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="custom-form-group">
+                                    <label class="custom-form-label">Hero Banner Overlay Title (Optional)</label>
+                                    <input type="text" id="admin-hero-title-input" class="custom-input" placeholder="e.g. ELEGANCE IN EVERY DETAIL">
+                                </div>
+                                <div class="custom-form-group">
+                                    <label class="custom-form-label">Hero Banner Overlay Subtitle (Optional)</label>
+                                    <input type="text" id="admin-hero-subtitle-input" class="custom-input" placeholder="e.g. Handcrafted 92.5 Sterling Silver">
+                                </div>
+                            </div>
+                            <button class="admin-btn-submit" onclick="saveBannerTexts()" style="margin-top: 8px; width: 100%; background: var(--color-primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;">Save Promotional & Announcement Texts</button>
+                        </div>
+                    </div>
+
                     <!-- Hero Banner -->
                     <div style="background: linear-gradient(135deg, #1a0a2e, #3D0024); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
                         <h4 style="color: #FFD700; margin-bottom: 16px; font-size: 1rem; letter-spacing: 1px; text-transform: uppercase;">🎯 Hero Banner (Main Homepage)</h4>
@@ -1534,7 +1617,22 @@
                                     <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
                                     <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'chains')">
                                 </label>
-                                <button onclick="resetBannerImage('chains')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor:8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                                <button onclick="resetBannerImage('chains')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
+                            </div>
+                        </div>
+
+                        <!-- Chain with Pendant -->
+                        <div style="background: var(--color-silver-light); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-accent-pink); flex-shrink: 0;">
+                                <img id="banner-preview-chain_pendant" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='chains.jpeg'">
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 0.95rem;">🔗 Chain with Pendant</div>
+                                <label style="display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary); color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 600;">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload
+                                    <input type="file" accept="image/*" style="display:none" onchange="handleBannerUpload(event, 'chain_pendant')">
+                                </label>
+                                <button onclick="resetBannerImage('chain_pendant')" style="margin-left: 6px; background: transparent; border: 1px solid var(--color-silver-mid); color: var(--color-silver-dark); padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem;">Reset</button>
                             </div>
                         </div>
 
@@ -1728,6 +1826,7 @@
                     <li><a href="#" onclick="navigateTo('shop','earrings')">Earrings</a></li>
                     <li><a href="#" onclick="navigateTo('shop','pendants')">Pendants</a></li>
                     <li><a href="#" onclick="navigateTo('shop','chains')">Chains</a></li>
+                    <li><a href="#" onclick="navigateTo('shop','chain_pendant')">Chain with Pendant</a></li>
                     <li><a href="#" onclick="navigateTo('shop','anklets')">Anklets</a></li>
                     <li><a href="#" onclick="navigateTo('shop','kada')">Kadas</a></li>
                     <li><a href="#" onclick="navigateTo('shop','bracelet')">Bracelets</a></li>
@@ -1812,7 +1911,7 @@
 
         <!-- Bottom Bar -->
         <div class="container footer-bottom">
-            <span>© 2026 M R THANGAMAALIGAI · All Rights Reserved.</span>
+            <span>© 2026 M R THANGAMAALIGAI · All Rights Reserved. · <a href="#" id="admin-toggle" onclick="toggleAdminMode()" style="color: inherit; opacity: 0.35; text-decoration: none;">Admin Area</a></span>
             <div class="footer-bottom-right">
                 <span class="footer-payment-label">Payments:</span>
                 <span class="footer-pay-badge">UPI</span>
