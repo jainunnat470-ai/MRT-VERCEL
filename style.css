@@ -1169,7 +1169,8 @@ header {
     border-radius: var(--border-radius-md);
     padding: 24px;
     box-shadow: var(--shadow-subtle);
-    height: fit-content;
+    max-height: calc(100vh - var(--header-height) - 40px);
+    overflow-y: auto;
     position: sticky;
     top: calc(var(--header-height) + 20px);
 }
