@@ -6611,3 +6611,34 @@ function downloadTdsReportPdf() {
 
     doc.save(`TDS_Report_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}.pdf`);
 }
+
+function editOrderBill(orderId) {
+    const order = STATE.orders.find(o => o.id === orderId);
+    if (!order) return;
+    const newTotalStr = prompt('Enter new total bill amount (?):', order.total || 0);
+    if (newTotalStr === null) return;
+    const newTotal = parseFloat(newTotalStr);
+    if (isNaN(newTotal) || newTotal < 0) {
+        alert('Invalid amount entered.');
+        return;
+    }
+    const newDiscountStr = prompt('Enter total discount applied (?):', order.discount || 0);
+    let newDiscount = 0;
+    if (newDiscountStr !== null) {
+        newDiscount = parseFloat(newDiscountStr);
+        if (isNaN(newDiscount) || newDiscount < 0) newDiscount = 0;
+    }
+    const newSubtotal = newTotal + newDiscount;
+
+    order.total = newTotal;
+    order.subtotal = newSubtotal;
+    order.discount = newDiscount;
+    renderAdminOrders();
+
+    supaClient.from('orders').update({ total: newTotal, subtotal: newSubtotal, discount: newDiscount }).eq('id', orderId)
+        .then(() => alert('Bill updated successfully!'))
+        .catch(err => {
+            console.error(err);
+            alert('Failed to update bill in database.');
+        });
+}
