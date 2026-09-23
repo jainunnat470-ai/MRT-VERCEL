@@ -17,7 +17,7 @@ const STATE = {
     cart: [],
     wishlist: [],
     orders: [],
-    rates: { sterling: 94.8, fine: 98.5, gold: 7500.00, trend: "up" },
+    rates: { sterling: 94.8, fine: 98.5, gold: 7500.00, trend: 'up', shipping: localStorage.getItem('mrt_shipping_rate') ? parseFloat(localStorage.getItem('mrt_shipping_rate')) : 300 },
     coupons: {
         "SILVER10": { code: "SILVER10", type: "percentage", value: 10, is_used: false, single_use: false },
         "SPARKLE15": { code: "SPARKLE15", type: "percentage", value: 15, is_used: false, single_use: false }
@@ -1229,7 +1229,7 @@ function openCheckoutModal() {
         }
         
         const hasPhysicalItems = physicalSubtotal > 0;
-        const shippingFee = hasPhysicalItems ? 150 : 0;
+        const shippingFee = hasPhysicalItems ? (STATE.rates.shipping || 300) : 0;
         
         // Digi Silver: 3% GST is EXTRA (added on top)
         // Physical items: 3% GST is INCLUDED in price
@@ -1438,7 +1438,7 @@ function submitCheckoutOrder() {
     }
     
     const hasPhysicalItems = physicalSubtotal > 0;
-    const shippingFee = hasPhysicalItems ? 150 : 0;
+    const shippingFee = hasPhysicalItems ? (STATE.rates.shipping || 300) : 0;
     const digiGst = Math.round(digiSubtotal * 0.03);
     const total = subtotal - discount + shippingFee + digiGst;
     
@@ -2173,16 +2173,19 @@ function renderAdminRates() {
     const inpSterling = document.getElementById("admin-rate-sterling");
     const inpFine = document.getElementById("admin-rate-fine");
     const inpGold = document.getElementById("admin-rate-gold");
+    const inpShipping = document.getElementById("admin-rate-shipping");
     
     if (inpSterling) inpSterling.value = STATE.rates.sterling.toFixed(2);
     if (inpFine) inpFine.value = STATE.rates.fine.toFixed(2);
     if (inpGold) inpGold.value = (STATE.rates.gold || 7500.00).toFixed(2);
+    if (inpShipping) inpShipping.value = STATE.rates.shipping || 300;
 }
 
 async function updateAdminRates() {
     const sterlingVal = parseFloat(document.getElementById("admin-rate-sterling").value);
     const fineVal = parseFloat(document.getElementById("admin-rate-fine").value);
     const goldVal = parseFloat(document.getElementById("admin-rate-gold").value);
+    const shippingVal = parseFloat(document.getElementById("admin-rate-shipping").value);
     
     if (isNaN(sterlingVal) || isNaN(fineVal) || isNaN(goldVal)) {
         alert("Please enter valid decimal numbers for rates.");
@@ -2192,6 +2195,10 @@ async function updateAdminRates() {
     STATE.rates.sterling = sterlingVal;
     STATE.rates.fine = fineVal;
     STATE.rates.gold = goldVal;
+    if (!isNaN(shippingVal)) {
+        STATE.rates.shipping = shippingVal;
+        localStorage.setItem('mrt_shipping_rate', shippingVal);
+    }
     STATE.rates.trend = "up";
     
     renderRatesTicker();
@@ -4280,8 +4287,8 @@ function calculateOrderGstAndShipping(o) {
     const expectedTotalWithoutShipping = physicalTaxableBase + digiSubtotal + digiGst;
     let shippingFee = 0;
     if (physicalSubtotal > 0) {
-        if (Math.abs(total - expectedTotalWithoutShipping - 150) < 5) {
-            shippingFee = 150;
+        if (Math.abs(total - expectedTotalWithoutShipping - (STATE.rates.shipping || 300)) < 5) {
+            shippingFee = STATE.rates.shipping || 300;
         }
     }
     
