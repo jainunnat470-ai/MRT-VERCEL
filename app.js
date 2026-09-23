@@ -2300,6 +2300,7 @@ function renderAdminOrders() {
                     <button class="btn-checkout" onclick="downloadOrderInvoicePdf('${o.id}')" style="padding: 6px 12px; font-size: 0.72rem; margin-top: 0; background: linear-gradient(135deg, #1A365D 0%, #2A4365 100%); color: #FFFFFF; border: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 6px;">
                         📄 PDF Copy
                     </button>
+                    <button onclick="editOrderBill('${o.id}')" style="padding: 6px 12px; font-size: 0.72rem; margin-top: 0; background: #e0e7ff; color: #4338ca; border: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 2px 4px rgba(67,56,202,0.1); margin-bottom: 6px;">?? Edit Bill</button>
                     <button onclick="deleteInvalidOrder('${o.id}')" style="padding: 6px 12px; font-size: 0.72rem; background: #fee2e2; color: #ef4444; border: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 2px 4px rgba(239,68,68,0.1);">
                         🗑️ Delete
                     </button>
