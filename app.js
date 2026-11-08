@@ -245,6 +245,9 @@ window.goBackFromDetail = function(e) {
     }
 };
 function navigateTo(viewId, preFilter = null, isPopstate = false) {
+    if (window.event && typeof window.event.preventDefault === 'function') {
+        window.event.preventDefault();
+    }
     // Close mobile nav if open
     const navMenu = document.querySelector(".nav-menu");
     if (navMenu && navMenu.classList.contains("mobile-open")) {
@@ -372,7 +375,7 @@ function applyQuickFilter(filterType) {
         const ids = [
             "filter-type-rings", "filter-type-earrings", "filter-type-pendants", 
             "filter-type-anklets", "filter-type-chains", "filter-type-chain_pendant",
-            "filter-type-customised", "filter-type-kada", "filter-type-bracelet"
+            "filter-type-customised", "filter-type-kada", "filter-type-bracelet", "filter-type-cuff_bracelet"
         ];
         ids.forEach(id => {
             const el = document.getElementById(id);
@@ -382,7 +385,7 @@ function applyQuickFilter(filterType) {
     const priceMaxSlider = document.getElementById("filter-price-max");
     const priceDisplay = document.getElementById("filter-price-val");
     
-    const categoriesList = ["rings", "earrings", "pendants", "anklets", "chains", "chain_pendant", "coins", "gold", "gold_coins", "kids", "customised", "kada", "bracelet", "bracelets"];
+    const categoriesList = ["rings", "earrings", "pendants", "anklets", "chains", "chain_pendant", "coins", "gold", "gold_coins", "kids", "customised", "kada", "bracelet", "bracelets", "cuff_bracelet", "cuff_bracelets"];
     
     if (filterType === "search") {
         // Keep current filters, just perform search
@@ -408,7 +411,7 @@ function applyQuickFilter(filterType) {
     } else if (categoriesList.includes(filterType)) {
         priceMaxSlider.value = 50000;
         priceDisplay.textContent = "₹50,000+";
-        const cat = filterType === "bracelets" ? "bracelet" : filterType;
+        const cat = filterType === "bracelets" ? "bracelet" : (filterType === "cuff_bracelets" ? "cuff_bracelet" : filterType);
         const catCheckbox = document.getElementById(`filter-type-${cat}`);
         if (catCheckbox) catCheckbox.checked = true;
     } else if (filterType.startsWith("cat-")) {
@@ -470,6 +473,8 @@ function renderShopCatalog() {
     if (kadaCheck && kadaCheck.checked) categories.push("kada");
     const braceletCheck = document.getElementById("filter-type-bracelet");
     if (braceletCheck && braceletCheck.checked) categories.push("bracelet");
+    const cuffBraceletCheck = document.getElementById("filter-type-cuff_bracelet");
+    if (cuffBraceletCheck && cuffBraceletCheck.checked) categories.push("cuff_bracelet");
     
     const searchQuery = document.getElementById("search-main") ? document.getElementById("search-main").value.toLowerCase().trim() : "";
     const sortBy = document.getElementById("shop-sort") ? document.getElementById("shop-sort").value : "popularity";
@@ -599,7 +604,7 @@ function addToCart(prodId, count = 1) {
     const isRing = ((prod.category || "").toLowerCase() === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing && !isEarring;
     const isChain = (prod.category || "").toLowerCase().includes("chain");
     const isKada = (prod.category || "").toLowerCase() === "kada" || prod.title.toLowerCase().includes("kada");
-    const isBracelet = (prod.category || "").toLowerCase() === "bracelet" || prod.title.toLowerCase().includes("bracelet");
+    const isBracelet = (prod.category || "").toLowerCase() === "bracelet" || (prod.category || "").toLowerCase() === "cuff_bracelet" || prod.title.toLowerCase().includes("bracelet") || prod.title.toLowerCase().includes("cuff");
     
     if (STATE.selectedProduct && STATE.selectedProduct.id === prod.id && STATE.selectedSize) {
         // If we are adding the product that is currently viewed in detail, use the selected size!
@@ -686,6 +691,7 @@ function formatCategoryName(cat) {
     if (lower === "customised") return "Customised";
     if (lower === "kada") return "Kadas";
     if (lower === "bracelet") return "Bracelets";
+    if (lower === "cuff_bracelet" || lower === "cuff_bracelets") return "Cuff Bracelets";
     return cat.charAt(0).toUpperCase() + cat.slice(1);
 }
 
@@ -732,7 +738,7 @@ function viewProductDetail(prodId, isPopstate = false) {
     const isRing = ((prod.category || "").toLowerCase() === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing && !isEarring;
     const isChain = (prod.category || "").toLowerCase().includes("chain");
     const isKada = (prod.category || "").toLowerCase() === "kada" || prod.title.toLowerCase().includes("kada");
-    const isBracelet = (prod.category || "").toLowerCase() === "bracelet" || prod.title.toLowerCase().includes("bracelet");
+    const isBracelet = (prod.category || "").toLowerCase() === "bracelet" || (prod.category || "").toLowerCase() === "cuff_bracelet" || prod.title.toLowerCase().includes("bracelet") || prod.title.toLowerCase().includes("cuff");
     
     const sizeSection = document.getElementById("detail-size-section");
     const sizeLabel = sizeSection ? sizeSection.querySelector(".custom-form-label") : null;
@@ -956,7 +962,7 @@ function triggerBuyNow() {
         const isRing = ((prod.category || "").toLowerCase() === "rings" || prod.title.toLowerCase().includes("ring") || prod.title.toLowerCase().includes("band")) && !isToeRing && !isEarring;
         const isChain = (prod.category || "").toLowerCase().includes("chain");
         const isKada = (prod.category || "").toLowerCase() === "kada" || prod.title.toLowerCase().includes("kada");
-        const isBracelet = (prod.category || "").toLowerCase() === "bracelet" || prod.title.toLowerCase().includes("bracelet");
+        const isBracelet = (prod.category || "").toLowerCase() === "bracelet" || (prod.category || "").toLowerCase() === "cuff_bracelet" || prod.title.toLowerCase().includes("bracelet") || prod.title.toLowerCase().includes("cuff");
         
         let size = STATE.selectedSize;
         if (!size) {
@@ -2978,6 +2984,7 @@ const BANNER_DEFAULTS = {
     earrings: 'earring.jpeg',
     pendants: 'pendant.jpeg',
     bracelets: 'bracelet.jpeg',
+    cuff_bracelet: 'bracelet.jpeg',
     anklets: 'anklets.jpeg',
     chains: 'chains.jpeg',
     him: 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=800&q=80',
@@ -3116,7 +3123,7 @@ function applyBannerSlot(slot, url) {
     // Category circles: find the img inside cat-circle-item for the given category
     const catMap = {
         rings: 'rings', earrings: 'earrings', pendants: 'pendants',
-        bracelets: 'bracelets', anklets: 'anklets', chains: 'chains',
+        bracelets: 'bracelets', cuff_bracelet: 'cuff_bracelet', anklets: 'anklets', chains: 'chains',
         gold: 'gold', kids: 'kids', customised: 'customisation'
     };
     if (catMap[slot]) {
@@ -3515,7 +3522,7 @@ function recalculateAllProductPrices() {
                 makingVal = (8.0 / 245) * 100;
             } else if (marketBase === "fine" || metalSpec.includes("625")) {
                 makingVal = (80.0 / 245) * 100;
-            } else if (cat === "chains" || cat === "chain_pendant" || cat === "bracelets" || cat === "kada" || title.includes("chain") || title.includes("bracelet") || title.includes("kada")) {
+            } else if (cat === "chains" || cat === "chain_pendant" || cat === "bracelets" || cat === "bracelet" || cat === "cuff_bracelet" || cat === "kada" || title.includes("chain") || title.includes("bracelet") || title.includes("cuff") || title.includes("kada")) {
                 makingVal = (155.0 / 245) * 100;
             } else {
                 makingVal = (405.0 / 245) * 100;
@@ -3589,7 +3596,7 @@ function autoCalculateJewelRate() {
             makingVal = (8.0 / 245) * 100;
         } else if (marketBase === "fine") {
             makingVal = (80.0 / 245) * 100;
-        } else if (cat === "chains" || cat === "chain_pendant" || cat === "bracelets" || cat === "kada" || title.includes("chain") || title.includes("bracelet") || title.includes("kada")) {
+        } else if (cat === "chains" || cat === "chain_pendant" || cat === "bracelets" || cat === "bracelet" || cat === "cuff_bracelet" || cat === "kada" || title.includes("chain") || title.includes("bracelet") || title.includes("cuff") || title.includes("kada")) {
             makingVal = (155.0 / 245) * 100;
         } else {
             makingVal = (405.0 / 245) * 100;
