@@ -20,16 +20,16 @@
     <header>
         <div class="container header-container">
             <!-- Logo Section -->
-            <a href="#" class="logo" onclick="navigateTo('home')">
+            <a href="javascript:void(0)" class="logo" onclick="event.preventDefault(); navigateTo('home'); return false;">
                 <span class="logo-main">M R THANGAMAALIGAI</span>
                 <span class="logo-sub">Pure Silver & Gold Jewellery</span>
             </a>
             <!-- Navigation Links -->
             <nav class="nav-menu">
-                <a href="#" class="nav-link active" data-view="home" onclick="navigateTo('home')">Home</a>
-                <a href="#" class="nav-link" data-view="shop" onclick="navigateTo('shop')">Collections</a>
-                <a href="#" class="nav-link nav-link--customise" data-view="customisation" onclick="navigateTo('customisation')">Customisation ✦</a>
-                <a href="#" class="nav-link" data-view="track" onclick="navigateTo('track')">Track Order</a>
+                <a href="javascript:void(0)" class="nav-link active" data-view="home" onclick="event.preventDefault(); navigateTo('home'); return false;">Home</a>
+                <a href="javascript:void(0)" class="nav-link" data-view="shop" onclick="event.preventDefault(); navigateTo('shop'); return false;">Collections</a>
+                <a href="javascript:void(0)" class="nav-link nav-link--customise" data-view="customisation" onclick="event.preventDefault(); navigateTo('customisation'); return false;">Customisation ✦</a>
+                <a href="javascript:void(0)" class="nav-link" data-view="track" onclick="event.preventDefault(); navigateTo('track'); return false;">Track Order</a>
             </nav>
 
             <!-- Search, Cart, Wishlist, Admin -->
@@ -112,50 +112,56 @@
             <h2 class="section-title text-center">Shop by Category</h2>
             <div class="section-subtitle text-center">Sparkle Handpicked Collections</div>
             <div class="categories-circles-grid">
-                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'rings')" style="animation-delay: 0.1s;">
+                <div class="cat-circle-item animate-entrance" onclick="event.preventDefault(); navigateTo('shop', 'rings'); return false;" style="animation-delay: 0.1s;">
                     <div class="cat-circle-img-wrap">
                         <span class="cat-circle-letter">R</span>
                     </div>
                     <span class="cat-circle-title">Rings</span>
                 </div>
-                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'earrings')" style="animation-delay: 0.15s;">
+                <div class="cat-circle-item animate-entrance" onclick="event.preventDefault(); navigateTo('shop', 'earrings'); return false;" style="animation-delay: 0.15s;">
                     <div class="cat-circle-img-wrap">
                         <span class="cat-circle-letter">E</span>
                     </div>
                     <span class="cat-circle-title">Earrings</span>
                 </div>
-                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'pendants')" style="animation-delay: 0.2s;">
+                <div class="cat-circle-item animate-entrance" onclick="event.preventDefault(); navigateTo('shop', 'pendants'); return false;" style="animation-delay: 0.2s;">
                     <div class="cat-circle-img-wrap">
                         <span class="cat-circle-letter">P</span>
                     </div>
                     <span class="cat-circle-title">Pendants</span>
                 </div>
-                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'bracelets')" style="animation-delay: 0.22s;">
+                <div class="cat-circle-item animate-entrance" onclick="event.preventDefault(); navigateTo('shop', 'bracelets'); return false;" style="animation-delay: 0.22s;">
                     <div class="cat-circle-img-wrap">
                         <span class="cat-circle-letter">B</span>
                     </div>
                     <span class="cat-circle-title">Bracelets</span>
                 </div>
-                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'anklets')" style="animation-delay: 0.25s;">
+                <div class="cat-circle-item animate-entrance" onclick="event.preventDefault(); navigateTo('shop', 'cuff_bracelet'); return false;" style="animation-delay: 0.24s;">
+                    <div class="cat-circle-img-wrap">
+                        <span class="cat-circle-letter">CB</span>
+                    </div>
+                    <span class="cat-circle-title">Cuff Bracelets</span>
+                </div>
+                <div class="cat-circle-item animate-entrance" onclick="event.preventDefault(); navigateTo('shop', 'anklets'); return false;" style="animation-delay: 0.25s;">
                     <div class="cat-circle-img-wrap">
                         <span class="cat-circle-letter">A</span>
                     </div>
                     <span class="cat-circle-title">Anklets</span>
                 </div>
-                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'chains')" style="animation-delay: 0.3s;">
+                <div class="cat-circle-item animate-entrance" onclick="event.preventDefault(); navigateTo('shop', 'chains'); return false;" style="animation-delay: 0.3s;">
                     <div class="cat-circle-img-wrap">
                         <span class="cat-circle-letter">C</span>
                     </div>
                     <span class="cat-circle-title">Chains</span>
                 </div>
-                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop', 'chain_pendant')" style="animation-delay: 0.33s;">
+                <div class="cat-circle-item animate-entrance" onclick="event.preventDefault(); navigateTo('shop', 'chain_pendant'); return false;" style="animation-delay: 0.33s;">
                     <div class="cat-circle-img-wrap">
                         <span class="cat-circle-letter">CP</span>
                     </div>
                     <span class="cat-circle-title">Chain with Pendant</span>
                 </div>
 
-                <div class="cat-circle-item animate-entrance" onclick="navigateTo('shop')" style="animation-delay: 0.35s;">
+                <div class="cat-circle-item animate-entrance" onclick="event.preventDefault(); navigateTo('shop'); return false;" style="animation-delay: 0.35s;">
                     <div class="cat-circle-img-wrap">
                         <span class="cat-circle-letter">V</span>
                     </div>
@@ -218,7 +224,7 @@
                     Share the elegance of M R Thangamaaligai with your friends and family! Earn <strong>5% commission</strong> on all Silver Articles and <strong>1% commission</strong> on all Gold Articles purchased by your referrals. 
                 </p>
                 <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-top: 10px;">
-                    <button onclick="navigateTo('profile')" class="btn-checkout" style="padding: 12px 30px; font-weight: bold; background: linear-gradient(135deg, #D97706 0%, #B45309 100%); margin: 0; border: none; border-radius: 30px; box-shadow: 0 4px 12px rgba(217,119,6,0.2); font-size: 0.9rem; cursor: pointer; color: white;">
+                    <button onclick="event.preventDefault(); navigateTo('profile'); return false;" class="btn-checkout" style="padding: 12px 30px; font-weight: bold; background: linear-gradient(135deg, #D97706 0%, #B45309 100%); margin: 0; border: none; border-radius: 30px; box-shadow: 0 4px 12px rgba(217,119,6,0.2); font-size: 0.9rem; cursor: pointer; color: white;">
                         Get Your Referral Link
                     </button>
                 </div>
@@ -231,9 +237,9 @@
             <div class="price-tiers-container">
                 <h3 class="price-tiers-title">Luxury Within Reach</h3>
                 <div class="price-tiers-grid">
-                    <button class="price-tier-card" onclick="navigateTo('shop', 'under-999')">Under ₹999</button>
-                    <button class="price-tier-card" onclick="navigateTo('shop', 'under-1999')">Under ₹1,999</button>
-                    <button class="price-tier-card" onclick="navigateTo('shop', 'under-4999')">Under ₹4,999</button>
+                    <button class="price-tier-card" onclick="event.preventDefault(); navigateTo('shop', 'under-999'); return false;">Under ₹999</button>
+                    <button class="price-tier-card" onclick="event.preventDefault(); navigateTo('shop', 'under-1999'); return false;">Under ₹1,999</button>
+                    <button class="price-tier-card" onclick="event.preventDefault(); navigateTo('shop', 'under-4999'); return false;">Under ₹4,999</button>
                 </div>
             </div>
         </section>
@@ -271,7 +277,7 @@
                     </div>
                 </div>
 
-                <a href="#" class="btn-primary" style="align-self: center;" onclick="navigateTo('shop')">Shop Flash Deals</a>
+                <a href="javascript:void(0)" class="btn-primary" style="align-self: center;" onclick="event.preventDefault(); navigateTo('shop'); return false;">Shop Flash Deals</a>
             </div>
         </section>
 
@@ -283,7 +289,7 @@
                 <!-- Dynamically Populated by app.js -->
             </div>
             <div class="view-more-container">
-                <a href="#" class="btn-primary" style="background-color: transparent; border: 2px solid var(--color-primary);" onclick="navigateTo('shop')">View Full Catalog</a>
+                <a href="javascript:void(0)" class="btn-primary" style="background-color: transparent; border: 2px solid var(--color-primary);" onclick="event.preventDefault(); navigateTo('shop'); return false;">View Full Catalog</a>
             </div>
         </section>
 
@@ -350,6 +356,10 @@
                     <label class="filter-checkbox-label">
                         <input type="checkbox" id="filter-type-bracelet" onchange="renderShopCatalog()">
                         <span>Bracelets</span>
+                    </label>
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" id="filter-type-cuff_bracelet" onchange="renderShopCatalog()">
+                        <span>Cuff Bracelets</span>
                     </label>
                 </div>
 
@@ -759,7 +769,7 @@
     <!-- --- E1. BIS HALLMARKING VIEW PANEL --- -->
     <div id="hallmarking-view" class="app-view container section-padding">
         <div style="margin-bottom: 30px;">
-            <a href="#" onclick="navigateTo('home')" style="display: inline-flex; align-items: center; gap: 8px; color: var(--color-accent-pink); font-weight: 600; font-size: 0.9rem; transition: var(--transition-fast);">
+            <a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('home'); return false;" style="display: inline-flex; align-items: center; gap: 8px; color: var(--color-accent-pink); font-weight: 600; font-size: 0.9rem; transition: var(--transition-fast);">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 Back to Home
             </a>
@@ -843,7 +853,7 @@
 
         <!-- Call to action -->
         <div class="text-center" style="margin-top: 40px;">
-            <button class="custom-btn" onclick="navigateTo('shop', 'all')" style="padding: 14px 30px; font-size: 0.95rem; font-weight: 600;">Shop Hallmarked Collections</button>
+            <button class="custom-btn" onclick="event.preventDefault(); navigateTo('shop', 'all'); return false;" style="padding: 14px 30px; font-size: 0.95rem; font-weight: 600;">Shop Hallmarked Collections</button>
         </div>
     </div>
 
@@ -851,7 +861,7 @@
     <!-- --- E2. HYPOALLERGENIC VIEW PANEL --- -->
     <div id="hypoallergenic-view" class="app-view container section-padding">
         <div style="margin-bottom: 30px;">
-            <a href="#" onclick="navigateTo('home')" style="display: inline-flex; align-items: center; gap: 8px; color: var(--color-accent-pink); font-weight: 600; font-size: 0.9rem; transition: var(--transition-fast);">
+            <a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('home'); return false;" style="display: inline-flex; align-items: center; gap: 8px; color: var(--color-accent-pink); font-weight: 600; font-size: 0.9rem; transition: var(--transition-fast);">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 Back to Home
             </a>
@@ -910,7 +920,7 @@
         </div>
 
         <div class="text-center">
-            <button class="custom-btn" onclick="navigateTo('shop', 'all')" style="padding: 14px 30px; font-size: 0.95rem; font-weight: 600;">Shop Skin-Safe Jewelry</button>
+            <button class="custom-btn" onclick="event.preventDefault(); navigateTo('shop', 'all'); return false;" style="padding: 14px 30px; font-size: 0.95rem; font-weight: 600;">Shop Skin-Safe Jewelry</button>
         </div>
     </div>
 
@@ -918,7 +928,7 @@
     <!-- --- E3. SHIPPING DETAILS VIEW PANEL --- -->
     <div id="shipping-view" class="app-view container section-padding">
         <div style="margin-bottom: 30px;">
-            <a href="#" onclick="navigateTo('home')" style="display: inline-flex; align-items: center; gap: 8px; color: var(--color-accent-pink); font-weight: 600; font-size: 0.9rem; transition: var(--transition-fast);">
+            <a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('home'); return false;" style="display: inline-flex; align-items: center; gap: 8px; color: var(--color-accent-pink); font-weight: 600; font-size: 0.9rem; transition: var(--transition-fast);">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 Back to Home
             </a>
@@ -974,7 +984,7 @@
         </div>
 
         <div class="text-center">
-            <button class="custom-btn" onclick="navigateTo('track')" style="padding: 14px 30px; font-size: 0.95rem; font-weight: 600;">Go to Tracking Portal</button>
+            <button class="custom-btn" onclick="event.preventDefault(); navigateTo('track'); return false;" style="padding: 14px 30px; font-size: 0.95rem; font-weight: 600;">Go to Tracking Portal</button>
         </div>
     </div>
 
@@ -1123,6 +1133,7 @@
                                     <option value="customised">Customised</option>
                                     <option value="kada">Kadas</option>
                                     <option value="bracelet">Bracelets</option>
+                                    <option value="cuff_bracelet">Cuff Bracelets</option>
                                 </select>
                             </div>
                         </div>
@@ -1171,6 +1182,7 @@
                                 <option value="customised">Customised</option>
                                 <option value="kada">Kadas</option>
                                 <option value="bracelet">Bracelets</option>
+                                <option value="cuff_bracelet">Cuff Bracelets</option>
                             </select>
                         </div>
                         <div class="custom-form-group">
@@ -1826,15 +1838,16 @@
             <div>
                 <h4 class="footer-col-title">Collections</h4>
                 <ul class="footer-links-list">
-                    <li><a href="#" onclick="navigateTo('shop','rings')">Rings</a></li>
-                    <li><a href="#" onclick="navigateTo('shop','earrings')">Earrings</a></li>
-                    <li><a href="#" onclick="navigateTo('shop','pendants')">Pendants</a></li>
-                    <li><a href="#" onclick="navigateTo('shop','chains')">Chains</a></li>
-                    <li><a href="#" onclick="navigateTo('shop','chain_pendant')">Chain with Pendant</a></li>
-                    <li><a href="#" onclick="navigateTo('shop','anklets')">Anklets</a></li>
-                    <li><a href="#" onclick="navigateTo('shop','kada')">Kadas</a></li>
-                    <li><a href="#" onclick="navigateTo('shop','bracelet')">Bracelets</a></li>
-                    <li><a href="#" onclick="navigateTo('customisation')">Customised</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('shop','rings'); return false;">Rings</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('shop','earrings'); return false;">Earrings</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('shop','pendants'); return false;">Pendants</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('shop','chains'); return false;">Chains</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('shop','chain_pendant'); return false;">Chain with Pendant</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('shop','anklets'); return false;">Anklets</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('shop','kada'); return false;">Kadas</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('shop','bracelet'); return false;">Bracelets</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('shop','cuff_bracelet'); return false;">Cuff Bracelets</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('customisation'); return false;">Customised</a></li>
                 </ul>
             </div>
 
@@ -1842,10 +1855,10 @@
             <div>
                 <h4 class="footer-col-title">Quick Links</h4>
                 <ul class="footer-links-list">
-                    <li><a href="#" onclick="navigateTo('home')">Home</a></li>
-                    <li><a href="#" onclick="navigateTo('shop')">All Collections</a></li>
-                    <li><a href="#" onclick="navigateTo('track')">Track Shipments</a></li>
-                    <li><a href="#" onclick="navigateTo('shipping')">Shipping Details</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('home'); return false;">Home</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('shop'); return false;">All Collections</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('track'); return false;">Track Shipments</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); navigateTo('shipping'); return false;">Shipping Details</a></li>
                 </ul>
             </div>
 
